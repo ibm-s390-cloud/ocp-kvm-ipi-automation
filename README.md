@@ -22,7 +22,7 @@ You can use GitHub issues to report problems and suggest improvements.
 
 ## License
 
-The OpenShift on KVM IPI Installation Automation for IBM Z / LinuxONE project is licensed under the Apache License, Version 2.0. See the included [LICENSE](LICENSE) file for more information.
+The OpenShift on KVM IPI Installation Automation for IBM Z / LinuxONE project and all files included are licensed under the Apache License, Version 2.0. See the included [LICENSE](LICENSE) file for more information.
 
 ## Authors
 
