@@ -463,8 +463,8 @@ You can use the following commands as an example on how to run the main Ansible 
 
 ```bash
 # if using Docker
-docker run -ti -v $HOME/.ssh:/root/.ssh:ro -v $PWD/ansible/inventory:/ansible/inventory:ro -v $PWD/ansible/host_vars:/ansible/host_vars:ro -v $PWD/ansible/secrets:/ansible/secrets:ro -v $PWD/ansible/roles/crypto/files/ep11:/ansible/roles/crypto/files/ep11:ro --rm kvm-ipi-automation:base-latest ansible-playbook -v -i inventory site.yml
+docker run --rm -ti -v $HOME/.ssh:/root/.ssh:rw -v $PWD/ansible/inventory:/ansible/inventory:ro -v $PWD/ansible/host_vars:/ansible/host_vars:ro -v $PWD/ansible/secrets:/ansible/secrets:ro -v $PWD/ansible/roles/crypto/files/ep11:/ansible/roles/crypto/files/ep11:ro --rm kvm-ipi-automation:base-latest ansible-playbook -i inventory site.yml
 
 # if using podman
-podman run -ti -v $HOME/.ssh:/root/.ssh:ro -v $PWD/ansible/inventory:/ansible/inventory:ro -v $PWD/ansible/host_vars:/ansible/host_vars:ro -v $PWD/ansible/secrets:/ansible/secrets:ro -v $PWD/ansible/roles/crypto/files/ep11:/ansible/roles/crypto/files/ep11:ro --rm kvm-ipi-automation:base-latest ansible-playbook -v -i inventory site.yml
+podman run --rm -ti -v $HOME/.ssh:/root/.ssh:rw -v $PWD/ansible/inventory:/ansible/inventory:ro -v $PWD/ansible/host_vars:/ansible/host_vars:ro -v $PWD/ansible/secrets:/ansible/secrets:ro -v $PWD/ansible/roles/crypto/files/ep11:/ansible/roles/crypto/files/ep11:ro --rm kvm-ipi-automation:base-latest ansible-playbook -i inventory site.yml
 ```
