@@ -1,0 +1,5 @@
+---
+
+- import_playbook: setup_host.yml
+- import_playbook: prepare_ocp_install.yml
+- import_playbook: run_ocp_install.yml

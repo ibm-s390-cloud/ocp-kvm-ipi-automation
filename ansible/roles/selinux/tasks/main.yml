@@ -1,0 +1,16 @@
+---
+
+- name: configure SELinux
+  block:
+    - name: set to permissive mode
+      ansible.posix.selinux:
+        policy: targeted
+        state: permissive
+      when: ansible_selinux.status == 'enabled'
+
+    - name: enable haproxy connectivity
+      ansible.posix.seboolean:
+        name: haproxy_connect_any
+        state: yes
+        persistent: yes
+      when: ansible_selinux.status == 'enabled'

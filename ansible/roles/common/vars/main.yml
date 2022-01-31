@@ -1,0 +1,6 @@
+---
+
+ipmi_dummy_network: dummy-ipmi
+
+host_marker: '# -- {mark} ANSIBLE MANAGED BLOCK - host --#'
+libvirt_marker: '# -- {mark} ANSIBLE MANAGED BLOCK - libvirt --#'

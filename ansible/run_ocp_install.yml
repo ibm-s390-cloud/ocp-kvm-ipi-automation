@@ -1,0 +1,52 @@
+---
+
+- hosts: s390x_kvm_host
+
+  pre_tasks:
+    - name: check the cluster image pull secret file exists on the Ansible controller
+      block:
+        - name: get pull secret file stats
+          ansible.builtin.stat:
+            path: '{{ cluster_pull_secret_file }}'
+          register: pull_secret_file_info
+          delegate_to: localhost
+
+        - name: display playbook usage message
+          ansible.builtin.fail:
+            msg:
+              - "The cluster image pull secret file does not exist."
+              - "Make sure it's present at the following location before running this playbook:"
+              - "{{ cluster_pull_secret_file }}"
+          when: not pull_secret_file_info.stat.exists
+
+    - name: check if vbmc and ipmi support is to be configured for the cluster
+      ansible.builtin.set_fact:
+        vbmc_ipmi: '{{ setup_vbmc_ipmi | default(true) }}'
+
+  roles:
+    - role: sanity_check
+      tags:
+        - sanity
+        - preflight
+      when: disable_sanity_check is undefined
+
+    - role: ocp_install_cluster
+      tags:
+        - install
+
+    - role: ocp_install_cluster_wrapup
+      tags:
+        - install
+        - wrapup
+
+    - role: vbmc
+      tags:
+        - vbmc
+      when: vbmc_ipmi
+
+  tasks:
+    - ansible.builtin.debug:
+        msg:
+          - "Finished installing the KVM-based OpenShift cluster via IPI on host '{{ inventory_hostname }}'. All done."
+          - "You can use 'oc' directly from the root user's account to interact with the cluster."
+          - "Enjoy!"

@@ -1,0 +1,11 @@
+---
+
+# settings for all Ansible hosts
+
+ansible_python_interpreter: '/usr/bin/python3'
+
+ansible_ssh_common_args: >
+  -o IdentitiesOnly=yes
+  -o BatchMode=yes
+  -o UserKnownHostsFile=/dev/null
+  -o StrictHostKeyChecking=no

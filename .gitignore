@@ -1,0 +1,7 @@
+.DS_Store
+*.retry
+*.log
+._*
+*.py[co]
+__pycache__
+inventory

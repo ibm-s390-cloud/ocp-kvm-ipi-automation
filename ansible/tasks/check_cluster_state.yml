@@ -1,0 +1,149 @@
+---
+
+- name: check if working directory exists
+  ansible.builtin.stat:
+    path: '{{ openshift_installer_workdir }}'
+  register: workdir_info
+
+- name: get existing non-ready Nodes
+  block:
+    - name: list all existing Node objects
+      kubernetes.core.k8s_info:
+        kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+        api_version: 'v1'
+        kind: Node
+      register: all_existing_nodes
+
+    - name: find non-ready (defunct) Nodes
+      ansible.builtin.set_fact:
+        nonready_nodes: '{{ (nonready_nodes | default([])) + [ item | get_resources(state="Ready", status="Unknown|False") ] | select() | list }}'
+      loop: '{{ all_existing_nodes.resources }}'
+      loop_control:
+        label: '{{ item.metadata.name }}'
+
+    - name: set has_nonready_nodes to True if there are non-ready Nodes
+      ansible.builtin.set_fact:
+        has_nonready_nodes: '{{ ("True" if nonready_nodes | length > 0 else "False") | bool }}'
+  when: workdir_info.stat.exists and workdir_info.stat.isdir
+
+- name: get existing unavailable ClusterOperators
+  block:
+    - name: list all existing ClusterOperator objects
+      kubernetes.core.k8s_info:
+        kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+        api_version: 'config.openshift.io/v1'
+        kind: ClusterOperator
+      register: all_existing_cos
+
+    - name: find unavailable (defunct) ClusterOperators
+      ansible.builtin.set_fact:
+        unavailable_cos: '{{ (unavailable_cos | default([])) + [ item | get_resources(state="Available", status="False") ] | select() | list }}'
+      loop: '{{ all_existing_cos.resources }}'
+      loop_control:
+        label: '{{ item.metadata.name }}'
+
+    - name: set has_unavailable_cos to True if there are unavailable ClusterOperators
+      ansible.builtin.set_fact:
+        has_unavailable_cos: '{{ ("True" if unavailable_cos | length > 0 else "False") | bool }}'
+  when: workdir_info.stat.exists and workdir_info.stat.isdir
+
+- name: get existing cluster alerts from Prometheus
+  block:
+    - name: create temporary file
+      ansible.builtin.tempfile:
+        state: file
+        suffix: cacert
+      register: temp_file
+
+    - name: get cacert from kubeconfig file
+      ansible.builtin.slurp:
+        src: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+      register: kubeconfig_file
+
+    - name: register ocp_kubeconfig fact
+      ansible.builtin.set_fact:
+        ocp_kubeconfig: '{{ kubeconfig_file["content"] | b64decode | trim | from_yaml }}'
+
+    - name: write ca_cert to temporary file
+      ansible.builtin.copy:
+        dest: '{{ temp_file.path }}'
+        content: '{{ ocp_kubeconfig.clusters[0]["cluster"]["certificate-authority-data"] | b64decode | trim }}'
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: get kubeadmin password from password file
+      ansible.builtin.slurp:
+        src: '{{ openshift_installer_workdir }}/auth/kubeadmin-password'
+      register: kubeadmin_password_file
+
+    - name: register kubeadmin_password fact
+      ansible.builtin.set_fact:
+        kubeadmin_password: '{{ kubeadmin_password_file["content"] | b64decode | trim }}'
+
+    - name: login to cluster
+      community.okd.openshift_auth:
+        host: '{{ ocp_kubeconfig.clusters[0]["cluster"]["server"] }}'
+        username: kubeadmin
+        password: '{{ kubeadmin_password }}'
+        state: present
+        validate_certs: no
+      register: ocp_login_details
+
+    - name: get prometheus-k8s route
+      kubernetes.core.k8s_info:
+        kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+        api_version: 'route.openshift.io/v1'
+        kind: Route
+        namespace: 'openshift-monitoring'
+        name: 'prometheus-k8s'
+      register: ocp_prometheus_route
+
+    - name: send GET request to prometheus-k8s route to list current alerts
+      ansible.builtin.uri:
+        url: 'https://{{ ocp_prometheus_route.resources[0].spec.host }}/api/v1/alerts?silenced=False&inhibited=False'
+        method: GET
+        ca_path: '{{ temp_file.path }}'
+        status_code: 200
+        headers:
+          Authorization: 'Bearer {{ ocp_login_details.openshift_auth.api_key }}'
+          Content-Type: 'application/json'
+      register: ocp_prometheus_alert_results
+
+    - name: filter the list of current alerts to remove default alerts
+      ansible.builtin.set_fact:
+        real_alerts: '{{ (real_alerts | default([])) + [ item ] if item }}'
+      loop: '{{ ocp_prometheus_alert_results.json.data | to_json | from_json | community.general.json_query(alerts_query) }}'
+      vars:
+        alerts_query: "alerts[?labels.alertname!='Watchdog' && labels.alertname!='AlertmanagerReceiversNotConfigured'].labels.alertname || [`0`]"
+
+    - name: set has_real_alerts to True if there are currently any non-default alerts
+      ansible.builtin.set_fact:
+        has_real_alerts: '{{ ("True" if real_alerts | length > 0 else "False") | bool }}'
+  always:
+    - name: delete temporary file
+      ansible.builtin.file:
+        path: '{{ temp_file.path }}'
+        state: absent
+      when: temp_file.path is defined
+
+    - name: logout from cluster
+      community.okd.openshift_auth:
+        host: '{{ ocp_kubeconfig.clusters[0]["cluster"]["server"] }}'
+        api_key: '{{ ocp_login_details.openshift_auth.api_key }}'
+        state: absent
+        validate_certs: no
+      when: ocp_login_details.openshift_auth.api_key is defined
+  when: workdir_info.stat.exists and workdir_info.stat.isdir
+
+- name: add cluster state facts to list
+  ansible.builtin.set_fact:
+    cluster_state_facts: '{{ (cluster_stats_facts | default([])) + [ item ] }}'
+  loop:
+    - '{{ has_nonready_nodes }}'
+    - '{{ has_unavailable_cos }}'
+    - '{{ has_real_alerts }}'
+
+- name: set fact for the cluster operational state
+  ansible.builtin.set_fact:
+    is_cluster_operational: '{{ not (cluster_state_facts | all) }}'

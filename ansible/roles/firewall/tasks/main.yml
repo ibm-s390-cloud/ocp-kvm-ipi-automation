@@ -1,0 +1,101 @@
+---
+
+- name: configure firewalld
+  block:
+    - name: ensure firewalld package is present
+      ansible.builtin.dnf:
+        name: firewalld
+        state: latest
+
+    - name: start firewalld service
+      ansible.builtin.service:
+        name: firewalld
+        state: started
+        enabled: true
+
+    - name: add libvirt rich-rule
+      ansible.posix.firewalld:
+        rich_rule: rule service name=libvirt reject
+        zone: public
+        permanent: yes
+        immediate: yes
+        state: enabled
+
+    - name: add libvirt service
+      ansible.posix.firewalld:
+        service: libvirt
+        permanent: yes
+        immediate: yes
+        zone: libvirt
+        state: enabled
+
+    - name: allow http traffic
+      ansible.posix.firewalld:
+        service: http
+        permanent: yes
+        immediate: yes
+        zone: '{{ item }}'
+        state: enabled
+      loop: '{{ firewalld_zones }}'
+
+    - name: allow https traffic
+      ansible.posix.firewalld:
+        service: https
+        permanent: yes
+        immediate: yes
+        zone: '{{ item }}'
+        state: enabled
+      loop: '{{ firewalld_zones }}'
+
+    - name: allow traffic at port 80
+      ansible.posix.firewalld:
+        port: 80/tcp
+        permanent: yes
+        immediate: yes
+        zone: '{{ item }}'
+        state: enabled
+      loop: '{{ firewalld_zones }}'
+
+    - name: allow traffic at port 8080
+      ansible.posix.firewalld:
+        port: 8080/tcp
+        permanent: yes
+        immediate: yes
+        zone: '{{ item }}'
+        state: enabled
+      loop: '{{ firewalld_zones }}'
+
+    - name: allow traffic at port 443
+      ansible.posix.firewalld:
+        port: 443/tcp
+        permanent: yes
+        zone: '{{ item }}'
+        state: enabled
+      loop: '{{ firewalld_zones }}'
+
+    - name: allow traffic at port 6443
+      ansible.posix.firewalld:
+        port: 6443/tcp
+        permanent: yes
+        immediate: yes
+        zone: '{{ item }}'
+        state: enabled
+      loop: '{{ firewalld_zones }}'
+
+    - name: allow traffic at additional ports
+      ansible.posix.firewalld:
+        port: '{{ item.1 }}'
+        permanent: yes
+        immediate: yes
+        zone: '{{ item.0 }}'
+        state: enabled
+      loop: '{{ firewalld_zones | product(additional_host_ports) | list }}'
+      when:
+        - additional_host_ports is defined
+        - additional_host_ports | type_debug == 'list'
+
+    - name: restart firewalld service
+      ansible.builtin.service:
+        name: firewalld
+        state: restarted
+        enabled: true

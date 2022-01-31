@@ -1,0 +1,5 @@
+all:
+  children:
+    s390x_kvm_host:
+      hosts:
+        $$YOUR_KVM_HOST_NAME$$:    # must match the name of the YAML file in subdirectory host_vars/

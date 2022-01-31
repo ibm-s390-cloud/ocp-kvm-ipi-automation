@@ -1,0 +1,42 @@
+---
+
+- name: create prerequisite data
+  block:
+    - name: remove existing working directory
+      ansible.builtin.file:
+        path: '{{ openshift_installer_workdir }}'
+        state: absent
+
+    - name: create working directory
+      ansible.builtin.file:
+        path: '{{ openshift_installer_workdir }}'
+        owner: root
+        group: root
+        mode: '0755'
+        state: directory
+
+    - name: generate SSH key to use with cluster nodes
+      community.crypto.openssh_keypair:
+        path: '{{ openshift_installer_workdir }}/id_ssh_ocp'
+
+    - name: create local directory for installation files
+      ansible.builtin.file:
+        path: /var/www/html/bootfiles
+        owner: root
+        group: root
+        mode: '0755'
+        state: directory
+
+    - name: download CoreOS installation files from Red Hat mirror with exponential backoff
+      ansible.builtin.get_url:
+        url: '{{ openshift_rhcos_image_url }}'
+        dest: '/var/www/html/bootfiles/{{ openshift_rhcos_image_url | basename }}'
+        mode: '0644'
+        timeout: 300
+      register: coreos_download
+      until: coreos_download is success
+      retries: 10
+      delay: '{{ delay | int }}'
+      loop: '{{ range(1, 10) | map("pow", 2) }}'
+      loop_control:
+        loop_var: delay

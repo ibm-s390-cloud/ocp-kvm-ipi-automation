@@ -1,0 +1,33 @@
+---
+
+- name: persist current libvirt cluster network configuration
+  block:
+    - name: create temporary file
+      ansible.builtin.tempfile:
+        state: file
+        suffix: libvirtnetxml
+      register: temp_file
+
+    - name: retrieve XML of libvirt cluster network
+      community.libvirt.virt_net:
+        command: get_xml
+        name: '{{ cluster_id }}'
+      register: libvirt_cluster_network
+
+    - name: write XML to temporary file
+      ansible.builtin.copy:
+        dest: '{{ temp_file.path }}'
+        content: '{{ libvirt_cluster_network.get_xml }}'
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: reload libvirt cluster network configuration
+      ansible.builtin.command:
+        cmd: 'virsh net-define --file {{ temp_file.path }}'
+  always:
+    - name: delete temporary file
+      ansible.builtin.file:
+        path: '{{ temp_file.path }}'
+        state: absent
+      when: temp_file.path is defined

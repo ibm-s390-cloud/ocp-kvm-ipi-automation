@@ -1,0 +1,17 @@
+---
+
+# alternative:
+# use `oc get -o jsonpath='{.status.infrastructureName}{"\n"}' infrastructure cluster`
+
+- name: fetch openshift-install log file
+  ansible.builtin.slurp:
+    src: '{{ openshift_installer_workdir }}/.openshift_install_state.json'
+  register: install_state
+
+- name: store openshift-install log file content in a dedicated fact
+  ansible.builtin.set_fact:
+    install_json: '{{ install_state["content"] | b64decode | trim | from_json }}'
+
+- name: get libvirt cluster name from log file content
+  ansible.builtin.set_fact:
+    cluster_id: '{{ install_json["*installconfig.ClusterID"].InfraID }}'

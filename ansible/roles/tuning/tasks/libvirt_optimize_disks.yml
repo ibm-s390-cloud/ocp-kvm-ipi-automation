@@ -1,0 +1,36 @@
+---
+
+- name: retrieve XML of cluster node
+  community.libvirt.virt:
+    command: get_xml
+    name: '{{ cluster_node }}'
+  register: cluster_node_xml
+
+- name: disable caching for qemu disk devices
+  community.general.xml:
+    xmlstring: '{{ cluster_node_xml.get_xml }}'
+    xpath: /domain/devices/disk/driver[@name='qemu']
+    attribute: cache
+    value: none
+  register: no_cache_xml
+
+- name: enable native IO mode for qemu disk devices
+  community.general.xml:
+    xmlstring: '{{ no_cache_xml.xmlstring }}'
+    xpath: /domain/devices/disk/driver[@name='qemu']
+    attribute: io
+    value: native
+  register: io_native_xml
+
+- name: assign dedicated iothread ID to qemu disk devices
+  community.general.xml:
+    xmlstring: '{{ io_native_xml.xmlstring }}'
+    xpath: /domain/devices/disk/driver[@name='qemu']
+    attribute: iothread
+    value: '{{ domain_boot_disk_devices_iothread_id }}'
+  register: iothreads_xml
+
+- name: reload cluster node configuration
+  community.libvirt.virt:
+    command: define
+    xml: '{{ iothreads_xml.xmlstring }}'

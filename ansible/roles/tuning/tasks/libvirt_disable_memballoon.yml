@@ -1,0 +1,27 @@
+---
+
+- name: retrieve XML of cluster node
+  community.libvirt.virt:
+    command: get_xml
+    name: '{{ cluster_node }}'
+  register: cluster_node_xml
+
+- name: remove existing memballoon XML node
+  community.general.xml:
+    xmlstring: '{{ cluster_node_xml.get_xml }}'
+    xpath: /domain/devices/memballoon
+    state: absent
+  register: no_memballoon_xml
+
+- name: add disabled memballoon XML node
+  community.general.xml:
+    xmlstring: '{{ no_memballoon_xml.xmlstring }}'
+    xpath: /domain/devices/memballoon
+    attribute: model
+    value: none
+  register: disabled_memballoon_xml
+
+- name: reload cluster node configuration
+  community.libvirt.virt:
+    command: define
+    xml: '{{ disabled_memballoon_xml.xmlstring }}'

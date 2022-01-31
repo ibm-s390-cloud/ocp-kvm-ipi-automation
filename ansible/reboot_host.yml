@@ -1,0 +1,7 @@
+---
+
+- hosts: s390x_kvm_host
+
+  tasks:
+    - name: reboot host
+      ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/reboot_host.yml'

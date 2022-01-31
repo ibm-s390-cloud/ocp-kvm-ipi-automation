@@ -1,0 +1,206 @@
+---
+
+- name: install prerequisite software packages
+  block:
+    - name: install and update required dnf modules and package groups
+      ansible.builtin.dnf:
+        name:
+          - '@virt:rhel/common'
+          - '@rust-toolset:rhel8/common'
+          - '@RPM Development Tools'
+          - '@Development Tools'
+        state: '{{ item }}'
+      loop:
+        - present
+        - latest
+
+    - name: install required packages
+      ansible.builtin.dnf:
+        name:
+          - bind-utils
+          - iputils
+          - podman
+          - tmux
+          - wget
+          - curl
+          - vim-enhanced
+          - rsync
+          - genisoimage
+          - qemu-img
+          - qemu-kvm
+          - libvirt
+          - libvirt-daemon-config-network
+          - libvirt-daemon-kvm
+          - libvirt-client
+          - libvirt-devel
+          - virt-install
+          - virt-manager
+          - libguestfs-tools-c
+          - openssl
+          - openssl-devel
+          - libffi
+          - libffi-devel
+          - policycoreutils-python-utils
+          - python3-jmespath
+          - python3-pyyaml
+          - python3-pip
+          - python3-devel
+          - python3-netaddr
+          - python3-policycoreutils
+          - python3-wheel
+          - python3-setuptools
+          - python3-lxml
+          - python3-pyOpenSSL
+          - python3-firewall
+          - python3-libvirt
+          - python3-virtualenv
+          - python3-libselinux
+          - python3-libsemanage
+          - ipmitool
+          - gcc
+          - gcc-c++
+          - git-lfs
+          - clang
+          - jq
+          - lsof
+          - net-tools
+          - httpd
+          - fio
+        state: latest
+
+- name: install prerequisite Python packages
+  ansible.builtin.pip:
+    name:
+      - setuptools-rust
+      - openshift
+      - stormssh
+      - xmltodict
+      - yq
+    state: '{{ item }}'
+    extra_args: --no-cache-dir
+  loop:
+    - present
+    - latest
+
+- name: install go compiler
+  block:
+    - name: create temporary download directory
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: golang
+      register: temp_dir
+
+    - name: download go tarball
+      ansible.builtin.get_url:
+        url: 'https://dl.google.com/go/go{{ go_version }}.linux-{{ ansible_architecture }}.tar.gz'
+        dest: '{{ temp_dir.path }}/go{{ go_version }}.linux-{{ ansible_architecture }}.tar.gz'
+        mode: '0440'
+        timeout: 120
+
+    - name: remove existing go installation
+      ansible.builtin.file:
+        path: '/usr/local/go'
+        state: absent
+
+    - name: install go
+      ansible.builtin.unarchive:
+        src: '{{ temp_dir.path }}/go{{ go_version }}.linux-{{ ansible_architecture }}.tar.gz'
+        dest: /usr/local
+        remote_src: yes
+
+    - name: add go to path
+      ansible.builtin.copy:
+        src: '{{ role_path }}/files/golang.profile.sh'
+        dest: /etc/profile.d/golang.sh
+        owner: root
+        group: root
+        mode: '0644'
+  always:
+    - name: delete temporary download directory
+      ansible.builtin.file:
+        path: '{{ temp_dir.path }}'
+        state: absent
+      when: temp_dir.path is defined
+
+- name: compile and install terraform
+  block:
+    - name: create temporary download directory
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: terraform
+      register: temp_dir
+
+    - name: fetch terraform source code
+      ansible.builtin.git:
+        repo: 'https://github.com/hashicorp/terraform.git'
+        dest: '{{ temp_dir.path }}/terraform'
+        version: 'v{{ terraform_version }}'
+
+    - name: build terraform binary
+      ansible.builtin.command:
+        cmd: 'go build'
+        chdir: '{{ temp_dir.path }}/terraform'
+
+    - name: remove existing terraform binary from /usr/local/bin
+      ansible.builtin.file:
+        path: /usr/local/bin/terraform
+        state: absent
+
+    - name: copy terraform binary to /usr/local/bin
+      ansible.builtin.copy:
+        src: '{{ temp_dir.path }}/terraform/terraform'
+        dest: /usr/local/bin/terraform
+        owner: root
+        group: root
+        mode: '0775'
+        remote_src: yes
+  always:
+    - name: delete temporary download directory
+      ansible.builtin.file:
+        path: '{{ temp_dir.path }}'
+        state: absent
+      when: temp_dir.path is defined
+
+- name: compile and install IBM Cloud terraform provider
+  block:
+    - name: create temporary download directory
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: ibmcloudtf
+      register: temp_dir
+
+    - name: fetch IBM Cloud terraform provider source code
+      ansible.builtin.git:
+        repo: 'https://github.com/IBM-Cloud/terraform-provider-ibm.git'
+        dest: '{{ temp_dir.path }}/terraform-provider-ibm'
+        version: 'v{{ terraform_ibm_provider_version }}'
+
+    - name: build terraform-provider-ibm binary
+      ansible.builtin.command:
+        cmd: 'go build'
+        chdir: '{{ temp_dir.path }}/terraform-provider-ibm'
+
+    - name: create global terraform plugin directory
+      ansible.builtin.file:
+        path: '/usr/local/share/terraform/plugins/local/ibm-cloud/ibm/{{ terraform_ibm_provider_version }}/linux_s390x'
+        state: directory
+
+    - name: remove existing terraform-provider-ibm binary if present
+      ansible.builtin.file:
+        path: '/usr/local/share/terraform/plugins/local/ibm-cloud/ibm/{{ terraform_ibm_provider_version }}/linux_s390x/terraform-provider-ibm'
+        state: absent
+
+    - name: copy terraform-provider-ibm binary to global terraform plugin directory
+      ansible.builtin.copy:
+        src: '{{ temp_dir.path }}/terraform-provider-ibm/terraform-provider-ibm'
+        dest: '/usr/local/share/terraform/plugins/local/ibm-cloud/ibm/{{ terraform_ibm_provider_version }}/linux_s390x/terraform-provider-ibm'
+        owner: root
+        group: root
+        mode: '0775'
+        remote_src: yes
+  always:
+    - name: delete temporary download directory
+      ansible.builtin.file:
+        path: '{{ temp_dir.path }}'
+        state: absent
+      when: temp_dir.path is defined

@@ -1,0 +1,25 @@
+---
+
+- name: retrieve XML of cluster node
+  community.libvirt.virt:
+    command: get_xml
+    name: '{{ cluster_node_share.0 }}'
+  register: cluster_node_xml
+
+- name: add cputune XML node
+  community.general.xml:
+    xmlstring: '{{ cluster_node_xml.get_xml }}'
+    xpath: /domain/cputune
+  register: cputune_xml
+
+- name: add shares XML node
+  community.general.xml:
+    xmlstring: '{{ cputune_xml.xmlstring }}'
+    xpath: /domain/cputune/shares
+    value: '{{ cluster_node_share.1 }}'
+  register: cputune_shares_xml
+
+- name: reload cluster node configuration
+  community.libvirt.virt:
+    command: define
+    xml: '{{ cputune_shares_xml.xmlstring }}'

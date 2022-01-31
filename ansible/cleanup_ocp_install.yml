@@ -1,0 +1,18 @@
+---
+
+- hosts: s390x_kvm_host
+
+  roles:
+    - role: sanity_check
+      tags:
+        - sanity
+        - preflight
+      when: disable_sanity_check is undefined
+
+    - role: ocp_cleanup
+      tags:
+        - cleanup
+
+  tasks:
+    - ansible.builtin.debug:
+        msg: "Finished cleaning up the KVM-based OpenShift cluster installation on host '{{ inventory_hostname }}'. All done."

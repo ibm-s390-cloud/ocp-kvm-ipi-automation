@@ -1,0 +1,133 @@
+---
+
+- name: cleanup vbmc assets
+  block:
+    - name: stop any existing vbmc and vbmcd processes
+      ansible.builtin.shell: killall vbmc; killall vbmcd; true
+
+    - name: remove any existing vbmc state files
+      ansible.builtin.file:
+        path: ~root/.vbmc
+        state: absent
+
+    - name: check if the dummy network interface used by vbmc exists
+      ansible.builtin.shell:
+        cmd: 'ip a | grep {{ ipmi_dummy_network }}'
+      register: dummy_net_link
+      failed_when: dummy_net_link.rc not in [0,1]
+
+    - name: delete the dummy network interface
+      ansible.builtin.command:
+        cmd: '{{ item }}'
+      loop:
+        - 'ip addr flush dev {{ ipmi_dummy_network }}'
+        - 'ip link delete {{ ipmi_dummy_network }}'
+      when: dummy_net_link.stdout | length > 0
+
+- name: check if working directory exists
+  ansible.builtin.stat:
+    path: '{{ openshift_installer_workdir }}'
+  register: workdir_info
+
+- name: check if cluster installation log file exists
+  ansible.builtin.stat:
+    path: '{{ openshift_installer_workdir }}/.openshift_install_state.json'
+  register: install_log_info
+  when: workdir_info.stat.exists and workdir_info.stat.isdir
+
+- name: check if openshift-install binary exists
+  ansible.builtin.stat:
+    path: /usr/local/bin/openshift-install
+  register: openshift_install_info
+
+- name: determine name of existing cluster from installation log
+  ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_cluster_name.yml'
+  when: workdir_info.stat.exists and workdir_info.stat.isdir and install_log_info.stat.exists
+
+- name: destroy any existing cluster
+  ansible.builtin.command:
+    cmd: 'openshift-install destroy cluster --dir={{ openshift_installer_workdir }}'
+  register: cluster_destroy
+  when: workdir_info.stat.exists and workdir_info.stat.isdir and openshift_install_info.stat.exists
+  ignore_errors: '{{ cleanup_ignore_errors }}'
+
+- name: remove all stale libvirt cluster resources
+  block:
+    - name: get list of all existing libvirt domains
+      community.libvirt.virt:
+        command: list_vms
+      register: all_libvirt_domains
+
+    - name: get list of libvirt domains that match previously existing cluster name
+      ansible.builtin.set_fact:
+        stale_cluster_domains: '{{ all_libvirt_domains.list_vms | select("startswith", cluster_id) | list }}'
+
+    - name: display all remaining stale libvirt domains
+      ansible.builtin.debug:
+        var: stale_cluster_domains
+  when: cluster_destroy is not skipped and cluster_destroy.rc != 0
+
+- name: remove all stale files and directories
+  block:
+    - name: find all OpenShift installer temporary files
+      ansible.builtin.find:
+        paths: /tmp
+        patterns: openshift-install-*
+      register: openshift_tmp_files
+
+    - name: delete all temporary files
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: absent
+      loop: '{{ openshift_tmp_files.files }}'
+
+    - name: delete all non-temporary files
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: absent
+      loop:
+        - ~root/.cache/go-build
+        - ~root/.cache/openshift-installer
+        - ~root/.kube
+        - ~root/.terraform.d
+        - '{{ openshift_installer_workdir }}'
+        - /usr/local/bin/oc
+        - /usr/local/bin/opm
+        - /usr/local/bin/kubectl
+        - /usr/local/bin/openshift-install
+
+- name: check if SSH configuration for user root exists
+  ansible.builtin.stat:
+    path: '~root/.ssh/config'
+  register: user_ssh_config_info
+
+- name: cleanup SSH configuration for user root
+  ansible.builtin.blockinfile:
+    path: '~root/.ssh/config'
+    state: absent
+  when: user_ssh_config_info.stat.exists
+
+- name: clean up /etc/hosts
+  ansible.builtin.blockinfile:
+    path: /etc/hosts
+    marker: '{{ item }}'
+    state: absent
+  loop:
+    - '{{ libvirt_marker }}'
+    - '{{ host_marker }}'
+
+- name: clean up libvirt hooks
+  block:
+    - name: remove 'qemu' libvirt hook
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: absent
+      loop:
+        - /etc/libvirt/hooks/qemu
+
+  always:
+    - name: restart libvirtd service
+      ansible.builtin.service:
+        name: libvirtd
+        state: reloaded
+        enabled: yes

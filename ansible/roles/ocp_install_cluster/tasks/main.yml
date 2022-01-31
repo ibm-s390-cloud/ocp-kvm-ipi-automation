@@ -1,0 +1,213 @@
+---
+
+- name: set required facts
+  block:
+    - name: check the required SSH key files exist on the KVM host
+      ansible.builtin.stat:
+        path: '{{ item }}'
+      register: ssh_key_file_info
+      failed_when: not ssh_key_file_info.stat.exists
+      loop:
+        - '{{ openshift_installer_workdir }}/id_ssh_ocp'
+        - '{{ openshift_installer_workdir }}/id_ssh_ocp.pub'
+
+    - name: fetch cluster image pull secret (from the Ansible controller)
+      ansible.builtin.set_fact:
+        pull_secret_file: '{{ lookup("file", cluster_pull_secret_file) | string }}'
+
+    - name: fetch SSH key to use with cluster nodes
+      ansible.builtin.slurp:
+        src: '{{ openshift_installer_workdir }}/id_ssh_ocp.pub'
+      register: ocp_ssh_key_pub
+
+    - name: determine OpenShift image to install
+      ansible.builtin.shell:
+        cmd: "curl -s {{ openshift_release_url }} | sed -n -e 's/^.*Pull From: //p'"
+      register: openshift_release_image
+      failed_when:
+        - openshift_release_image.rc != 0
+        - openshift_release_image.stdout | length == 0
+
+- name: create OpenShift installation manifests
+  block:
+    - name: put the OpenShift installation configuration file in place
+      ansible.builtin.template:
+        src: '{{ role_path }}/templates/install-config.yaml.j2'
+        dest: '{{ openshift_installer_workdir }}/install-config.yaml'
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: remove blank lines from OpenShift installation configuration file
+      ansible.builtin.lineinfile:
+        path: '{{ openshift_installer_workdir }}/install-config.yaml'
+        state: absent
+        regexp: '^\s*$'
+
+    - name: create backup of OpenShift installation configuration file (for debugging purposes)
+      ansible.builtin.copy:
+        src: '{{ openshift_installer_workdir }}/install-config.yaml'
+        dest: '{{ openshift_installer_workdir }}/install-config.yaml.bkup'
+        owner: root
+        group: root
+        mode: '0644'
+        remote_src: yes
+
+    - name: remove existing manifests
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: absent
+      loop:
+        - '{{ openshift_installer_workdir }}/manifests'
+        - '{{ openshift_installer_workdir }}/openshift'
+
+    - name: set local installation file download URL
+      ansible.builtin.set_fact:
+        openshift_rhcos_image_url_local: 'http://{{ ansible_default_ipv4.address }}:8080/bootfiles/{{ openshift_rhcos_image_url | basename }}'
+
+    - name: generate manifests using openshift-install binary
+      ansible.builtin.command:
+        cmd: 'openshift-install create manifests --dir={{ openshift_installer_workdir }}'
+      environment:
+        OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE: '{{ openshift_release_image.stdout }}'
+        OPENSHIFT_INSTALL_OS_IMAGE_OVERRIDE: '{{ openshift_rhcos_image_url_local }}'
+
+    - name: check if manifests have been created successfully
+      ansible.builtin.stat:
+        path: '{{ item }}'
+      register: file_info
+      failed_when: not file_info.stat.exists
+      loop:
+        - '{{ openshift_installer_workdir }}/manifests'
+        - '{{ openshift_installer_workdir }}/openshift'
+        - '{{ openshift_installer_workdir }}/openshift/99_openshift-cluster-api_worker-machineset-0.yaml'
+        - '{{ openshift_installer_workdir }}/openshift/99_openshift-cluster-api_master-machines-0.yaml'
+        - '{{ openshift_installer_workdir }}/openshift/99_openshift-cluster-api_master-machines-1.yaml'
+        - '{{ openshift_installer_workdir }}/openshift/99_openshift-cluster-api_master-machines-2.yaml'
+
+    - name: create backup of manifests (for debugging purposes)
+      ansible.posix.synchronize:
+        src: '{{ item }}'
+        dest: '{{ item }}.bkup'
+      delegate_to: '{{ inventory_hostname }}'
+      loop:
+        - '{{ openshift_installer_workdir }}/manifests'
+        - '{{ openshift_installer_workdir }}/openshift'
+
+- name: patch generated OpenShift manifests to accommodate custom cluster resource needs
+  block:
+    - name: slurp worker configuration from manifest file
+      ansible.builtin.slurp:
+        src: '{{ openshift_installer_workdir }}/openshift/99_openshift-cluster-api_worker-machineset-0.yaml'
+      register: worker_machineset
+
+    - name: store worker configuration into a dedicated fact
+      ansible.builtin.set_fact:
+        openshift_worker_config: '{{ worker_machineset["content"] | b64decode | trim | from_yaml }}'
+
+    - name: update worker configuration
+      ansible.utils.update_fact:
+        updates:
+        - path: openshift_worker_config.spec.template.spec.providerSpec.value.volume.volumeSize
+          value: '{{ openshift_worker_root_volume_size }}'
+        - path: openshift_worker_config.spec.template.spec.providerSpec.value.domainMemory
+          value: '{{ openshift_worker_memory_size }}'
+        - path: openshift_worker_config.spec.template.spec.providerSpec.value.domainVcpu
+          value: '{{ openshift_worker_number_of_cpus }}'
+      register: updated
+
+    - name: write back worker configuration to manifest file
+      ansible.builtin.copy:
+        dest: '{{ openshift_installer_workdir }}/openshift/99_openshift-cluster-api_worker-machineset-0.yaml'
+        content: '{{ updated.openshift_worker_config | to_nice_yaml }}'
+        backup: yes
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: update master manifests
+      ansible.builtin.include_tasks: '{{ role_path }}/tasks/update_master_configuration.yml'
+      loop:
+        - 99_openshift-cluster-api_master-machines-0.yaml
+        - 99_openshift-cluster-api_master-machines-1.yaml
+        - 99_openshift-cluster-api_master-machines-2.yaml
+      loop_control:
+        loop_var: manifest
+
+- name: determine name of to-be-created cluster from installation log
+  ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_cluster_name.yml'
+
+- name: trigger cluster installation using openshift-install binary
+  ansible.builtin.command:
+    cmd: 'openshift-install create cluster --dir={{ openshift_installer_workdir }}'
+  environment:
+    OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE: '{{ openshift_release_image.stdout }}'
+    OPENSHIFT_INSTALL_OS_IMAGE_OVERRIDE: '{{ openshift_rhcos_image_url }}'
+  async: 3600
+  poll: 0
+  register: cluster_install
+
+- name: handle libvirt cluster network update
+  block:
+    - name: wait until libvirt cluster network has been created
+      community.libvirt.virt_net:
+        command: list_nets
+      register: libvirt_networks
+      until: cluster_id in libvirt_networks.list_nets
+      retries: 120
+      delay: 30
+
+    - name: create temporary directory
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: libvirtnet
+      register: temp_dir
+
+    - name: create libvirt cluster network update file
+      ansible.builtin.template:
+        src: '{{ role_path }}/templates/libvirt_network_dns_xml.j2'
+        dest: '{{ temp_dir.path }}/libvirt_network_dns.xml'
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: add DNS records to the libvirt cluster network
+      ansible.builtin.command:
+        cmd: 'virsh net-update --network {{ cluster_id }} --command add-last --section dns-host --xml {{ temp_dir.path }}/libvirt_network_dns.xml --live --config'
+  always:
+    - name: delete temporary directory
+      ansible.builtin.file:
+        path: '{{ temp_dir.path }}'
+        state: absent
+      when: temp_dir.path is defined
+
+- name: copy kubeconfig file to enable OpenShift client tooling
+  block:
+    - name: create directory /root/.kube
+      ansible.builtin.file:
+        path: ~root/.kube
+        owner: root
+        group: root
+        mode: '0755'
+        state: directory
+
+    - name: copy kubeconfig file to /root/.kube
+      ansible.builtin.copy:
+        src: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+        dest: ~root/.kube/config
+        owner: root
+        group: root
+        mode: '0644'
+        remote_src: yes
+
+- name: wait until cluster installation has finished
+  ansible.builtin.async_status:
+    jid: '{{ cluster_install.ansible_job_id }}'
+  register: job_result
+  until: job_result.finished
+  retries: 120
+  delay: 60
+
+- name: setup dedicated infrastructure cluster nodes
+  ansible.builtin.include_tasks: '{{ role_path }}/tasks/setup_infra_cluster_nodes.yml'
+  when: openshift_setup_dedicated_infra_nodes

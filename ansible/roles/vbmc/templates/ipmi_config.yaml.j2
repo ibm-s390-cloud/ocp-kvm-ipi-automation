@@ -1,0 +1,7 @@
+ipmi:
+{% for vbmc_node in vbmc_node_list_yaml %}
+  {{ vbmc_node["Domain name"] }}:
+    mgmt_console: '{{ vbmc_node.Address }}'
+    mgmt_username: '{{ vbmc_user }}'
+    mgmt_password: '{{ vbmc_password }}'
+{% endfor %}

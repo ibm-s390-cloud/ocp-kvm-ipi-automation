@@ -1,0 +1,251 @@
+---
+
+- name: run sanity checks for crypto support
+  ansible.builtin.include_tasks: '{{ role_path }}/tasks/sanity_checks.yml'
+
+- name: upload and install EP11 binary packages (if present)
+  block:
+    - name: create temporary upload directory
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: ep11binary
+      register: temp_dir
+
+    - name: upload binary EP11 packages to host
+      ansible.posix.synchronize:
+        src: '{{ inventory_dir }}/roles/crypto/files/ep11/'
+        dest: '{{ temp_dir.path }}'
+
+    - name: find all EP11 binary packages to install (rpms)
+      ansible.builtin.find:
+        paths: '{{ temp_dir.path }}'
+        patterns: '*.rpm'
+      register: ep11_binary_rpm_files
+
+    - name: compile a list of all installable EP11 binary packages
+      ansible.builtin.set_fact:
+        ep11_binary_rpm_list: '{{ ep11_binary_rpm_files.files | map(attribute="path") | list }}'
+      when: ep11_binary_rpm_files.files | length > 0
+
+    - name: install all EP11 binary packages
+      ansible.builtin.dnf:
+        name: '{{ ep11_binary_rpm_list }}'
+        state: present
+        disable_gpg_check: yes
+      when: ep11_binary_rpm_list is defined
+
+  always:
+    - name: delete temporary upload directory
+      ansible.builtin.file:
+        path: '{{ temp_dir.path }}'
+        state: absent
+      when: temp_dir.path is defined
+
+- name: enable given crypto adapters
+  block:
+    - name: set crypto adapters to 'configured' state
+      crypto_adapter:
+        adapter: '{{ item["id"] }}'
+        state: 'configured'
+      loop: '{{ crypto_adapters }}'
+
+    - name: set crypto adapters to 'enabled' state
+      crypto_adapter:
+        adapter: '{{ item["id"] }}'
+        state: 'enabled'
+      loop: '{{ crypto_adapters }}'
+
+- name: determine cluster node details
+  block:
+    - name: determine name of existing cluster from installation log
+      ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_cluster_name.yml'
+
+    - name: list all existing libvirt domains
+      community.libvirt.virt:
+        command: list_vms
+      register: all_libvirt_domains
+
+    - name: determine list of libvirt domains belonging to current OpenShift cluster instance
+      ansible.builtin.set_fact:
+        all_libvirt_domains_for_cluster: '{{ all_libvirt_domains.list_vms | select("contains", cluster_id) | list }}'
+
+    - name: determine list of cluster worker nodes
+      ansible.builtin.set_fact:
+        master_domains: '{{ all_libvirt_domains_for_cluster | select("contains", "master") | list }}'
+        worker_domains: '{{ all_libvirt_domains_for_cluster | select("contains", "worker") | list }}'
+        infra_domains: '{{ (all_libvirt_domains_for_cluster | select("contains", "infra") | list) | default([]) }}'
+
+- name: generate mediated devices for cluster worker nodes
+  block:
+    - name: ensure 'vfio_ap' kernel module is loaded
+      block:
+        - name: load 'vfio_ap' module via modprobe
+          community.general.modprobe:
+            name: vfio_ap
+            state: present
+
+        - name: enable load of 'vfio_ap' module at boot time
+          ansible.builtin.copy:
+            src: '{{ role_path }}/files/vfio_ap.conf'
+            dest: /etc/modules-load.d/vfio_ap.conf
+            owner: root
+            group: root
+            mode: '0644'
+
+    - name: create uuids for mediated devices
+      mdev_uuid_gen:
+        worker_index: '{{ worker_index | int }}'
+        resource_assignments: '{{ crypto_adapters }}'
+      loop: '{{ worker_domains }}'
+      loop_control:
+        loop_var: worker_name
+        index_var: worker_index
+      register: mdev_uuid_gen_result
+
+    - name: persist mediated device configuration
+      ansible.builtin.copy:
+        dest: '{{ openshift_installer_workdir }}/crypto_mdevs_{{ item["worker_name"] }}.yaml'
+        content: '{{ item["mdev_uuids"] | to_nice_yaml }}'
+        owner: root
+        group: root
+        mode: '0600'
+      loop: '{{ mdev_uuid_gen_result.results }}'
+      when: item['mdev_uuids'] | length > 0
+
+- name: put libvirt 'qemu' hook in place
+  block:
+    - name: ensure the directory '/etc/libvirt/hooks' exists
+      ansible.builtin.file:
+        path: '/etc/libvirt/hooks'
+        owner: root
+        group: root
+        mode: '0755'
+        state: directory
+
+    - name: install 'qemu' hook
+      ansible.builtin.template:
+        src: '{{ role_path }}/templates/libvirt_hook_qemu.py.j2'
+        dest: '/etc/libvirt/hooks/qemu'
+        owner: root
+        group: root
+        mode: '0777'
+
+- name: shutdown all cluster nodes
+  block:
+    - name: shutdown cluster nodes via libvirt
+      community.libvirt.virt:
+        command: shutdown
+        name: '{{ cluster_node }}'
+      loop: '{{ worker_domains + master_domains + infra_domains }}'
+      loop_control:
+        loop_var: cluster_node
+
+    - name: check if the cluster nodes have been shut down successfully
+      community.libvirt.virt:
+        command: list_vms
+        state: shutdown
+      register: offline_libvirt_domains
+      until: offline_libvirt_domains.list_vms is superset(worker_domains + master_domains + infra_domains)
+      retries: 30
+      delay: 10
+
+- name: modify cluster worker nodes to include mediated device information
+  block:
+    - name: attach mediated devices to cluster worker nodes
+      ansible.builtin.include_tasks: '{{ role_path }}/tasks/attach_mediated_device_to_domain.yml'
+      loop: '{{ mdev_uuid_gen_result.results }}'
+      when: item['mdev_uuids'] | length > 0
+
+  always:
+    - name: restart libvirtd service
+      ansible.builtin.service:
+        name: libvirtd
+        state: reloaded
+        enabled: yes
+
+    - name: start cluster nodes via libvirt
+      community.libvirt.virt:
+        name: '{{ cluster_node }}'
+        state: running
+      loop: '{{ master_domains + worker_domains + infra_domains }}'
+      loop_control:
+        loop_var: cluster_node
+
+    - name: wait until the cluster nodes have been started successfully
+      community.libvirt.virt:
+        command: list_vms
+        state: running
+      register: online_libvirt_domains
+      until: online_libvirt_domains.list_vms is superset(master_domains + worker_domains + infra_domains)
+      retries: 30
+      delay: 10
+
+    - name: wait for OpenShift cluster to be fully operational
+      ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/wait_for_cluster.yml'
+
+- name: create cluster resources
+  block:
+    - name: fetch crypto adapter information
+      crypto_adapter_info:
+        adapter: '{{ item["id"] }}'
+      loop: '{{ crypto_adapters }}'
+      register: crypto_adapters_info
+
+    - name: extract the mode of operation of all crypto resources
+      ansible.builtin.set_fact:
+        crypto_adapters_modes: '{{ crypto_adapters_info.results | map(attribute="adapter_info.mode") }}'
+
+    - name: determine crypto resources operation mode
+      ansible.builtin.set_fact:
+        crypto_config_set_cexmode: '{{ crypto_adapters_modes | unique | cexmode }}'
+
+    - name: create cex-resources-config ConfigMap resource
+      kubernetes.core.k8s:
+        kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+        state: present
+        definition: '{{ lookup("template", "{{ role_path }}/templates/cex-resources-config.yaml.j2") | from_yaml }}'
+
+    - name: create cex-plugin-daemonset DaemonSet resource
+      kubernetes.core.k8s:
+        kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+        state: present
+        definition: '{{ lookup("file", "{{ role_path }}/files/cex-plugin-daemonset.yaml") | from_yaml }}'
+        wait: yes
+        wait_timeout: 300
+
+- name: verify the crypto resources are present and usable
+  block:
+    - name: create temporary namespace
+      kubernetes.core.k8s:
+        kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+        name: '{{ crypto_config_set_project }}'
+        api_version: v1
+        kind: Namespace
+        state: present
+
+    - name: create crypto resource test workload
+      kubernetes.core.k8s:
+        kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+        state: present
+        definition: '{{ lookup("template", "{{ role_path }}/templates/crypto-test-load.yaml.j2") | from_yaml }}'
+        wait: yes
+        wait_timeout: 180
+
+  always:
+    - name: delete crypto resource test workload
+      kubernetes.core.k8s:
+        kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+        state: absent
+        definition: '{{ lookup("template", "{{ role_path }}/templates/crypto-test-load.yaml.j2") | from_yaml }}'
+        delete_options:
+          gracePeriodSeconds: 0
+
+    - name: delete temporary namespace
+      kubernetes.core.k8s:
+        kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+        name: '{{ crypto_config_set_project }}'
+        api_version: v1
+        kind: Namespace
+        state: absent
+        delete_options:
+          gracePeriodSeconds: 0

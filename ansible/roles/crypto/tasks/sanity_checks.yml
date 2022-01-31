@@ -1,0 +1,33 @@
+---
+
+- name: only continue if there are actually any crypto resources configured
+  ansible.builtin.assert:
+    that: crypto_adapters is defined
+
+- name: only continue if the number of workers assigned to crypto resources does not exceed the overall number of workers configured
+  block:
+    - name: get index numbers of workers assigned to crypto resources
+      ansible.builtin.set_fact:
+        crypto_resources_workers: '{{ crypto_adapters | map(attribute="assign_to_worker") }}'
+
+    - name: check the overall number of workers assigned as well as index numbers for validity
+      ansible.builtin.assert:
+        that:
+          - '{{ crypto_resources_workers | length <= cluster_number_of_workers }}'
+          - '{{ crypto_resources_workers is isrange(start=0) }}'
+
+- name: fetch crypto adapter information
+  crypto_adapter_info:
+    adapter: '{{ item["id"] }}'
+  loop: '{{ crypto_adapters }}'
+  register: crypto_adapters_info
+
+- name: extract the mode of operation of all crypto resources
+  ansible.builtin.set_fact:
+    crypto_adapters_modes: '{{ crypto_adapters_info.results | map(attribute="adapter_info.mode") }}'
+
+- name: check if the number of found adapters matches the number of given adapters and that all adapters are using the same mode
+  ansible.builtin.assert:
+    that:
+      - '{{ crypto_adapters_info.results | length >= crypto_adapters | length }}'
+      - '{{ crypto_adapters_modes | unique | length == 1 }}'

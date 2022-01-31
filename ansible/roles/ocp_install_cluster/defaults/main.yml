@@ -1,0 +1,3 @@
+---
+
+cluster_pull_secret_file: '{{ inventory_dir }}/secrets/.ocp4_pull_secret'

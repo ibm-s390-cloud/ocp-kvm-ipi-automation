@@ -1,0 +1,63 @@
+---
+
+- hosts: s390x_kvm_host
+
+  vars:
+    cluster_tuned_annotation: 'kvm-ipi-automation-tuned'
+    cluster_version_patch: |-
+      metadata:
+        annotations:
+          {{ cluster_tuned_annotation }}: 'true'
+
+  pre_tasks:
+    - name: check if the cluster has already been tuned with the help of these playbooks
+      block:
+        - name: get ClusterVersion object
+          kubernetes.core.k8s_info:
+            kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+            api_version: 'config.openshift.io/v1'
+            kind: ClusterVersion
+            name: 'version'
+          register: cluster_version
+
+        - name: set fact to mark cluster has been tuned already
+          ansible.builtin.set_fact:
+            is_cluster_tuned: true
+          when:
+            - cluster_version.resources | length > 0
+            - cluster_version.resources[0].metadata.annotations[cluster_tuned_annotation] is defined
+
+  roles:
+    - role: sanity_check
+      tags:
+        - sanity
+        - preflight
+      when:
+        - disable_sanity_check is undefined
+        - is_cluster_tuned is undefined or not is_cluster_tuned
+
+    - role: tuning
+      tags:
+        - tune
+      when: is_cluster_tuned is undefined or not is_cluster_tuned
+
+  tasks:
+    - name: annotate OpenShift ClusterVersion object to record successful tuning
+      block:
+        - name: wait until the cluster is operational
+          ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/wait_for_cluster.yml'
+
+        - name: annotate OpenShift ClusterVersion object to record successful tuning
+          kubernetes.core.k8s:
+            kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+            api_version: 'config.openshift.io/v1'
+            kind: ClusterVersion
+            name: version
+            state: present
+            definition: '{{ cluster_version_patch | from_yaml }}'
+      when: is_cluster_tuned is undefined or not is_cluster_tuned
+
+    - ansible.builtin.debug:
+        msg:
+          - "Finished tuning the KVM-based OpenShift cluster on host '{{ inventory_hostname }}'. All done."
+          - "Enjoy!"

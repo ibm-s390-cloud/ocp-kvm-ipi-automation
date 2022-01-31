@@ -1,0 +1,32 @@
+---
+
+- name: retrieve XML of cluster node
+  community.libvirt.virt:
+    command: get_xml
+    name: '{{ cluster_node }}'
+  register: cluster_node_xml
+
+- name: add iothreads XML node
+  community.general.xml:
+    xmlstring: '{{ cluster_node_xml.get_xml }}'
+    xpath: /domain/iothreads
+    value: '{{ domain_iothreads | length }}'
+  register: iothreads_xml
+
+- name: add iothreadids XML node
+  community.general.xml:
+    xmlstring: '{{ iothreads_xml.xmlstring }}'
+    xpath: /domain/iothreadids
+  register: iothreadids_xml
+
+- name: add dedicated iothread ID XML nodes
+  community.general.xml:
+    xmlstring: '{{ iothreadids_xml.xmlstring }}'
+    xpath: /domain/iothreadids
+    add_children: '{{ domain_iothreads }}'
+  register: iothreadids_children_xml
+
+- name: reload cluster node configuration
+  community.libvirt.virt:
+    command: define
+    xml: '{{ iothreadids_children_xml.xmlstring }}'

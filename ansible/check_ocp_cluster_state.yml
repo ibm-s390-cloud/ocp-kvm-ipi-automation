@@ -1,0 +1,26 @@
+---
+
+- hosts: s390x_kvm_host
+
+  tasks:
+    - name: check the operational state of the OpenShift cluster
+      ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/check_cluster_state.yml'
+
+    - ansible.builtin.fail:
+        msg:
+          - "The OpenShift cluster '{{ cluster_name }}.{{ cluster_base_domain }}' running on host '{{ inventory_hostname }}' is non-operational at the moment."
+          - "There are {{ nonready_nodes | length }} non-ready Nodes, {{ unavailable_cos | length }} unavailable ClusterOperators and {{ real_alerts | length }} Prometheus alerts."
+          - "Use 'oc' directly from the root user's account to interact with the cluster and remediate the issues."
+          - "Good luck!"
+      when:
+        - is_cluster_operational is defined
+        - not is_cluster_operational
+
+    - ansible.builtin.debug:
+        msg:
+          - "The OpenShift cluster '{{ cluster_name }}.{{ cluster_base_domain }}' running on host '{{ inventory_hostname }}' is fully operational."
+          - "You can use 'oc' directly from the root user's account to interact with the cluster."
+          - "Enjoy!"
+      when:
+        - is_cluster_operational is defined
+        - is_cluster_operational

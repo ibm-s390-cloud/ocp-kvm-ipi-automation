@@ -1,0 +1,17 @@
+---
+
+domain_iothreads:
+  - iothread:
+      id: '1'
+  - iothread:
+      id: '2'
+
+domain_boot_disk_devices_iothread_id: '1'
+
+domain_network_interface_driver:
+  - driver:
+      name: vhost
+      queues: '2'
+
+domain_cpu_shares:
+  worker: 2048
