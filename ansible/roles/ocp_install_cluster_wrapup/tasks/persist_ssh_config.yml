@@ -1,0 +1,68 @@
+---
+
+- name: configure SSH for easy access to the cluster nodes
+  block:
+    - name: retrieve XML of libvirt cluster network
+      community.libvirt.virt_net:
+        command: get_xml
+        name: '{{ cluster_id }}'
+      register: libvirt_cluster_network
+
+    - name: determine network configuration for cluster nodes
+      community.general.xml:
+        xmlstring: '{{ libvirt_cluster_network.get_xml }}'
+        xpath: /network/ip/dhcp/host
+        content: attribute
+      register: libvirt_cluster_nodes
+
+    - name: create temporary file
+      ansible.builtin.tempfile:
+        state: file
+        suffix: sshconfig
+      register: temp_file
+
+    - name: generate temporary SSH config file
+      community.general.ssh_config:
+        host: '{{ item.host.name.split(".")[0] }} {{ item.host.ip }}'
+        hostname: '{{ item.host.ip }}'
+        remote_user: core
+        identity_file: '{{ openshift_installer_workdir }}/id_ssh_ocp'
+        strict_host_key_checking: no
+        user_known_hosts_file: /dev/null
+        port: '22'
+        ssh_config_file: '{{ temp_file.path }}'
+        state: present
+      loop: '{{ libvirt_cluster_nodes.matches }}'
+      when: not "bootstrap" in item.host.name
+
+    - name: fetch temporary SSH config file content
+      ansible.builtin.slurp:
+        src: '{{ temp_file.path }}'
+      register: ssh_config_cluster
+
+    - name: add cluster nodes to SSH configuration for user root
+      ansible.builtin.blockinfile:
+        path: '~root/.ssh/config'
+        block: '{{ ssh_config_cluster["content"] | b64decode | trim }}'
+        create: yes
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: set /etc/hosts cluster nodes fact
+      ansible.builtin.set_fact:
+        cluster_nodes_etc_hosts: '{{ (cluster_nodes_etc_hosts | default([])) + [ item.host.ip + " " + item.host.name.split(".")[0] ] }}'
+      loop: '{{ libvirt_cluster_nodes.matches }}'
+      when: not "bootstrap" in item.host.name
+
+    - name: add cluster nodes to /etc/hosts
+      ansible.builtin.blockinfile:
+        path: /etc/hosts
+        marker: '{{ libvirt_marker }}'
+        block: "{{ cluster_nodes_etc_hosts | join('\n') }}"
+  always:
+    - name: delete temporary file
+      ansible.builtin.file:
+        path: '{{ temp_file.path }}'
+        state: absent
+      when: temp_file.path is defined

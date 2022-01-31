@@ -1,0 +1,27 @@
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: crypto-test-load
+  namespace: {{ crypto_config_set_project }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: crypto-test-load
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: crypto-test-load
+    spec:
+      containers:
+      - image: 'bash'
+        imagePullPolicy: Always
+        name: crypto-test-load-pod
+        command: ['/bin/sh', '-c', 'while true; do echo do-nothing-loop; sleep 30; done']
+        resources:
+          limits:
+            cex.s390.ibm.com/{{ cluster_id }}: 1

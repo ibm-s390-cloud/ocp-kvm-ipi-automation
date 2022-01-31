@@ -1,0 +1,15 @@
+---
+
+- name: download client '{{ tarball.name }}' with exponential backoff
+  ansible.builtin.get_url:
+    url: '{{ tarball.src }}'
+    dest: '{{ tarball.dest }}'
+    mode: '0440'
+    timeout: 300
+  register: tarball_download
+  until: tarball_download is success
+  retries: 10
+  delay: '{{ delay | int }}'
+  loop: '{{ range(1, 10) | map("pow", 2) }}'
+  loop_control:
+    loop_var: delay

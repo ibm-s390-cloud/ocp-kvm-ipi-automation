@@ -1,0 +1,60 @@
+---
+
+- name: ensure the targeted KVM host is running RHEL 8.x on s390x
+  ansible.builtin.assert:
+    that:
+      - "ansible_os_family == 'RedHat'"
+      - "ansible_distribution_major_version == '8'"
+      - "ansible_architecture == 's390x'"
+
+- name: check if mandatory configuration variables are set
+  ansible.builtin.assert:
+    that: '{{ item }}'
+  loop:
+    - cluster_base_domain is defined and cluster_base_domain | trim | length > 0
+    - cluster_name is defined and cluster_base_domain | trim | length > 0
+    - cluster_number_of_workers is defined and cluster_number_of_workers | int > 0
+    - openshift_master_root_volume_size is defined and openshift_master_root_volume_size | int > 0
+    - openshift_master_number_of_cpus is defined and openshift_master_number_of_cpus | int > 0
+    - openshift_master_memory_size is defined and openshift_master_memory_size | int > 0
+    - openshift_worker_root_volume_size is defined and openshift_worker_root_volume_size | int > 0
+    - openshift_worker_number_of_cpus is defined and openshift_worker_number_of_cpus | int > 0
+    - openshift_worker_memory_size is defined and openshift_worker_memory_size | int > 0
+    - openshift_release_url is defined and openshift_release_url | trim | length > 0
+    - openshift_rhcos_image_url is defined and openshift_rhcos_image_url | trim | length > 0
+
+- name: ensure KVM host is capable of fulfilling requested cluster configuration hardware demands
+  block:
+    - name: fetch disk space information of libvirt location on the KVM host
+      ansible.builtin.shell:
+        cmd: 'test -d /var/lib/libvirt && df -B1 --output=avail /var/lib/libvirt || df -B1 --output=avail /var/lib'
+      register: libvirt_df_result
+
+    - name: set libvirt_free_space fact
+      ansible.builtin.set_fact:
+        libvirt_free_space: '{{ libvirt_df_result.stdout_lines | last }}'
+
+    - name: calculate cluster configuration hardware demands
+      ansible.builtin.set_fact:
+        total_memory_required: '{{ openshift_master_memory_size * 3 + openshift_worker_memory_size * cluster_number_of_workers + openshift_infra_memory_size * openshift_number_of_infra_nodes }}'
+        min_required_disk_space: '{{ (openshift_master_root_volume_size * 3 + openshift_worker_root_volume_size * cluster_number_of_workers + openshift_infra_root_volume_size * openshift_number_of_infra_nodes) / 5 }}'
+      when: openshift_setup_dedicated_infra_nodes
+
+    - name: calculate cluster configuration hardware demands
+      ansible.builtin.set_fact:
+        total_memory_required: '{{ openshift_master_memory_size * 3 + openshift_worker_memory_size * cluster_number_of_workers }}'
+        min_required_disk_space: '{{ (openshift_master_root_volume_size * 3 + openshift_worker_root_volume_size * cluster_number_of_workers) / 5 }}'
+      when: not openshift_setup_dedicated_infra_nodes
+
+    - name: ensure that the hardware demands can be met by the KVM host
+      ansible.builtin.assert:
+        that:
+          - 'ansible_memtotal_mb > total_memory_required | int'
+          - 'ansible_processor_cores > openshift_worker_number_of_cpus'
+          - 'libvirt_free_space | int >= min_required_disk_space | int'
+        fail_msg: |-
+          "The KVM host does not meet the hardware demands required by your OpenShift cluster configuration."
+          "Make sure the host has at least:"
+          "{{ total_memory_required }} MB of RAM available"
+          "{{ ansible_processor_cores }} CPU cores available"
+          "{{ min_required_disk_space | int | human_readable(unit='G') }} free disk space available at /var/lib/libvirt"

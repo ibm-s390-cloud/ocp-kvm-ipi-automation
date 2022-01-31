@@ -1,0 +1,109 @@
+---
+
+- name: configure NetworkManager
+  block:
+    - name: enable dnsmasq module
+      ansible.builtin.copy:
+        src: '{{ role_path }}/files/networkmanager.dns.conf'
+        dest: /etc/NetworkManager/conf.d/openshift.conf
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: configure dnsmasq module for OpenShift
+      ansible.builtin.lineinfile:
+        path: /etc/NetworkManager/dnsmasq.d/openshift.conf
+        line: 'server=/{{ cluster_base_domain }}/{{ machine_network_prefix }}.1'
+        owner: root
+        group: root
+        mode: '0644'
+        create: yes
+
+    - name: increase dnsmasq cache size
+      ansible.builtin.copy:
+        src: '{{ role_path }}/files/dnsmasq.cache.conf'
+        dest: /etc/NetworkManager/dnsmasq.d/cache.conf
+        owner: root
+        group: root
+        mode: '0644'
+
+    - name: reload NetworkManager configuration
+      ansible.builtin.service:
+        name: NetworkManager
+        state: reloaded
+        enabled: true
+
+- name: configure haproxy
+  block:
+    - name: enable non-local IPv4 port bindings
+      ansible.posix.sysctl:
+        name: net.ipv4.ip_nonlocal_bind
+        value: '1'
+        sysctl_set: yes
+        state: present
+        reload: yes
+
+    - name: ensure haproxy package is present
+      ansible.builtin.dnf:
+        name: haproxy
+        state: latest
+
+    - name: start haproxy service
+      ansible.builtin.service:
+        name: haproxy
+        state: started
+        enabled: true
+
+    - name: configure haproxy
+      ansible.builtin.blockinfile:
+        path: /etc/haproxy/haproxy.cfg
+        block: '{{ lookup("template", "{{ role_path }}/templates/haproxy.cfg.j2") }}'
+
+    - name: restart haproxy service
+      ansible.builtin.service:
+        name: haproxy
+        state: restarted
+        enabled: true
+
+- name: configure Apache httpd
+  block:
+    - name: ensure httpd package is present
+      ansible.builtin.dnf:
+        name: httpd
+        state: latest
+
+    - name: bind httpd to port 8080
+      ansible.builtin.lineinfile:
+        dest: /etc/httpd/conf/httpd.conf
+        regexp: ^Listen 80
+        line: Listen 8080
+
+    - name: restart httpd service
+      ansible.builtin.service:
+        name: httpd.service
+        state: started
+        enabled: yes
+
+- name: update /etc/hosts
+  block:
+    - name: set /etc/hosts fact
+      ansible.builtin.set_fact:
+        etc_hosts_template:
+          - '{{ ansible_default_ipv4.address }}'
+          - 'noobaa-mgmt-openshift-storage.apps.{{ cluster_name }}.{{ cluster_base_domain }}'
+          - 'alertmanager-main-openshift-monitoring.apps.{{ cluster_name }}.{{ cluster_base_domain }}'
+          - 'console-openshift-console.apps.{{ cluster_name }}.{{ cluster_base_domain }}'
+          - 'downloads-openshift-console.apps.{{ cluster_name }}.{{ cluster_base_domain }}'
+          - 'grafana-openshift-monitoring.apps.{{ cluster_name }}.{{ cluster_base_domain }}'
+          - 'oauth-openshift.apps.{{ cluster_name }}.{{ cluster_base_domain }}'
+          - 'prometheus-k8s-openshift-monitoring.apps.{{ cluster_name }}.{{ cluster_base_domain }}'
+          - 'rgw.apps.{{ cluster_name }}.{{ cluster_base_domain }}'
+          - 'rgw.router-default.apps.{{ cluster_name }}.{{ cluster_base_domain }}'
+          - 's3-openshift-storage.apps.{{ cluster_name }}.{{ cluster_base_domain }}'
+          - 'canary-openshift-ingress-canary.apps.{{ cluster_name }}.{{ cluster_base_domain }}'
+
+    - name: add line to /etc/hosts file
+      ansible.builtin.blockinfile:
+        path: /etc/hosts
+        marker: '{{ host_marker }}'
+        block: "{{ (etc_hosts_template | join(' ')) }}"

@@ -1,0 +1,39 @@
+---
+
+- hosts: s390x_kvm_host
+
+  roles:
+    - role: sanity_check
+      tags:
+        - sanity
+        - preflight
+      when: disable_sanity_check is undefined
+
+    - role: basics
+      tags:
+        - setup
+        - basics
+
+    - role: selinux
+      tags:
+        - setup
+        - selinux
+
+    - role: libvirt
+      tags:
+        - setup
+        - libvirt
+
+    - role: networking
+      tags:
+        - setup
+        - networking
+
+    - role: firewall
+      tags:
+        - setup
+        - firewall
+
+  tasks:
+    - ansible.builtin.debug:
+        msg: "Finished setting up the KVM host '{{ inventory_hostname }}'. All done."

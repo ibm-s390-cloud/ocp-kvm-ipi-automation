@@ -1,0 +1,18 @@
+---
+
+- name: check if working directory exists
+  ansible.builtin.stat:
+    path: '{{ openshift_installer_workdir }}'
+  register: workdir_info
+
+- name: wait until the cluster is responding
+  kubernetes.core.k8s_info:
+    kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+    api_version: 'config.openshift.io/v1'
+    kind: ClusterVersion
+    name: 'version'
+  register: cluster_version
+  until: cluster_version is success
+  retries: 60
+  delay: 10
+  when: workdir_info.stat.exists and workdir_info.stat.isdir

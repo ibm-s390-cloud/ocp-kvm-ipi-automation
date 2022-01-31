@@ -1,0 +1,11 @@
+---
+
+- name: attach mediated devices to cluster worker node {{ item["worker_name"] }}
+  mdev_libvirt_attach:
+    device_index: '{{ device_index | int }}'
+    device_uuid: '{{ uuid_resource_mapping["key"] }}'
+    worker_name: '{{ item["worker_name"] }}'
+  loop: '{{ item["mdev_uuids"] | dict2items }}'
+  loop_control:
+    loop_var: uuid_resource_mapping
+    index_var: device_index

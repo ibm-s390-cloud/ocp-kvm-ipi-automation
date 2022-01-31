@@ -1,0 +1,19 @@
+---
+
+- name: retrieve XML of cluster node
+  community.libvirt.virt:
+    command: get_xml
+    name: '{{ cluster_node }}'
+  register: cluster_node_xml
+
+- name: enable queues for cluster network interface
+  community.general.xml:
+    xmlstring: '{{ cluster_node_xml.get_xml }}'
+    xpath: /domain/devices/interface[@type='network']
+    add_children: '{{ domain_network_interface_driver }}'
+  register: network_queues_xml
+
+- name: reload cluster node configuration
+  community.libvirt.virt:
+    command: define
+    xml: '{{ network_queues_xml.xmlstring }}'

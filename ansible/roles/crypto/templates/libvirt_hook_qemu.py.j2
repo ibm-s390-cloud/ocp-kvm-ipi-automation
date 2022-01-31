@@ -1,0 +1,183 @@
+#!/usr/bin/env python3
+
+# see also:
+# https://libvirt.org/hooks.html
+
+
+import os
+from pathlib import Path
+import subprocess
+import sys
+import xmltodict
+import yaml
+
+
+# define constants
+OPENSHIFT_INSTALLER_WORKDIR = '{{ openshift_installer_workdir }}'
+DOMAIN_MDEV_CONFIG_FILE_TEMPLATE = '{}/crypto_mdevs_{}.yaml'
+SYS_DEVICES_VFIOAP_MATRIX = '/sys/devices/vfio_ap/matrix'
+SYS_BUS_AP_APMASK = '/sys/bus/ap/apmask'
+SYS_BUS_AP_AQMASK = '/sys/bus/ap/aqmask'
+
+
+# helper class
+class MediatedDeviceException(Exception):
+    def __init__(self, message='An error occurred setting up the mediated device on the KVM host'):
+        self.message = message
+        super().__init__(self.message)
+
+
+# helper functions
+def check_hostdev_attributes(hostdev_data):
+    try:
+        if len(hostdev_data.keys()) != 2:
+            raise MediatedDeviceException()
+        if hostdev_data['@type'] != 'mdev':
+            raise MediatedDeviceException()
+        if hostdev_data['@model'] != 'vfio-ap':
+            raise MediatedDeviceException()
+    except Exception:
+        return False
+    else:
+        return True
+
+
+def check_filesystem_object(location, object_type):
+    p = Path(location)
+
+    if not p.exists():
+        raise MediatedDeviceException()
+    if object_type == 'directory' and not p.is_dir():
+        raise MediatedDeviceException()
+    if object_type == 'file' and not p.is_file():
+        raise MediatedDeviceException()
+
+
+# main logic
+def main():
+    try:
+
+        # get relevant arguments and assign to variables
+        domain_name = sys.argv[1]
+        operation = sys.argv[2]
+        sub_operation = sys.argv[3]
+
+        # get domain XML from stdin and convert it to a dictionary
+        domain_xml = sys.stdin.read()
+        domain_dict = xmltodict.parse(domain_xml)
+
+        # check the libvirt operation (early exit)
+        # we're only interested in 'prepare' and 'release' in which case we actually need to do something
+        if operation not in ['prepare', 'release']:
+            sys.exit(0)
+
+        # sanity check:
+        # - check if the given domain XML contains a <domain><devices><hostdev model=vfio-ap type=mdev> node
+        hostdevs = domain_dict['domain']['devices'].get('hostdev', None)
+
+        # if the domain has no hostdev devices at all we simply exit here
+        # as there's nothing to do for us and libvirt can continue starting the domain
+        if not hostdevs:
+            sys.exit(0)
+
+        domain_has_crypto_mdevs = False
+        domain_mdev_uuids = []
+
+        if isinstance(hostdevs, list):
+            for h in hostdevs:
+                type_model_data = { k: v for k, v in h.items() if k in ('@type', '@model') }
+                domain_has_crypto_mdevs = check_hostdev_attributes(type_model_data)
+                if domain_has_crypto_mdevs:
+                    domain_mdev_uuids.append(h['source']['address']['@uuid'])
+        else:
+            type_model_data = { k: v for k, v in hostdevs.items() if k in ('@type', '@model') }
+            domain_has_crypto_mdevs = check_hostdev_attributes(type_model_data)
+            if domain_has_crypto_mdevs:
+                domain_mdev_uuids.append(hostdevs['source']['address']['@uuid'])
+
+        # if the domain has no matching hostdev devices we simply exit here
+        # as there's nothing to do for us and libvirt can continue starting the domain
+        if not domain_has_crypto_mdevs:
+            sys.exit(0)
+
+        # sanity check:
+        # - check that domain_mdev_uuids is set (not empty)
+        if not domain_mdev_uuids:
+            raise MediatedDeviceException()
+
+        # sanity check:
+        # - check that the file which contains mediated device information for the given domain exists
+        domain_mdev_config_file = DOMAIN_MDEV_CONFIG_FILE_TEMPLATE.format(OPENSHIFT_INSTALLER_WORKDIR, domain_name)
+        check_filesystem_object(domain_mdev_config_file, 'file')
+
+        # sanity check:
+        # - check that the domain_mdev_uuids matches the uuids recorded in file OPENSHIFT_INSTALLER_WORKDIR/crypto_mdevs_{domain_name}.yaml
+        domain_mdev_config_data = None
+        with open(domain_mdev_config_file, 'r') as f:
+            domain_mdev_config_data = yaml.load(f, Loader=yaml.SafeLoader)
+        if not domain_mdev_config_data:
+            raise MediatedDeviceException()
+
+        # convert the two lists of uuids to sets for easier comparison
+        domain_mdev_uuids_set = set(domain_mdev_uuids)
+        recorded_mdev_uuids_set = set(domain_mdev_config_data.keys())
+
+        if domain_mdev_uuids_set != recorded_mdev_uuids_set:
+            raise MediatedDeviceException()
+
+        for mdev_uuid in domain_mdev_uuids:
+
+            # do different things based on the given libvirt operation
+            if operation == 'prepare':
+
+                # sanity check
+                # - ensure mediated device with the given mdev_uuid does not exist
+                mdev_path = Path('{}/{}'.format(SYS_DEVICES_VFIOAP_MATRIX, mdev_uuid))
+                if mdev_path.exists():
+                    raise MediatedDeviceException()
+
+                # move crypto resource under control of the vfio-ap driver
+                crypto_resource = domain_mdev_config_data[mdev_uuid].split('.')
+                cmd = 'echo -{} > {}'.format(int(crypto_resource[0], 16), SYS_BUS_AP_APMASK)
+                subprocess.run(cmd, shell=True, check=True)
+                cmd = 'echo -{} > {}'.format(int(crypto_resource[1], 16), SYS_BUS_AP_AQMASK)
+                subprocess.run(cmd, shell=True, check=True)
+
+                # create mediated device
+                cmd = 'echo {} > {}/mdev_supported_types/vfio_ap-passthrough/create'.format(mdev_uuid, SYS_DEVICES_VFIOAP_MATRIX)
+                subprocess.run(cmd, shell=True, check=True)
+
+                # assign crypto resources to mediated device
+                cmd = 'echo 0x{} > {}/{}/assign_adapter'.format(crypto_resource[0], SYS_DEVICES_VFIOAP_MATRIX, mdev_uuid)
+                subprocess.run(cmd, shell=True, check=True)
+                cmd = 'echo 0x{} > {}/{}/assign_domain'.format(crypto_resource[1], SYS_DEVICES_VFIOAP_MATRIX, mdev_uuid)
+                subprocess.run(cmd, shell=True, check=True)
+                cmd = 'echo 0x{} > {}/{}/assign_control_domain'.format(crypto_resource[1], SYS_DEVICES_VFIOAP_MATRIX, mdev_uuid)
+                subprocess.run(cmd, shell=True, check=True)
+
+            if operation == 'release':
+
+                # sanity check
+                # - ensure mediated device with the given mdev_uuid exists
+                mdev_path = Path('{}/{}'.format(SYS_DEVICES_VFIOAP_MATRIX, mdev_uuid))
+                if not mdev_path.exists():
+                    raise MediatedDeviceException()
+
+                # remove mediated device
+                cmd = 'echo 1 > {}/{}/remove'.format(SYS_DEVICES_VFIOAP_MATRIX, mdev_uuid)
+                subprocess.run(cmd, shell=True, check=True)
+
+                # move crypto resource back under control of the zcrypt driver
+                crypto_resource = domain_mdev_config_data[mdev_uuid].split('.')
+                cmd = 'echo +{} > {}'.format(int(crypto_resource[1], 16), SYS_BUS_AP_AQMASK)
+                subprocess.run(cmd, shell=True, check=True)
+                cmd = 'echo +{} > {}'.format(int(crypto_resource[0], 16), SYS_BUS_AP_APMASK)
+                subprocess.run(cmd, shell=True, check=True)
+
+    except Exception as e:
+        print(e, file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == '__main__':
+    main()

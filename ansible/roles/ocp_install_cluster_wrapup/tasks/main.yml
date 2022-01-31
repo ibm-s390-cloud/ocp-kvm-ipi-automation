@@ -1,0 +1,10 @@
+---
+
+- name: determine name of existing cluster from installation log
+  ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_cluster_name.yml'
+
+- name: persist libvirt cluster network configuration
+  ansible.builtin.include_tasks: '{{ role_path }}/tasks/persist_libvirt_cluster_network.yml'
+
+- name: persist SSH configuration for easy access to cluster nodes
+  ansible.builtin.include_tasks: '{{ role_path }}/tasks/persist_ssh_config.yml'

@@ -1,0 +1,9 @@
+# common ignores
+.DS_Store
+__pycache__
+.travis.yml
+
+# specific ignores
+ansible/host_vars
+ansible/secrets
+ansible/inventory

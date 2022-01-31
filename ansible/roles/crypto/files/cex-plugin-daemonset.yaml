@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: cex-plugin-daemonset
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      name: cex-plugin
+  template:
+    metadata:
+      labels:
+        name: cex-plugin
+    spec:
+      tolerations:
+      - key: CriticalAddonsOnly
+        operator: Exists
+      initContainers:
+      - name: shadowsysfs
+        image: 'registry.access.redhat.com/ubi8/ubi-minimal'
+        command: ["/bin/sh"]
+        args: ["-c", "mkdir -p -m 0755 /var/tmp/shadowsysfs && chcon -t container_file_t /var/tmp/shadowsysfs"]
+        securityContext:
+          privileged: true
+        volumeMounts:
+          - name: vartmp
+            mountPath: /var/tmp
+      containers:
+      - image: 'quay.io/ibm/ibm-cex-plugin-cm:v1.0.0'
+        imagePullPolicy: Always
+        name: cex-plugin
+        securityContext:
+          privileged: true
+        env:
+          - name: NODENAME
+            valueFrom:
+              fieldRef:
+                fieldPath: spec.nodeName
+        volumeMounts:
+          - name: device-plugin
+            mountPath: /var/lib/kubelet/device-plugins
+          - name: pod-resources
+            mountPath: /var/lib/kubelet/pod-resources
+          - name: vartmp
+            mountPath: /var/tmp
+          - name: dev
+            mountPath: /dev
+          - name: sys
+            mountPath: /sys
+          - name: cex-resources-conf
+            mountPath: /config/
+      priorityClassName: system-node-critical
+      volumes:
+        - name: device-plugin
+          hostPath:
+            path: /var/lib/kubelet/device-plugins
+        - name: pod-resources
+          hostPath:
+            path: /var/lib/kubelet/pod-resources
+        - name: vartmp
+          hostPath:
+            path: /var/tmp
+        - name: dev
+          hostPath:
+            path: /dev
+        - name: sys
+          hostPath:
+            path: /sys
+        - name: cex-resources-conf
+          configMap:
+            name: cex-resources-config

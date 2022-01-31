@@ -1,0 +1,24 @@
+---
+
+- name: wait for existing cluster to be fully operational
+  ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/wait_for_cluster.yml'
+
+- name: fetch SSH key to use with cluster nodes
+  ansible.builtin.slurp:
+    src: '{{ openshift_installer_workdir }}/id_ssh_ocp.pub'
+  register: ocp_ssh_key_pub
+
+- name: create resource definitions for dedicated infrastructure cluster nodes
+  kubernetes.core.k8s:
+    kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+    state: present
+    definition: '{{ lookup(item.type, item.location) | from_yaml }}'
+  loop:
+    - { 'type': 'template', 'location': '{{ role_path }}/templates/01_openshift-cluster-api_infra-machineset-0.yaml.j2' }
+    - { 'type': 'template', 'location': '{{ role_path }}/templates/02_openshift-machineconfig_99-infra-ssh.yaml.j2' }
+    - { 'type': 'file', 'location': '{{ role_path }}/files/03_openshift-machineconfigpool_infra-0.yaml' }
+
+- name: wait for {{ cluster_waiting_period }} seconds for the cluster to apply changes
+  ansible.builtin.wait_for:
+    timeout: '{{ cluster_waiting_period }}'
+  delegate_to: localhost

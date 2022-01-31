@@ -1,0 +1,13 @@
+<host ip='{{ machine_network_prefix }}.1'>
+  <hostname>noobaa-mgmt-openshift-storage.apps.{{ cluster_name }}.{{ cluster_base_domain }}</hostname>
+  <hostname>alertmanager-main-openshift-monitoring.apps.{{ cluster_name }}.{{ cluster_base_domain }}</hostname>
+  <hostname>console-openshift-console.apps.{{ cluster_name }}.{{ cluster_base_domain }}</hostname>
+  <hostname>downloads-openshift-console.apps.{{ cluster_name }}.{{ cluster_base_domain }}</hostname>
+  <hostname>grafana-openshift-monitoring.apps.{{ cluster_name }}.{{ cluster_base_domain }}</hostname>
+  <hostname>oauth-openshift.apps.{{ cluster_name }}.{{ cluster_base_domain }}</hostname>
+  <hostname>prometheus-k8s-openshift-monitoring.apps.{{ cluster_name }}.{{ cluster_base_domain }}</hostname>
+  <hostname>rgw.apps.{{ cluster_name }}.{{ cluster_base_domain }}</hostname>
+  <hostname>rgw.router-default.apps.{{ cluster_name }}.{{ cluster_base_domain }}</hostname>
+  <hostname>s3-openshift-storage.apps.{{ cluster_name }}.{{ cluster_base_domain }}</hostname>
+  <hostname>canary-openshift-ingress-canary.apps.{{ cluster_name }}.{{ cluster_base_domain }}</hostname>
+</host>

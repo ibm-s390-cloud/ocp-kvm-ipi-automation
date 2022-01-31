@@ -1,0 +1,51 @@
+---
+
+- name: install OpenShift and OPM clients
+  block:
+    - name: create temporary download directory
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: ocpclient
+      register: temp_dir
+
+    - name: set default OpenShift and OPM client tarball download location variables
+      ansible.builtin.set_fact:
+        oc_package_install_loc: 'http://mirror.openshift.com/pub/openshift-v4/s390x/clients/ocp/{{ openshift_client_version }}/openshift-client-linux.tar.gz'
+        opm_package_install_loc: 'http://mirror.openshift.com/pub/openshift-v4/s390x/clients/ocp/{{ openshift_client_version }}/opm-linux.tar.gz'
+
+    - name: download OpenShift and OPM client tarballs
+      ansible.builtin.include_tasks: '{{ role_path }}/tasks/download_client_tarballs.yml'
+      loop:
+        - { name: 'oc', src: '{{ oc_package_binary_url | default(oc_package_install_loc) }}', dest: '{{ temp_dir.path }}/ocp_client.tar.gz' }
+        - { name: 'opm', src: '{{ opm_package_binary_url | default(opm_package_install_loc) }}', dest: '{{ temp_dir.path }}/opm_linux.tar.gz' }
+      loop_control:
+        loop_var: tarball
+
+    - name: remove existing OpenShift and OPM client installation from /usr/local/bin
+      ansible.builtin.file:
+        path: '/usr/local/bin/{{ item }}'
+        state: absent
+      loop:
+        - oc
+        - kubectl
+        - opm
+
+    - name: install OpenShift client to /usr/local/bin
+      ansible.builtin.unarchive:
+        src: '{{ temp_dir.path }}/ocp_client.tar.gz'
+        dest: /usr/local/bin
+        remote_src: yes
+        exclude:
+          - README.md
+
+    - name: install OPM client to /usr/local/bin
+      ansible.builtin.unarchive:
+        src: '{{ temp_dir.path }}/opm_linux.tar.gz'
+        dest: /usr/local/bin
+        remote_src: yes
+  always:
+    - name: delete temporary download directory
+      ansible.builtin.file:
+        path: '{{ temp_dir.path }}'
+        state: absent
+      when: temp_dir.path is defined

@@ -1,0 +1,28 @@
+---
+
+- hosts: s390x_kvm_host
+
+  roles:
+    - role: sanity_check
+      tags:
+        - sanity
+        - preflight
+      when: disable_sanity_check is undefined
+
+    - role: ocp_prepare_install
+      tags:
+        - prepare
+
+    - role: ocp_build_installer
+      tags:
+        - prepare
+        - build
+
+    - role: ocp_install_clients
+      tags:
+        - prepare
+        - clients
+
+  tasks:
+    - ansible.builtin.debug:
+        msg: "Finished preparing the KVM-based OpenShift cluster installation via IPI on host '{{ inventory_hostname }}'. All done."

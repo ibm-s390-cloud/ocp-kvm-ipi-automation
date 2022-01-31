@@ -1,0 +1,33 @@
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cex-resources-config
+  namespace: kube-system
+data:
+  cex_resources.json: |
+    {
+    "cryptoconfigsets":
+    [
+        {
+            "setname": "{{ cluster_id }}",
+            "project": "{{ crypto_config_set_project }}",
+            "cexmode": "{{ crypto_config_set_cexmode }}",
+            "apqns":
+            [
+{% for ca in crypto_adapters %}
+                {
+                    "adapter": {{ ca["id"] | split(".") | first | int(base=16) }},
+                    "domain": {{ ca["id"] | split(".") | last | int(base=16) }},
+                    "machineid": ""
+{% if loop.last %}
+                }
+{% else %}
+                },
+{% endif %}
+{% endfor %}
+            ]
+        }
+    ]
+    }

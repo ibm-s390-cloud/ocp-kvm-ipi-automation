@@ -1,0 +1,30 @@
+---
+
+- name: slurp master configuration from manifest file
+  ansible.builtin.slurp:
+    src: '{{ openshift_installer_workdir }}/openshift/{{ manifest }}'
+  register: master_machineset
+
+- name: store master configuration into a dedicated fact
+  ansible.builtin.set_fact:
+    openshift_master_config: '{{ master_machineset["content"] | b64decode | trim | from_yaml }}'
+
+- name: update master configuration
+  ansible.utils.update_fact:
+    updates:
+    - path: openshift_master_config.spec.providerSpec.value.volume.volumeSize
+      value: '{{ openshift_master_root_volume_size }}'
+    - path: openshift_master_config.spec.providerSpec.value.domainMemory
+      value: '{{ openshift_master_memory_size }}'
+    - path: openshift_master_config.spec.providerSpec.value.domainVcpu
+      value: '{{ openshift_master_number_of_cpus }}'
+  register: updated
+
+- name: write back master configuration to manifest file
+  ansible.builtin.copy:
+    dest: '{{ openshift_installer_workdir }}/openshift/{{ manifest }}'
+    content: '{{ updated.openshift_master_config | to_nice_yaml }}'
+    backup: yes
+    owner: root
+    group: root
+    mode: '0644'

@@ -1,0 +1,193 @@
+---
+
+- name: install vbmc software package
+  block:
+    - name: check if vbmc binary is already available
+      ansible.builtin.stat:
+        path: /opt/vbmc/bin/vbmc
+      register: vbmc_bin
+
+    - name: remove existing vbmc binary
+      ansible.builtin.file:
+        path: /opt/vbmc
+        state: absent
+      when:
+        - vbmc_bin.stat.exists
+
+    - name: install vbmc Python package
+      ansible.builtin.shell: |
+          python3 -m virtualenv --system-site-packages --download /opt/vbmc
+          /opt/vbmc/bin/pip install virtualbmc
+
+    - name: stop any existing vbmc and vbmcd processes
+      ansible.builtin.shell: killall vbmc; killall vbmcd; true
+
+    - name: remove any existing vbmc state files
+      ansible.builtin.file:
+        path: /root/.vbmc
+        state: absent
+
+    - name: start vbmcd
+      ansible.builtin.command:
+        cmd: /opt/vbmc/bin/vbmcd
+        creates: /root/.vbmc/master.pid
+
+    - name: add vbmc to path
+      ansible.builtin.lineinfile:
+        path: /etc/profile.d/vbmc.sh
+        line: 'export PATH=$PATH:/opt/vbmc/bin'
+        owner: root
+        group: root
+        mode: '0644'
+        create: yes
+
+- name: ensure 'dummy' kernel module is loaded
+  block:
+    - name: load 'dummy' module via modprobe
+      community.general.modprobe:
+        name: dummy
+        state: present
+
+    - name: enable load of 'dummy' module at boot time
+      ansible.builtin.copy:
+        src: '{{ role_path }}/files/dummy.conf'
+        dest: /etc/modules-load.d/dummy.conf
+        owner: root
+        group: root
+        mode: '0644'
+
+- name: generate password for vbmc user '{{ vbmc_user }}'
+  ansible.builtin.set_fact:
+    vbmc_password: '{{ lookup("password", "/dev/null length=15 chars=ascii_letters") }}'
+
+- name: enable vbmc usage for cluster nodes
+  block:
+    - name: list all existing libvirt domains
+      community.libvirt.virt:
+        command: list_vms
+      register: all_libvirt_domains
+
+    - name: determine list of cluster nodes
+      ansible.builtin.set_fact:
+        master_domains: '{{ all_libvirt_domains.list_vms | select("contains", "master") | list }}'
+        worker_domains: '{{ all_libvirt_domains.list_vms | select("contains", "worker") | list }}'
+
+    - name: add master cluster nodes to vbmc
+      ansible.builtin.command:
+        cmd: 'vbmc add {{ master_node }} --username {{ vbmc_user }} --password {{ vbmc_password }} --address {{ vbmc_network_prefix }}.{{ vbmc_network_node_start + node_index }}'
+      loop: '{{ master_domains | sort }}'
+      loop_control:
+        loop_var: master_node
+        index_var: node_index
+
+    - name: add worker cluster nodes to vbmc
+      ansible.builtin.command:
+        cmd: 'vbmc add {{ worker_node }} --username {{ vbmc_user }} --password {{ vbmc_password }} --address {{ vbmc_network_prefix }}.{{ vbmc_network_node_start + node_index + (master_domains | length) }}'
+      loop: '{{ worker_domains | sort }}'
+      loop_control:
+        loop_var: worker_node
+        index_var: node_index
+
+    - name: consider dedicated infrastructure cluster nodes
+      block:
+        - name: determine list of infrastructure cluster nodes
+          ansible.builtin.set_fact:
+            infra_domains: '{{ all_libvirt_domains.list_vms | select("contains", "infra") | list }}'
+
+        - name: add infrastructure cluster nodes to vbmc
+          ansible.builtin.command:
+            cmd: 'vbmc add {{ infra_node }} --username {{ vbmc_user }} --password {{ vbmc_password }} --address {{ vbmc_network_prefix }}.{{ vbmc_network_node_start + node_index + ((master_domains + worker_domains) | length) }}'
+          loop: '{{ infra_domains | sort }}'
+          loop_control:
+            loop_var: infra_node
+            index_var: node_index
+      when: openshift_setup_dedicated_infra_nodes
+
+- name: start and verify vbmc nodes
+  block:
+    - name: concatenate lists of cluster master and worker and infrastucture nodes
+      ansible.builtin.set_fact:
+        all_domains: "{{ worker_domains + infra_domains + master_domains }}"
+      when: openshift_setup_dedicated_infra_nodes
+
+    - name: concatenate lists of cluster master and worker nodes
+      ansible.builtin.set_fact:
+        all_domains: "{{ worker_domains + master_domains }}"
+      when: not openshift_setup_dedicated_infra_nodes
+
+    - name: start vbmc nodes
+      ansible.builtin.command:
+        cmd: "vbmc start {{ all_domains | join(' ') }}"
+
+    - name: list started vbmc nodes
+      ansible.builtin.command:
+        cmd: 'vbmc list -f yaml'
+      register: vbmc_node_list
+
+    - name: convert vbmc node list output to yaml
+      ansible.builtin.set_fact:
+        vbmc_node_list_yaml: '{{ vbmc_node_list.stdout | from_yaml }}'
+
+    - name: verify all cluster worker nodes are present as vbmc nodes
+      ansible.builtin.assert:
+        that:
+          - "vbmc_node_list_yaml | selectattr('Domain name', 'contains', cluster_node)"
+      loop: '{{ all_domains }}'
+      loop_control:
+        loop_var: cluster_node
+
+- name: enable networking for vbmc nodes
+  block:
+    - name: list started vbmc nodes
+      ansible.builtin.command:
+        cmd: 'vbmc list -f yaml'
+      register: vbmc_node_list
+
+    - name: convert vbmc node list output to yaml
+      ansible.builtin.set_fact:
+        vbmc_node_list_yaml: '{{ vbmc_node_list.stdout | from_yaml }}'
+
+    - name: create dummy network link
+      ansible.builtin.command:
+        cmd: 'ip link add {{ ipmi_dummy_network }} type dummy'
+
+    - name: add vbmc nodes to dummy network
+      ansible.builtin.command:
+        cmd: 'ip addr add {{ vbmc_node.Address }}/24 brd + dev {{ ipmi_dummy_network }} label {{ ipmi_dummy_network }}:{{ node_index }}'
+      loop: '{{ vbmc_node_list_yaml }}'
+      loop_control:
+        loop_var: vbmc_node
+        index_var: node_index
+
+- name: verify ipmi connection to vbmc nodes
+  block:
+    - name: list started vbmc nodes
+      ansible.builtin.command:
+        cmd: 'vbmc list -f yaml'
+      register: vbmc_node_list
+
+    - name: convert vbmc node list output to yaml
+      ansible.builtin.set_fact:
+        vbmc_node_list_yaml: '{{ vbmc_node_list.stdout | from_yaml }}'
+
+    - name: randomly select vbmc node
+      ansible.builtin.set_fact:
+        random_vbmc_node: '{{ vbmc_node_list_yaml | random }}'
+
+    - name: run ipmi command against vbmc node
+      ansible.builtin.command:
+        cmd: 'ipmitool -I lanplus -U {{ vbmc_user }} -P {{ vbmc_password }} -H {{ random_vbmc_node.Address }} power status'
+      register: ipmi_status
+
+    - name: verify that ipmi connection to vbmc node was successful
+      ansible.builtin.assert:
+        that:
+          - "'Chassis Power is on' in ipmi_status.stdout"
+
+- name: persist vbmc connection information to {{ openshift_installer_workdir }}
+  ansible.builtin.template:
+    src: '{{ role_path }}/templates/ipmi_config.yaml.j2'
+    dest: '{{ openshift_installer_workdir }}/ipmi_config.yaml'
+    owner: root
+    group: root
+    mode: '0600'

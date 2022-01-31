@@ -1,0 +1,6 @@
+---
+
+vbmc_network_prefix: 10.0.0
+vbmc_network_node_start: 100
+
+vbmc_user: admin

@@ -1,0 +1,43 @@
+---
+
+- name: build openshift-install binary
+  block:
+    - name: create temporary checkout directory
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: ocpinst
+      register: temp_dir
+
+    - name: fetch openshift-install source code
+      ansible.builtin.git:
+        repo: 'https://github.com/openshift/installer.git'
+        dest: '{{ temp_dir.path }}/installer'
+        version: '{{ openshift_installer_version }}'
+
+    - name: build openshift-install binary
+      ansible.builtin.command:
+        cmd: 'hack/build.sh'
+        chdir: '{{ temp_dir.path }}/installer'
+      environment:
+        TAGS: 'libvirt'
+        CC: 'gcc'
+
+    - name: remove existing openshift-install binary from /usr/local/bin
+      ansible.builtin.file:
+        path: /usr/local/bin/openshift-install
+        state: absent
+
+    - name: copy openshift-install binary to /usr/local/bin
+      ansible.builtin.copy:
+        src: '{{ temp_dir.path }}/installer/bin/openshift-install'
+        dest: /usr/local/bin/openshift-install
+        owner: root
+        group: root
+        mode: '0775'
+        remote_src: yes
+  always:
+    - name: delete temporary checkout directory
+      ansible.builtin.file:
+        path: '{{ temp_dir.path }}'
+        state: absent
+      when: temp_dir.path is defined
