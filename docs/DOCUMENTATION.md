@@ -1,5 +1,9 @@
 # Documentation
 
+## Purpose / Target Audience
+
+The playbooks in this repository are intended for setting up OpenShift clusters on s390x Linux LPARs that will be used for demonstration, education or proof-of-concept type purposes and thus are short-lived by intent. These playbooks are not meant to set up OpenShift clusters for production purposes or any kind of production-level workloads. Please note that OpenShift clusters set up by these playbooks will not be supported by Red Hat nor IBM.
+
 ## Prerequisites
 
 In order to run the Ansible playbooks in this repository you need:
@@ -459,8 +463,8 @@ You can use the following commands as an example on how to run the main Ansible 
 
 ```bash
 # if using Docker
-docker run -ti -v $HOME/.ssh:/root/.ssh:ro -v $PWD/ansible/inventory:/ansible/inventory:ro -v $PWD/ansible/host_vars:/ansible/host_vars:ro -v $PWD/ansible/secrets:/ansible/secrets:ro -v $PWD/ansible/roles/crypto/files/ep11:/ansible/roles/crypto/files/ep11:ro --rm kvm-ipi-automation:base-latest ansible-playbook -v -i inventory site.yml
+docker run --rm -ti -v $HOME/.ssh:/root/.ssh:rw -v $PWD/ansible/inventory:/ansible/inventory:ro -v $PWD/ansible/host_vars:/ansible/host_vars:ro -v $PWD/ansible/secrets:/ansible/secrets:ro -v $PWD/ansible/roles/crypto/files/ep11:/ansible/roles/crypto/files/ep11:ro --rm kvm-ipi-automation:base-latest ansible-playbook -i inventory site.yml
 
 # if using podman
-podman run -ti -v $HOME/.ssh:/root/.ssh:ro -v $PWD/ansible/inventory:/ansible/inventory:ro -v $PWD/ansible/host_vars:/ansible/host_vars:ro -v $PWD/ansible/secrets:/ansible/secrets:ro -v $PWD/ansible/roles/crypto/files/ep11:/ansible/roles/crypto/files/ep11:ro --rm kvm-ipi-automation:base-latest ansible-playbook -v -i inventory site.yml
+podman run --rm -ti -v $HOME/.ssh:/root/.ssh:rw -v $PWD/ansible/inventory:/ansible/inventory:ro -v $PWD/ansible/host_vars:/ansible/host_vars:ro -v $PWD/ansible/secrets:/ansible/secrets:ro -v $PWD/ansible/roles/crypto/files/ep11:/ansible/roles/crypto/files/ep11:ro --rm kvm-ipi-automation:base-latest ansible-playbook -i inventory site.yml
 ```
