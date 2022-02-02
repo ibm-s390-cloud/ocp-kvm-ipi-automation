@@ -22,7 +22,7 @@ crypto_adapters:
 crypto_config_set_project: kvm-ipi-automation
 ```
 
-As you can see every resource that is to be used needs to be explicitely listed as a member of the  `crypto_adapter` array. The `id` field of the crypto resource needs to be fully qualified (meaning a combination of crypto adapter and crypto domain) and corresponds to the output given by the OS-level command `lszcrypt -V` run on the KVM host. The `assign_to_worker` field determines which cluster worker node the crypto resource will be attached to (the value actually denotes a worker node index).
+As you can see every resource that is to be used needs to be explicitly listed as a member of the  `crypto_adapter` array. The `id` field of the crypto resource needs to be fully qualified (meaning a combination of crypto adapter and crypto domain) and corresponds to the output given by the OS-level command `lszcrypt -V` run on the KVM host. The `assign_to_worker` field determines which cluster worker node the crypto resource will be attached to (the value actually denotes a worker node index).
 
 Please be aware that due to a current limitation of libvirt **only one crypto resource per worker node** is allowed. Upon running the playbook the given `crypto_adapters` configuration settings will be sanity-checked for validity.
 
@@ -37,7 +37,7 @@ ansible-playbook -i inventory enable_crypto_resources.yml
 
 ## What it does
 
-The crypto resources enablement tuning playbook (and by proxy the role) exposes crypto resources (adapters and domains) present on the KVM host to the OpenShift cluster worker nodes so that crypto-enabled containerized workloads can make use of it. The usage of crypto resources within the cluster is facilitated by the Kubernetes CEX device plugin available [here](https://github.com/ibm-s390-cloud/k8s-cex-dev-plugin).
+The crypto resources enablement playbook (and by proxy the role) exposes crypto resources (adapters and domains) present on the KVM host to the OpenShift cluster worker nodes so that crypto-enabled containerized workloads can make use of it. The usage of crypto resources within the cluster is facilitated by the Kubernetes CEX device plugin available [here](https://github.com/ibm-s390-cloud/k8s-cex-dev-plugin).
 
 Before the plugin can be installed however plenty of configuration modifications need to be made for the KVM host itself as well as the KVM guests that make up the OpenShift cluster worker nodes. The playbook takes care of all of this:
 
@@ -86,13 +86,13 @@ The `setname` property will always reflect the internal cluster ID of the OpenSh
 
 ## Optional: installing the EP11 binaries on the KVM host
 
-The crypto resources enablement tuning playbook allows you to automatically install the EP11 binaries on the KVM host. As these binaries are not part of the underlying RHEL 8.x distribution but need to be downloaded separately from IBM this installation step is completely optional and will be skipped if the binaries are not provided by the user. The most recent EP11 binaries (available as RPM or Debian packages) can be obtained from this website: <https://www.ibm.com/resources/mrs/assets?source=ibmzep11>.
+The crypto resources enablement playbook allows you to automatically install the EP11 binaries on the KVM host. As these binaries are not part of the underlying RHEL 8.x distribution but need to be downloaded separately from IBM this installation step is completely optional and will be skipped if the binaries are not provided by the user. The most recent EP11 binaries (available as RPM or Debian packages) can be obtained from this website: <https://www.ibm.com/resources/mrs/assets?source=ibmzep11>.
 
 Make sure to download at least the following files:
 
 - ep11-host-\<version\>.s390x.rpm
 - ep11-host-devel-\<version\>.s390x.rpm
 
-In order for the playbook to pick up these files and install them on the KVM host you need to put them into the following folder in this repository: `${repository_root}/ansible/roles/crypto/files/ep11`. No worries, these files won't get persisted in git / GHE as the `.gitignore` file in that folder explicitely excludes these files.
+In order for the playbook to pick up these files and install them on the KVM host you need to put them into the following folder in this repository: `${repository_root}/ansible/roles/crypto/files/ep11`. No worries, these files won't get persisted in git / GHE as the `.gitignore` file in that folder explicitly excludes these files.
 
 After you have put the EP11 RPM packages in the correct folder, simply run the `enable_crypto_resources.yml` playbook as shown above and the EP11 binaries will be installed on the KVM host as part of the crypto resource enablement process.
