@@ -1,0 +1,7 @@
+* text=auto
+*.yaml linguist-detectable=true
+*.yaml linguist-language=YAML
+*.yml linguist-detectable=true
+*.yml linguist-language=YAML
+*.j2 linguist-detectable=true
+*.j2 linguist-language=Jinja
