@@ -124,7 +124,6 @@
         state: absent
       loop:
         - /etc/libvirt/hooks/qemu
-
   always:
     - name: restart libvirtd service
       ansible.builtin.service:

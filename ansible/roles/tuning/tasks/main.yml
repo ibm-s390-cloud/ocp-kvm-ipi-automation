@@ -66,7 +66,6 @@
       loop: '{{ worker_domains | product([ domain_cpu_shares.worker ]) | list }}'
       loop_control:
         loop_var: cluster_node_share
-
   always:
     - name: start cluster nodes via libvirt
       community.libvirt.virt:

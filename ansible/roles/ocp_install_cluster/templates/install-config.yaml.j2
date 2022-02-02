@@ -1,12 +1,12 @@
 apiVersion: v1
 baseDomain: {{ cluster_base_domain }}
 compute:
-- architecture: s390x
+- architecture: {{ ansible_architecture }}
   hyperthreading: Enabled
   name: worker
   replicas: {{ cluster_number_of_workers }}
 controlPlane:
-  architecture: s390x
+  architecture: {{ ansible_architecture }}
   hyperthreading: Enabled
   name: master
   replicas: 3

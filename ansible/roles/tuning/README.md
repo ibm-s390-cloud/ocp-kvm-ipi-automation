@@ -27,8 +27,9 @@ In order to change the various configuration parameters of the cluster nodes, th
   - add dedicated IO threads for disk access to all cluster nodes
   - assign root disk to dedicated IO thread for all cluster nodes
   - increase the CPU weight (shares) for all cluster worker nodes
+
 - OpenShift cluster is online:
-  - enables 'receive packet steering' network setting for all cluster worker nodes
+  - enable 'receive packet steering' network setting for all cluster worker nodes
 
 At the end of the successful cluster tuning process, the OpenShift cluster is online and fully operational. The result of the cluster tuning process is documented *within* the cluster itself, using an annotation field in the `ClusterVersion` object's metadata:
 

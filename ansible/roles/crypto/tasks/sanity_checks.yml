@@ -29,5 +29,5 @@
 - name: check if the number of found adapters matches the number of given adapters and that all adapters are using the same mode
   ansible.builtin.assert:
     that:
-      - '{{ crypto_adapters_info.results | length >= crypto_adapters | length }}'
+      - '{{ (crypto_adapters_info.results | length) >= (crypto_adapters | length) }}'
       - '{{ crypto_adapters_modes | unique | length == 1 }}'

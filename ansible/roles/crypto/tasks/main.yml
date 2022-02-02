@@ -33,7 +33,6 @@
         state: present
         disable_gpg_check: yes
       when: ep11_binary_rpm_list is defined
-
   always:
     - name: delete temporary upload directory
       ansible.builtin.file:
@@ -155,7 +154,6 @@
       ansible.builtin.include_tasks: '{{ role_path }}/tasks/attach_mediated_device_to_domain.yml'
       loop: '{{ mdev_uuid_gen_result.results }}'
       when: item['mdev_uuids'] | length > 0
-
   always:
     - name: restart libvirtd service
       ansible.builtin.service:
@@ -230,7 +228,6 @@
         definition: '{{ lookup("template", "{{ role_path }}/templates/crypto-test-load.yaml.j2") | from_yaml }}'
         wait: yes
         wait_timeout: 180
-
   always:
     - name: delete crypto resource test workload
       kubernetes.core.k8s:
