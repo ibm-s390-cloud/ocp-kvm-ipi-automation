@@ -10,6 +10,6 @@
   until: tarball_download is success
   retries: 10
   delay: '{{ delay | int }}'
-  loop: '{{ range(1, 10) | map("pow", 2) }}'
+  loop: '{{ (range(1, 10) | map("pow", 2)) | list }}'
   loop_control:
     loop_var: delay

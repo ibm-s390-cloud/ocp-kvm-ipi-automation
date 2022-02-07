@@ -10,7 +10,7 @@ Please make sure to read the included project [documentation](docs/DOCUMENTATION
 
 Contributions to this project have to be submitted under the Apache License, Version 2.0. See the included [LICENSE](LICENSE) file for more information.
 
-## Developer's Certificate of Origin
+## Developer Certificate of Origin
 
 When making contributions to this project, you certify the [Developer Certificate of Origin](https://developercertificate.org/).
 

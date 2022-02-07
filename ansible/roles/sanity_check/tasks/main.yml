@@ -27,7 +27,7 @@
   block:
     - name: fetch disk space information of libvirt location on the KVM host
       ansible.builtin.shell:
-        cmd: 'test -d /var/lib/libvirt && df -B1 --output=avail /var/lib/libvirt || df -B1 --output=avail /var/lib'
+        cmd: 'test -d /var/lib/libvirt/openshift-images && df -B1 --output=avail /var/lib/libvirt/openshift-images || df -B1 --output=avail /var/lib'
       register: libvirt_df_result
 
     - name: set libvirt_free_space fact

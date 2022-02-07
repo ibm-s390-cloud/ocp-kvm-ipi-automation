@@ -72,7 +72,7 @@
   ansible.builtin.pip:
     name:
       - setuptools-rust
-      - openshift
+      - openshift!=0.13.0
       - stormssh
       - xmltodict
       - yq
