@@ -12,7 +12,7 @@ Assignment of the crypto resources available on the KVM host to individual clust
 # (see also: https://github.com/ibm-s390-cloud/k8s-cex-dev-plugin)
 crypto_adapters:
   - id: '07.0029'              # crypto resource identifier in <adapter>.<domain> format using **hexadecimal** values
-    assign_to_worker: 0        # cluster worker node index (indexing start at zero)
+    assign_to_worker: 0        # cluster worker node index (indexing starts at zero)
   - id: '07.002a'
     assign_to_worker: 1
   - id: '07.002b'

@@ -12,7 +12,7 @@ In order to run the Ansible playbooks in this repository you need:
 - a working recent installation of Ansible (tested with version 4.7.0) on your workstation
 - a suitably powerful s390x Linux LPAR running RHEL 8.x (tested with RHEL 8.4) with an **active** subscription
 - a working SSH connection to that s390x Linux LPAR from your workstation user account to the LPAR's *root* acccount (password-less SSH)
-- the OpenShift cluster image pull secrets file - see also [here](ansible/secrets/README.md) for details
+- the OpenShift cluster image pull secrets file - see also [here](../ansible/secrets/README.md) for details
 
 Installing Ansible on your workstation should be fairly easy. Please refer to the Ansible installation guide [here](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) for detailed instructions.
 
