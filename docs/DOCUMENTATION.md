@@ -191,10 +191,10 @@ If you've set the host variable `setup_vbmc_ipmi` to `true` in your '$$YOUR_KVM_
 In addition to the main Ansible playbooks mentioned above this repository contains the following auxiliary playbooks:
 
 - tune_ocp_install.yml
-  - see [here](ansible/roles/tuning/README.md) for detailed information
+  - see [here](../ansible/roles/tuning/README.md) for detailed information
 
 - enable_crypto_resources.yml
-  - see [here](ansible/roles/crypto/README.md) for detailed.information
+  - see [here](../ansible/roles/crypto/README.md) for detailed.information
 
 - reboot_host.yml
   - reboots the targeted KVM host and waits until the host has finished rebooting
@@ -224,6 +224,9 @@ ansible-playbook -i inventory start_ocp_cluster_nodes.yml
 # tune the installed OpenShift cluster on the targeted KVM host
 # (this will mainly reconfigure the KVM guests and KVM network settings)
 ansible-playbook -i inventory tune_ocp_install.yml
+
+# attach existing crypto resources to the cluster worker nodes and install / configure the Kubernetes CEX device plugin
+ansible-playbook -i inventory enable_crypto_resources.yml
 
 # check the basic OpenShift cluster health
 ansible-playbook -i inventory check_ocp_cluster_state.yml
