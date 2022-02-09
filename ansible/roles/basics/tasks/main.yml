@@ -153,7 +153,7 @@
         dest: /usr/local/bin/terraform
         owner: root
         group: root
-        mode: '0775'
+        mode: '0755'
         remote_src: yes
   always:
     - name: delete temporary download directory
@@ -186,7 +186,7 @@
         path: '/usr/local/share/terraform/plugins/local/ibm-cloud/ibm/{{ terraform_ibm_provider_version }}/linux_{{ ansible_architecture }}'
         owner: root
         group: root
-        mode: '0755'
+        mode: '0775'
         state: directory
 
     - name: remove existing terraform-provider-ibm binary if present
@@ -200,8 +200,48 @@
         dest: '/usr/local/share/terraform/plugins/local/ibm-cloud/ibm/{{ terraform_ibm_provider_version }}/linux_{{ ansible_architecture }}/terraform-provider-ibm'
         owner: root
         group: root
-        mode: '0775'
+        mode: '0755'
         remote_src: yes
+  always:
+    - name: delete temporary download directory
+      ansible.builtin.file:
+        path: '{{ temp_dir.path }}'
+        state: absent
+      when: temp_dir.path is defined
+
+- name: install helm
+  block:
+    - name: create temporary download directory
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: helm
+      register: temp_dir
+
+    - name: download helm tarball
+      ansible.builtin.get_url:
+        url: 'https://get.helm.sh/helm-v{{ helm_version }}-linux-{{ ansible_architecture }}.tar.gz'
+        dest: '{{ temp_dir.path }}/helm-v{{ helm_version }}-linux-{{ ansible_architecture }}.tar.gz'
+        mode: '0440'
+        timeout: 120
+
+    - name: remove existing helm binary from /usr/local/bin
+      ansible.builtin.file:
+        path: /usr/local/bin/helm
+        state: absent
+
+    - name: copy helm binary to /usr/local/bin
+      ansible.builtin.unarchive:
+        src: '{{ temp_dir.path }}/helm-v{{ helm_version }}-linux-{{ ansible_architecture }}.tar.gz'
+        dest: /usr/local/bin
+        remote_src: yes
+        owner: root
+        group: root
+        mode: '0755'
+        extra_opts:
+          - --transform
+          - 's/^linux-{{ ansible_architecture }}//'
+        include:
+          - 'linux-{{ ansible_architecture }}/helm'
   always:
     - name: delete temporary download directory
       ansible.builtin.file:

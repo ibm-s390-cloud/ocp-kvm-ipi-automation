@@ -33,7 +33,7 @@
         dest: /usr/local/bin/openshift-install
         owner: root
         group: root
-        mode: '0775'
+        mode: '0755'
         remote_src: yes
   always:
     - name: delete temporary checkout directory

@@ -95,6 +95,9 @@
         - /usr/local/bin/opm
         - /usr/local/bin/kubectl
         - /usr/local/bin/openshift-install
+        - /usr/local/bin/terraform
+        - /usr/local/share/terraform/plugins/local/ibm-cloud/ibm
+        - /usr/local/bin/helm
 
 - name: check if SSH configuration for user root exists
   ansible.builtin.stat:
