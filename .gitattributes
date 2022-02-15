@@ -5,3 +5,5 @@
 *.yml linguist-language=YAML
 *.j2 linguist-detectable=true
 *.j2 linguist-language=Jinja
+*.md linguist-detectable=true
+*.md linguist-language=Markdown
