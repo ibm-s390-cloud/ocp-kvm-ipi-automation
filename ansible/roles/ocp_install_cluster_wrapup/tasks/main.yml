@@ -8,3 +8,8 @@
 
 - name: persist SSH configuration for easy access to cluster nodes
   ansible.builtin.include_tasks: '{{ role_path }}/tasks/persist_ssh_config.yml'
+
+- name: stop httpd service
+  ansible.builtin.service:
+    name: httpd.service
+    state: stopped
