@@ -49,6 +49,11 @@
         group: root
         mode: '0755'
         remote_src: yes
+
+    - name: install bash completion for OpenShift client
+      ansible.builtin.shell:
+        cmd: '/usr/local/bin/oc completion bash > /etc/bash_completion.d/oc'
+        creates: /etc/bash_completion.d/oc
   always:
     - name: delete temporary download directory
       ansible.builtin.file:

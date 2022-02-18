@@ -67,6 +67,7 @@
           - net-tools
           - httpd
           - fio
+          - bash-completion
         state: latest
 
 - name: install prerequisite Python packages
