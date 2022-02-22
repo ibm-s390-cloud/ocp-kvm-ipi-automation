@@ -78,11 +78,10 @@
         regexp: ^Listen 80
         line: Listen 8080
 
-    - name: restart httpd service
+    - name: reload httpd service
       ansible.builtin.service:
         name: httpd.service
-        state: started
-        enabled: yes
+        state: reloaded
 
 - name: update /etc/hosts
   block:
