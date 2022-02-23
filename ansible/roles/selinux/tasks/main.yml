@@ -11,6 +11,6 @@
     - name: enable haproxy connectivity
       ansible.posix.seboolean:
         name: haproxy_connect_any
-        state: yes
-        persistent: yes
+        state: true
+        persistent: true
       when: ansible_selinux.status == 'enabled'

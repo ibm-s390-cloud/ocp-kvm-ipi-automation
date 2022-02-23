@@ -90,6 +90,7 @@
         - ~root/.cache/openshift-installer
         - ~root/.kube
         - ~root/.terraform.d
+        - ~root/go
         - '{{ openshift_installer_workdir }}'
         - /usr/local/bin/oc
         - /usr/local/bin/opm
@@ -133,4 +134,4 @@
       ansible.builtin.service:
         name: libvirtd
         state: reloaded
-        enabled: yes
+        enabled: true

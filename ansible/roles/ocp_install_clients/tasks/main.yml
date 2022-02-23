@@ -37,7 +37,7 @@
         owner: root
         group: root
         mode: '0755'
-        remote_src: yes
+        remote_src: true
         exclude:
           - README.md
 
@@ -48,7 +48,7 @@
         owner: root
         group: root
         mode: '0755'
-        remote_src: yes
+        remote_src: true
 
     - name: install bash completion for OpenShift client
       ansible.builtin.shell:

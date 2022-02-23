@@ -108,7 +108,7 @@
       ansible.builtin.unarchive:
         src: '{{ temp_dir.path }}/go{{ go_version }}.linux-{{ ansible_architecture }}.tar.gz'
         dest: /usr/local
-        remote_src: yes
+        remote_src: true
 
     - name: add go to path
       ansible.builtin.copy:
@@ -155,7 +155,7 @@
         owner: root
         group: root
         mode: '0755'
-        remote_src: yes
+        remote_src: true
   always:
     - name: delete temporary download directory
       ansible.builtin.file:
@@ -202,7 +202,7 @@
         owner: root
         group: root
         mode: '0755'
-        remote_src: yes
+        remote_src: true
   always:
     - name: delete temporary download directory
       ansible.builtin.file:
@@ -234,7 +234,7 @@
       ansible.builtin.unarchive:
         src: '{{ temp_dir.path }}/helm-v{{ helm_version }}-linux-{{ ansible_architecture }}.tar.gz'
         dest: /usr/local/bin
-        remote_src: yes
+        remote_src: true
         owner: root
         group: root
         mode: '0755'
