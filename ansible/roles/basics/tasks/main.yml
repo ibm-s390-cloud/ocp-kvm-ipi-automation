@@ -94,8 +94,8 @@
 
     - name: download go tarball
       ansible.builtin.get_url:
-        url: 'https://dl.google.com/go/go{{ go_version }}.linux-{{ ansible_architecture }}.tar.gz'
-        dest: '{{ temp_dir.path }}/go{{ go_version }}.linux-{{ ansible_architecture }}.tar.gz'
+        url: 'https://dl.google.com/go/go{{ go_version }}.linux-{{ architecture_alias }}.tar.gz'
+        dest: '{{ temp_dir.path }}/go{{ go_version }}.tar.gz'
         mode: '0440'
         timeout: 120
 
@@ -106,7 +106,7 @@
 
     - name: install go
       ansible.builtin.unarchive:
-        src: '{{ temp_dir.path }}/go{{ go_version }}.linux-{{ ansible_architecture }}.tar.gz'
+        src: '{{ temp_dir.path }}/go{{ go_version }}.tar.gz'
         dest: /usr/local
         remote_src: true
 
@@ -220,8 +220,8 @@
 
     - name: download helm tarball
       ansible.builtin.get_url:
-        url: 'https://get.helm.sh/helm-v{{ helm_version }}-linux-{{ ansible_architecture }}.tar.gz'
-        dest: '{{ temp_dir.path }}/helm-v{{ helm_version }}-linux-{{ ansible_architecture }}.tar.gz'
+        url: 'https://get.helm.sh/helm-v{{ helm_version }}-linux-{{ architecture_alias }}.tar.gz'
+        dest: '{{ temp_dir.path }}/helm-v{{ helm_version }}.tar.gz'
         mode: '0440'
         timeout: 120
 
@@ -232,7 +232,7 @@
 
     - name: copy helm binary to /usr/local/bin
       ansible.builtin.unarchive:
-        src: '{{ temp_dir.path }}/helm-v{{ helm_version }}-linux-{{ ansible_architecture }}.tar.gz'
+        src: '{{ temp_dir.path }}/helm-v{{ helm_version }}.tar.gz'
         dest: /usr/local/bin
         remote_src: true
         owner: root
@@ -240,10 +240,10 @@
         mode: '0755'
         extra_opts:
           - --transform
-          - 's/^linux-{{ ansible_architecture }}//'
+          - 's/^linux-{{ architecture_alias }}//'
         exclude:
-          - 'linux-{{ ansible_architecture }}/README.md'
-          - 'linux-{{ ansible_architecture }}/LICENSE'
+          - 'linux-{{ architecture_alias }}/README.md'
+          - 'linux-{{ architecture_alias }}/LICENSE'
   always:
     - name: delete temporary download directory
       ansible.builtin.file:

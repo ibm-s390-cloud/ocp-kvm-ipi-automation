@@ -1,10 +1,10 @@
 ---
 
-# default settings that apply to all s390x_kvm_host hosts
+# default settings that apply to all ppc64le_kvm_host hosts
 
 ansible_user: root
 
-architecture_alias: s390x
+architecture_alias: ppc64le
 
 go_version: 1.17.6
 
