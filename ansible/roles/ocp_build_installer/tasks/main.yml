@@ -21,6 +21,8 @@
       environment:
         TAGS: 'libvirt'
         CC: 'gcc'
+        GOPATH: '{{ temp_dir.path }}/go'
+        PATH: '{{ ansible_env.PATH }}:{{ temp_dir.path }}/go/bin'
 
     - name: remove existing openshift-install binary from /usr/local/bin
       ansible.builtin.file:

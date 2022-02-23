@@ -95,7 +95,7 @@
     - name: download go tarball
       ansible.builtin.get_url:
         url: 'https://dl.google.com/go/go{{ go_version }}.linux-{{ ansible_architecture }}.tar.gz'
-        dest: '{{ temp_dir.path }}/go{{ go_version }}.linux-{{ ansible_architecture }}.tar.gz'
+        dest: '{{ temp_dir.path }}/go{{ go_version }}.tar.gz'
         mode: '0440'
         timeout: 120
 
@@ -106,7 +106,7 @@
 
     - name: install go
       ansible.builtin.unarchive:
-        src: '{{ temp_dir.path }}/go{{ go_version }}.linux-{{ ansible_architecture }}.tar.gz'
+        src: '{{ temp_dir.path }}/go{{ go_version }}.tar.gz'
         dest: /usr/local
         remote_src: true
 
@@ -142,6 +142,9 @@
       ansible.builtin.command:
         cmd: 'go build'
         chdir: '{{ temp_dir.path }}/terraform'
+      environment:
+        GOPATH: '{{ temp_dir.path }}/go'
+        PATH: '{{ ansible_env.PATH }}:{{ temp_dir.path }}/go/bin'
 
     - name: remove existing terraform binary from /usr/local/bin
       ansible.builtin.file:
@@ -181,6 +184,9 @@
       ansible.builtin.command:
         cmd: 'go build'
         chdir: '{{ temp_dir.path }}/terraform-provider-ibm'
+      environment:
+        GOPATH: '{{ temp_dir.path }}/go'
+        PATH: '{{ ansible_env.PATH }}:{{ temp_dir.path }}/go/bin'
 
     - name: create global terraform plugin directory
       ansible.builtin.file:
@@ -221,7 +227,7 @@
     - name: download helm tarball
       ansible.builtin.get_url:
         url: 'https://get.helm.sh/helm-v{{ helm_version }}-linux-{{ ansible_architecture }}.tar.gz'
-        dest: '{{ temp_dir.path }}/helm-v{{ helm_version }}-linux-{{ ansible_architecture }}.tar.gz'
+        dest: '{{ temp_dir.path }}/helm-v{{ helm_version }}.tar.gz'
         mode: '0440'
         timeout: 120
 
@@ -232,7 +238,7 @@
 
     - name: copy helm binary to /usr/local/bin
       ansible.builtin.unarchive:
-        src: '{{ temp_dir.path }}/helm-v{{ helm_version }}-linux-{{ ansible_architecture }}.tar.gz'
+        src: '{{ temp_dir.path }}/helm-v{{ helm_version }}.tar.gz'
         dest: /usr/local/bin
         remote_src: true
         owner: root
