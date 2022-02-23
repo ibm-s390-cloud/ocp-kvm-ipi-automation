@@ -241,8 +241,9 @@
         extra_opts:
           - --transform
           - 's/^linux-{{ ansible_architecture }}//'
-        include:
-          - 'linux-{{ ansible_architecture }}/helm'
+        exclude:
+          - 'linux-{{ ansible_architecture }}/README.md'
+          - 'linux-{{ ansible_architecture }}/LICENSE'
   always:
     - name: delete temporary download directory
       ansible.builtin.file:
