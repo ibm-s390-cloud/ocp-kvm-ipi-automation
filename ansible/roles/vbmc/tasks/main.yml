@@ -39,7 +39,7 @@
         owner: root
         group: root
         mode: '0644'
-        create: yes
+        create: true
 
 - name: ensure 'dummy' kernel module is loaded
   block:

@@ -51,7 +51,7 @@
         owner: root
         group: root
         mode: '0644'
-        remote_src: yes
+        remote_src: true
 
     - name: remove existing manifests
       ansible.builtin.file:
@@ -120,7 +120,7 @@
       ansible.builtin.copy:
         dest: '{{ openshift_installer_workdir }}/openshift/99_openshift-cluster-api_worker-machineset-0.yaml'
         content: '{{ updated.openshift_worker_config | to_nice_yaml }}'
-        backup: yes
+        backup: true
         owner: root
         group: root
         mode: '0644'
@@ -198,7 +198,7 @@
         owner: root
         group: root
         mode: '0644'
-        remote_src: yes
+        remote_src: true
 
 - name: wait until cluster installation has finished
   ansible.builtin.async_status:

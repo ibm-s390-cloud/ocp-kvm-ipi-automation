@@ -31,7 +31,7 @@
       ansible.builtin.dnf:
         name: '{{ ep11_binary_rpm_list }}'
         state: present
-        disable_gpg_check: yes
+        disable_gpg_check: true
       when: ep11_binary_rpm_list is defined
   always:
     - name: delete temporary upload directory
@@ -159,7 +159,7 @@
       ansible.builtin.service:
         name: libvirtd
         state: reloaded
-        enabled: yes
+        enabled: true
 
     - name: start cluster nodes via libvirt
       community.libvirt.virt:
@@ -208,7 +208,7 @@
         kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
         state: present
         definition: '{{ lookup("file", "{{ role_path }}/files/cex-plugin-daemonset.yaml") | from_yaml }}'
-        wait: yes
+        wait: true
         wait_timeout: 300
 
 - name: verify the crypto resources are present and usable
@@ -226,7 +226,7 @@
         kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
         state: present
         definition: '{{ lookup("template", "{{ role_path }}/templates/crypto-test-load.yaml.j2") | from_yaml }}'
-        wait: yes
+        wait: true
         wait_timeout: 180
   always:
     - name: delete crypto resource test workload

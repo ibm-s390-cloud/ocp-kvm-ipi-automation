@@ -27,7 +27,7 @@
         hostname: '{{ item.host.ip }}'
         remote_user: core
         identity_file: '{{ openshift_installer_workdir }}/id_ssh_ocp'
-        strict_host_key_checking: no
+        strict_host_key_checking: false
         user_known_hosts_file: /dev/null
         port: '22'
         ssh_config_file: '{{ temp_file.path }}'
@@ -44,7 +44,7 @@
       ansible.builtin.blockinfile:
         path: '~root/.ssh/config'
         block: '{{ ssh_config_cluster["content"] | b64decode | trim }}'
-        create: yes
+        create: true
         owner: root
         group: root
         mode: '0644'

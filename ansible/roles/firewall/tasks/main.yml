@@ -17,23 +17,23 @@
       ansible.posix.firewalld:
         rich_rule: rule service name=libvirt reject
         zone: public
-        permanent: yes
-        immediate: yes
+        permanent: true
+        immediate: true
         state: enabled
 
     - name: add libvirt service
       ansible.posix.firewalld:
         service: libvirt
-        permanent: yes
-        immediate: yes
+        permanent: true
+        immediate: true
         zone: libvirt
         state: enabled
 
     - name: allow http traffic
       ansible.posix.firewalld:
         service: http
-        permanent: yes
-        immediate: yes
+        permanent: true
+        immediate: true
         zone: '{{ item }}'
         state: enabled
       loop: '{{ firewalld_zones }}'
@@ -41,8 +41,8 @@
     - name: allow https traffic
       ansible.posix.firewalld:
         service: https
-        permanent: yes
-        immediate: yes
+        permanent: true
+        immediate: true
         zone: '{{ item }}'
         state: enabled
       loop: '{{ firewalld_zones }}'
@@ -50,8 +50,8 @@
     - name: allow traffic at port 80
       ansible.posix.firewalld:
         port: 80/tcp
-        permanent: yes
-        immediate: yes
+        permanent: true
+        immediate: true
         zone: '{{ item }}'
         state: enabled
       loop: '{{ firewalld_zones }}'
@@ -59,8 +59,8 @@
     - name: allow traffic at port 8080
       ansible.posix.firewalld:
         port: 8080/tcp
-        permanent: yes
-        immediate: yes
+        permanent: true
+        immediate: true
         zone: '{{ item }}'
         state: enabled
       loop: '{{ firewalld_zones }}'
@@ -68,7 +68,7 @@
     - name: allow traffic at port 443
       ansible.posix.firewalld:
         port: 443/tcp
-        permanent: yes
+        permanent: true
         zone: '{{ item }}'
         state: enabled
       loop: '{{ firewalld_zones }}'
@@ -76,8 +76,8 @@
     - name: allow traffic at port 6443
       ansible.posix.firewalld:
         port: 6443/tcp
-        permanent: yes
-        immediate: yes
+        permanent: true
+        immediate: true
         zone: '{{ item }}'
         state: enabled
       loop: '{{ firewalld_zones }}'
@@ -85,8 +85,8 @@
     - name: allow traffic at additional ports
       ansible.posix.firewalld:
         port: '{{ item.1 }}'
-        permanent: yes
-        immediate: yes
+        permanent: true
+        immediate: true
         zone: '{{ item.0 }}'
         state: enabled
       loop: '{{ firewalld_zones | product(additional_host_ports) | list }}'

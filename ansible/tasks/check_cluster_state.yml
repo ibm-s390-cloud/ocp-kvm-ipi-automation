@@ -87,7 +87,7 @@
         username: kubeadmin
         password: '{{ kubeadmin_password }}'
         state: present
-        validate_certs: no
+        validate_certs: false
       register: ocp_login_details
 
     - name: get prometheus-k8s route
@@ -132,7 +132,7 @@
         host: '{{ ocp_kubeconfig.clusters[0]["cluster"]["server"] }}'
         api_key: '{{ ocp_login_details.openshift_auth.api_key }}'
         state: absent
-        validate_certs: no
+        validate_certs: false
       when: ocp_login_details.openshift_auth.api_key is defined
   when: workdir_info.stat.exists and workdir_info.stat.isdir
 
