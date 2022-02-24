@@ -121,6 +121,28 @@
     - '{{ libvirt_marker }}'
     - '{{ host_marker }}'
 
+- name: clean up /etc/resolv.conf
+  block:
+    - name: check if /etc/resolv.conf backup file exists
+      ansible.builtin.stat:
+        path: /etc/resolv.conf.bkup
+      register: etc_resolv_conf_bkup_info
+
+    - name: restore original /etc/resolv.conf from backup file
+      ansible.builtin.copy:
+        src: /etc/resolv.conf.bkup
+        dest: /etc/resolv.conf
+        owner: root
+        group: root
+        mode: '0644'
+        remote_src: true
+      when: etc_resolv_conf_bkup_info.stat.exists
+
+    - name: remove /etc/resolv.conf backup file
+      ansible.builtin.file:
+        path: /etc/resolv.conf.bkup
+        state: absent
+
 - name: clean up libvirt hooks
   block:
     - name: remove 'qemu' libvirt hook

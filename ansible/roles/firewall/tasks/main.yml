@@ -5,7 +5,7 @@
     - name: ensure firewalld package is present
       ansible.builtin.dnf:
         name: firewalld
-        state: latest
+        state: present
 
     - name: start firewalld service
       ansible.builtin.service:
