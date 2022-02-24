@@ -144,7 +144,7 @@
         chdir: '{{ temp_dir.path }}/terraform'
       environment:
         GOPATH: '{{ temp_dir.path }}/go'
-        PATH: '{{ ansible_env.PATH }}:{{ temp_dir.path }}/go/bin'
+        PATH: '{{ ansible_env.PATH }}:/usr/local/go/bin:{{ temp_dir.path }}/go/bin'
 
     - name: remove existing terraform binary from /usr/local/bin
       ansible.builtin.file:
@@ -186,7 +186,7 @@
         chdir: '{{ temp_dir.path }}/terraform-provider-ibm'
       environment:
         GOPATH: '{{ temp_dir.path }}/go'
-        PATH: '{{ ansible_env.PATH }}:{{ temp_dir.path }}/go/bin'
+        PATH: '{{ ansible_env.PATH }}:/usr/local/go/bin:{{ temp_dir.path }}/go/bin'
 
     - name: create global terraform plugin directory
       ansible.builtin.file:
