@@ -2,6 +2,15 @@
 
 - name: configure NetworkManager
   block:
+    - name: create backup of /etc/resolv.conf file
+      ansible.builtin.copy:
+        src: /etc/resolv.conf
+        dest: /etc/resolv.conf.bkup
+        owner: root
+        group: root
+        mode: '0644'
+        remote_src: true
+
     - name: enable dnsmasq module
       ansible.builtin.copy:
         src: '{{ role_path }}/files/networkmanager.dns.conf'
@@ -19,19 +28,34 @@
         mode: '0644'
         create: true
 
-    - name: increase dnsmasq cache size
+    - name: configure various aspects of dnsmasq
       ansible.builtin.copy:
-        src: '{{ role_path }}/files/dnsmasq.cache.conf'
-        dest: /etc/NetworkManager/dnsmasq.d/cache.conf
+        src: '{{ role_path }}/files/{{ item.src }}'
+        dest: '/etc/NetworkManager/dnsmasq.d/{{ item.tgt }}'
         owner: root
         group: root
         mode: '0644'
+      loop:
+        - { 'src': 'dnsmasq.cache.conf', 'tgt': 'cache.conf' }
+        - { 'src': 'dnsmasq.add-hosts.conf', 'tgt': 'add-hosts.conf' }
 
     - name: reload NetworkManager configuration
       ansible.builtin.service:
         name: NetworkManager
         state: reloaded
         enabled: true
+
+    - name: slurp original of /etc/resolv.conf file from backup
+      ansible.builtin.slurp:
+        src: /etc/resolv.conf.bkup
+      register: original_etc_resolv_conf
+
+    - name: retain any nameserver settings from the original /etc/resolv.conf file
+      ansible.builtin.lineinfile:
+        path: /etc/resolv.conf
+        line: '{{ item }}'
+        insertafter: '^nameserver.*$'
+      loop: "{{ original_etc_resolv_conf['content'] | b64decode | trim | regex_findall('^nameserver.*$', multiline=true) }}"
 
 - name: configure haproxy
   block:
@@ -46,7 +70,7 @@
     - name: ensure haproxy package is present
       ansible.builtin.dnf:
         name: haproxy
-        state: latest
+        state: present
 
     - name: start haproxy service
       ansible.builtin.service:
@@ -70,7 +94,7 @@
     - name: ensure httpd package is present
       ansible.builtin.dnf:
         name: httpd
-        state: latest
+        state: present
 
     - name: bind httpd to port 8080
       ansible.builtin.lineinfile:
