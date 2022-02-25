@@ -1,7 +1,6 @@
 parseable: true
 quiet: true
 skip_list:
-  - package-latest
   - command-instead-of-module
   - no-changed-when
   - meta-no-info
