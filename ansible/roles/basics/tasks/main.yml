@@ -285,7 +285,7 @@
 
     - name: copy butane binary to /usr/local/bin
       ansible.builtin.copy:
-        src: '{{ temp_dir.path }}/butane/bin/{{ ansible_architecture }}/butane'
+        src: '{{ temp_dir.path }}/butane/bin/{{ architecture_alias }}/butane'
         dest: /usr/local/bin/butane
         owner: root
         group: root
