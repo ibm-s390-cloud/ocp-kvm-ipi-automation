@@ -189,7 +189,7 @@
 
     - name: create global terraform plugin directory
       ansible.builtin.file:
-        path: '/usr/local/share/terraform/plugins/local/ibm-cloud/ibm/{{ terraform_ibm_provider_version }}/linux_{{ ansible_architecture }}'
+        path: '/usr/local/share/terraform/plugins/local/ibm-cloud/ibm/{{ terraform_ibm_provider_version }}/linux_{{ architecture_alias }}'
         owner: root
         group: root
         mode: '0775'
@@ -197,13 +197,13 @@
 
     - name: remove existing terraform-provider-ibm binary if present
       ansible.builtin.file:
-        path: '/usr/local/share/terraform/plugins/local/ibm-cloud/ibm/{{ terraform_ibm_provider_version }}/linux_{{ ansible_architecture }}/terraform-provider-ibm'
+        path: '/usr/local/share/terraform/plugins/local/ibm-cloud/ibm/{{ terraform_ibm_provider_version }}/linux_{{ architecture_alias }}/terraform-provider-ibm'
         state: absent
 
     - name: copy terraform-provider-ibm binary to global terraform plugin directory
       ansible.builtin.copy:
         src: '{{ temp_dir.path }}/terraform-provider-ibm/terraform-provider-ibm'
-        dest: '/usr/local/share/terraform/plugins/local/ibm-cloud/ibm/{{ terraform_ibm_provider_version }}/linux_{{ ansible_architecture }}/terraform-provider-ibm'
+        dest: '/usr/local/share/terraform/plugins/local/ibm-cloud/ibm/{{ terraform_ibm_provider_version }}/linux_{{ architecture_alias }}/terraform-provider-ibm'
         owner: root
         group: root
         mode: '0755'
