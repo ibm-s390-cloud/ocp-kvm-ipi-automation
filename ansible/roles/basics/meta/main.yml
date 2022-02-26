@@ -1,15 +1,12 @@
 ---
 
 galaxy_info:
-  role_name: networking
+  role_name: basics
   author: Dirk Haubenreisser (haubenr@de.ibm.com)
-  description: Role performing network setup and configuration tasks
+  description: Role performing basic setup and configuration tasks
   company: IBM
   license: Apache
   min_ansible_version: 2.10
   platforms:
     - name: EL
       versions: 8
-
-dependencies:
-  - role: common

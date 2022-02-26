@@ -1,4 +1,15 @@
 ---
 
+galaxy_info:
+  role_name: ocp_cleanup
+  author: Dirk Haubenreisser (haubenr@de.ibm.com)
+  description: Role performing cleanup of an existing OCP cluster and it's KVM host
+  company: IBM
+  license: Apache
+  min_ansible_version: 2.10
+  platforms:
+    - name: EL
+      versions: 8
+
 dependencies:
   - role: common

@@ -1,4 +1,15 @@
 ---
 
+galaxy_info:
+  role_name: vbmc
+  author: Dirk Haubenreisser (haubenr@de.ibm.com)
+  description: Role performing VBMC / IPMI setup and configuration tasks
+  company: IBM
+  license: Apache
+  min_ansible_version: 2.10
+  platforms:
+    - name: EL
+      versions: 8
+
 dependencies:
   - role: common
