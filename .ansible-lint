@@ -3,6 +3,5 @@ quiet: true
 skip_list:
   - command-instead-of-module
   - no-changed-when
-  - meta-no-info
 use_default_rules: true
 verbosity: 1

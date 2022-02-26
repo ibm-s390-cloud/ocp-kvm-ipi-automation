@@ -9,8 +9,8 @@ The playbooks in this repository are intended for setting up OpenShift clusters 
 In order to run the Ansible playbooks in this repository you need:
 
 - an Ansible **compatible** workstation
-- a working recent installation of Ansible (tested with version 4.7.0) on your workstation
-- a suitably powerful s390x Linux LPAR running RHEL 8.x (tested with RHEL 8.4) with an **active** subscription
+- a working **Ansible 2.10 (or newer)** installation on your workstation
+- a suitably powerful s390x Linux LPAR running RHEL 8.x (tested with RHEL 8.4) with an **active** Red Hat subscription
 - a working SSH connection to that s390x Linux LPAR from your workstation user account to the LPAR's *root* acccount (password-less SSH)
 - the OpenShift cluster image pull secrets file - see also [here](../ansible/secrets/README.md) for details
 
@@ -153,8 +153,8 @@ To kick off the OpenShift installation process you can either run the Ansible pl
 ```bash
 cd ansible
 
-# install Ansible prerequites
-ansible-galaxy collection install -r requirements.yml
+# install / update Ansible prerequites
+ansible-galaxy collection install -r requirements.yml --force
 
 # run all playbooks
 ansible-playbook -i inventory site.yml
@@ -238,6 +238,8 @@ While it is theoretically possible to install multiple OpenShift clusters on the
 
 While the OpenShift cluster installation on a reasonably powerful Linux LPAR is quite fast, there might be occasions where the installation runs into some sort of timeout that is imposed by these Ansible playbooks. For the cluster installation itself, this timeout is set to 3600 seconds (one hour).
 
+For more information please see also the included [troubleshooting](TROUBLESHOOTING.md) document.
+
 ## Running the playbooks from within a Docker container
 
 This repository includes a Dockerfile that can be used to build a Docker image containing Ansible (and all packages required by Ansible) and the KVM IPI automation playbooks. This Docker image can then either be used as the base image for further customizations (e.g. adding your own playbooks or roles on top of the existing ones) or as-is in order to run the playbooks against any appropriate s390x Linux LPAR KVM host directly.
@@ -279,9 +281,13 @@ Due to the way the The KVM IPI automation Docker image content has been structur
 │   │   │   └── main.yml
 │   │   ├── files
 │   │   │   └── golang.profile.sh
+│   │   ├── meta
+│   │   │   └── main.yml
 │   │   └── tasks
 │   │       └── main.yml
 │   ├── common
+│   │   ├── meta
+│   │   │   └── main.yml
 │   │   └── vars
 │   │       └── main.yml
 │   ├── crypto
@@ -298,6 +304,8 @@ Due to the way the The KVM IPI automation Docker image content has been structur
 │   │   │   ├── crypto_adapter_info.py
 │   │   │   ├── mdev_libvirt_attach.py
 │   │   │   └── mdev_uuid_gen.py
+│   │   ├── meta
+│   │   │   └── main.yml
 │   │   ├── tasks
 │   │   │   ├── attach_mediated_device_to_domain.yml
 │   │   │   ├── main.yml
@@ -309,15 +317,20 @@ Due to the way the The KVM IPI automation Docker image content has been structur
 │   ├── firewall
 │   │   ├── defaults
 │   │   │   └── main.yml
+│   │   ├── meta
+│   │   │   └── main.yml
 │   │   └── tasks
 │   │       └── main.yml
 │   ├── libvirt
 │   │   ├── files
 │   │   │   └── libvirt.profile.sh
+│   │   ├── meta
+│   │   │   └── main.yml
 │   │   └── tasks
 │   │       └── main.yml
 │   ├── networking
 │   │   ├── files
+│   │   │   ├── dnsmasq.add-hosts.conf
 │   │   │   ├── dnsmasq.cache.conf
 │   │   │   └── networkmanager.dns.conf
 │   │   ├── meta
@@ -328,6 +341,8 @@ Due to the way the The KVM IPI automation Docker image content has been structur
 │   │       └── haproxy.cfg.j2
 │   ├── ocp_build_installer
 │   │   ├── defaults
+│   │   │   └── main.yml
+│   │   ├── meta
 │   │   │   └── main.yml
 │   │   └── tasks
 │   │       └── main.yml
@@ -341,6 +356,8 @@ Due to the way the The KVM IPI automation Docker image content has been structur
 │   ├── ocp_install_clients
 │   │   ├── defaults
 │   │   │   └── main.yml
+│   │   ├── meta
+│   │   │   └── main.yml
 │   │   └── tasks
 │   │       ├── download_client_tarballs.yml
 │   │       └── main.yml
@@ -349,6 +366,8 @@ Due to the way the The KVM IPI automation Docker image content has been structur
 │   │   │   └── main.yml
 │   │   ├── files
 │   │   │   └── 03_openshift-machineconfigpool_infra-0.yaml
+│   │   ├── meta
+│   │   │   └── main.yml
 │   │   ├── tasks
 │   │   │   ├── main.yml
 │   │   │   ├── setup_infra_cluster_nodes.yml
@@ -359,19 +378,25 @@ Due to the way the The KVM IPI automation Docker image content has been structur
 │   │       ├── install-config.yaml.j2
 │   │       └── libvirt_network_dns_xml.j2
 │   ├── ocp_install_cluster_wrapup
+│   │   ├── meta
+│   │   │   └── main.yml
 │   │   └── tasks
 │   │       ├── main.yml
 │   │       ├── persist_libvirt_cluster_network.yml
 │   │       └── persist_ssh_config.yml
 │   ├── ocp_prepare_install
+│   │   ├── meta
+│   │   │   └── main.yml
 │   │   └── tasks
 │   │       └── main.yml
 │   ├── sanity_check
+│   │   ├── meta
+│   │   │   └── main.yml
 │   │   └── tasks
-│   │       ├── cpu_speed_check.yml
-│   │       ├── disk_speed_check.yml
 │   │       └── main.yml
 │   ├── selinux
+│   │   ├── meta
+│   │   │   └── main.yml
 │   │   └── tasks
 │   │       └── main.yml
 │   ├── tuning
@@ -380,6 +405,8 @@ Due to the way the The KVM IPI automation Docker image content has been structur
 │   │   │   └── main.yml
 │   │   ├── files
 │   │   │   └── 50-enable-rps.yaml
+│   │   ├── meta
+│   │   │   └── main.yml
 │   │   └── tasks
 │   │       ├── k8s_enable_rps.yml
 │   │       ├── libvirt_add_iothreads.yml
