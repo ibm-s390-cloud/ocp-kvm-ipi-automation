@@ -6,6 +6,8 @@ This repository contains Ansible playbooks to automate the setup of a dedicated 
 
 Please make sure to read the included project [documentation](docs/DOCUMENTATION.md) thoroughly before you get started.
 
+If you've encountered an issue while using the playbooks in this repository you might want to take a look at the [troubleshooting](docs/TROUBLESHOOTING.md) document.
+
 ## Contributing
 
 Contributions to this project have to be submitted under the Apache License, Version 2.0. See the included [LICENSE](LICENSE) file for more information.

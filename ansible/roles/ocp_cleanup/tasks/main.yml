@@ -153,8 +153,12 @@
       loop:
         - /etc/libvirt/hooks/qemu
   always:
+    - name: list all system services
+      ansible.builtin.service_facts:
+
     - name: restart libvirtd service
       ansible.builtin.service:
         name: libvirtd
         state: reloaded
         enabled: true
+      when: "'libvirtd' in ansible_facts.services"

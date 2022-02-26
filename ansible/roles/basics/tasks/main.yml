@@ -2,6 +2,18 @@
 
 - name: install prerequisite software packages
   block:
+    - name: install python3-dnf-plugin-versionlock package first
+      ansible.builtin.dnf:
+        name:
+          - python3-dnf-plugin-versionlock
+        state: present
+
+    - name: exclude known incompatible software packages from installation
+      community.general.dnf_versionlock:
+        name:
+          - libvirt*6.0.0-37.1.* # see: https://bugzilla.redhat.com/show_bug.cgi?id=2038812
+        state: excluded
+
     - name: install and update required dnf modules and package groups
       ansible.builtin.dnf:
         name:
@@ -56,7 +68,6 @@
           - python3-virtualenv
           - python3-libselinux
           - python3-libsemanage
-          - python3-dnf-plugin-versionlock
           - ipmitool
           - gcc
           - gcc-c++
