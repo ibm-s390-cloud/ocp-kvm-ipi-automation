@@ -5,7 +5,7 @@ galaxy_info:
   author: Dirk Haubenreisser (haubenr@de.ibm.com)
   description: Role performing performance-related OCP cluster configuration tasks
   company: IBM
-  license: Apache
+  license: Apache-2.0
   min_ansible_version: 2.10
   platforms:
     - name: EL
