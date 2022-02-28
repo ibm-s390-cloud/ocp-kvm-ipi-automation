@@ -74,7 +74,7 @@
 
     - name: add master cluster nodes to vbmc
       ansible.builtin.command:
-        cmd: 'vbmc add {{ master_node }} --username {{ vbmc_user }} --password {{ vbmc_password }} --address {{ vbmc_network_prefix }}.{{ vbmc_network_node_start + node_index }}'
+        cmd: '/opt/vbmc/bin/vbmc add {{ master_node }} --username {{ vbmc_user }} --password {{ vbmc_password }} --address {{ vbmc_network_prefix }}.{{ vbmc_network_node_start + node_index }}'
       loop: '{{ master_domains | sort }}'
       loop_control:
         loop_var: master_node
@@ -82,7 +82,7 @@
 
     - name: add worker cluster nodes to vbmc
       ansible.builtin.command:
-        cmd: 'vbmc add {{ worker_node }} --username {{ vbmc_user }} --password {{ vbmc_password }} --address {{ vbmc_network_prefix }}.{{ vbmc_network_node_start + node_index + (master_domains | length) }}'
+        cmd: '/opt/vbmc/bin/vbmc add {{ worker_node }} --username {{ vbmc_user }} --password {{ vbmc_password }} --address {{ vbmc_network_prefix }}.{{ vbmc_network_node_start + node_index + (master_domains | length) }}'
       loop: '{{ worker_domains | sort }}'
       loop_control:
         loop_var: worker_node
@@ -96,7 +96,7 @@
 
         - name: add infrastructure cluster nodes to vbmc
           ansible.builtin.command:
-            cmd: 'vbmc add {{ infra_node }} --username {{ vbmc_user }} --password {{ vbmc_password }} --address {{ vbmc_network_prefix }}.{{ vbmc_network_node_start + node_index + ((master_domains + worker_domains) | length) }}'
+            cmd: '/opt/vbmc/bin/vbmc add {{ infra_node }} --username {{ vbmc_user }} --password {{ vbmc_password }} --address {{ vbmc_network_prefix }}.{{ vbmc_network_node_start + node_index + ((master_domains + worker_domains) | length) }}'
           loop: '{{ infra_domains | sort }}'
           loop_control:
             loop_var: infra_node
@@ -117,11 +117,11 @@
 
     - name: start vbmc nodes
       ansible.builtin.command:
-        cmd: "vbmc start {{ all_domains | join(' ') }}"
+        cmd: "/opt/vbmc/bin/vbmc start {{ all_domains | join(' ') }}"
 
     - name: list started vbmc nodes
       ansible.builtin.command:
-        cmd: 'vbmc list -f yaml'
+        cmd: '/opt/vbmc/bin/vbmc list -f yaml'
       register: vbmc_node_list
 
     - name: convert vbmc node list output to yaml
@@ -140,7 +140,7 @@
   block:
     - name: list started vbmc nodes
       ansible.builtin.command:
-        cmd: 'vbmc list -f yaml'
+        cmd: '/opt/vbmc/bin/vbmc list -f yaml'
       register: vbmc_node_list
 
     - name: convert vbmc node list output to yaml
@@ -163,7 +163,7 @@
   block:
     - name: list started vbmc nodes
       ansible.builtin.command:
-        cmd: 'vbmc list -f yaml'
+        cmd: '/opt/vbmc/bin/vbmc list -f yaml'
       register: vbmc_node_list
 
     - name: convert vbmc node list output to yaml
