@@ -18,15 +18,16 @@
         owner: root
         group: root
         mode: '0644'
+        force: true
 
     - name: configure dnsmasq module for OpenShift
-      ansible.builtin.lineinfile:
-        path: /etc/NetworkManager/dnsmasq.d/openshift.conf
-        line: 'server=/{{ cluster_base_domain }}/{{ machine_network_prefix }}.1'
+      ansible.builtin.template:
+        src: '{{ role_path }}/templates/dnsmasq.openshift.conf.j2'
+        dest: /etc/NetworkManager/dnsmasq.d/openshift.conf
         owner: root
         group: root
         mode: '0644'
-        create: true
+        force: true
 
     - name: configure various aspects of dnsmasq
       ansible.builtin.copy:
@@ -35,6 +36,7 @@
         owner: root
         group: root
         mode: '0644'
+        force: true
       loop:
         - { 'src': 'dnsmasq.cache.conf', 'tgt': 'cache.conf' }
         - { 'src': 'dnsmasq.add-hosts.conf', 'tgt': 'add-hosts.conf' }
