@@ -1,10 +1,5 @@
 ---
 
-- name: determine version of openshift-install to use
-  block:
-
-
-
 - name: build openshift-install binary
   block:
     - name: create temporary checkout directory
