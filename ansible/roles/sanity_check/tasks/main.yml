@@ -67,9 +67,14 @@
         manager: auto
 
     # see: https://bugzilla.redhat.com/show_bug.cgi?id=2038812
-    - name: downgrade incompatible version of libvirt package
-      ansible.builtin.command:
-        cmd: 'yum downgrade -y libvirt'
+    - name: ensure that the KVM host has a compatible version of libvirt installed
+      ansible.builtin.assert:
+        that:
+          - ansible_facts.packages['libvirt'][0]['release'] is not startswith('37.1.module')
+        fail_msg: |-
+          "The KVM host has a version of libvirt installed that is known to be incompatible with OpenShift:"
+          "{{ ansible_facts.packages['libvirt'][0]['name'] }}-{{ ansible_facts.packages['libvirt'][0]['version'] }}-{{ ansible_facts.packages['libvirt'][0]['release'] }}"
+          "Follow these instructions in the troubleshooting guide to resolve the issue:"
+          "https://github.com/ibm-s390-cloud/ocp-kvm-ipi-automation/blob/main/docs/TROUBLESHOOTING.md#using-an-incompatible-libvirt-version"
       when:
         - "'libvirt' in ansible_facts.packages"
-        - ansible_facts.packages['libvirt'][0]['release'] is startswith('37.1.module')
