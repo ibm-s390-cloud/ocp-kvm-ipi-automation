@@ -13,6 +13,7 @@ class FilterModule(object):
             'get_resources': self.get_resources,
             'all': self.all,
             'cexmode': self.cexmode,
+            'parse_version': self.parse_version,
         }
 
     '''
@@ -97,3 +98,26 @@ class FilterModule(object):
             return ""
         except Exception:
             return ""
+
+    '''
+    Jinja2 filter that returns a dictionary containing the major, minor and micro
+    (patch-level) version information parsed from the given input.
+
+    Parameters:
+    - input: either a list of string values or a single string value
+    '''
+    def parse_version(self, input):
+        try:
+            from packaging.version import parse
+            if isinstance(input, list):
+                parsed_version = parse(input[0])
+            else:
+                parsed_version = parse(input)
+            out = {
+              "major": parsed_version.major,
+              "minor": parsed_version.minor,
+              "micro": parsed_version.micro,
+            }
+            return out
+        except Exception:
+            return None
