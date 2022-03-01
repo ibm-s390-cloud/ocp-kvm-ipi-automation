@@ -1,6 +1,6 @@
 ---
 
-- name: account for know prerequisite software package incompatibilities
+- name: account for known prerequisite software package incompatibilities
   block:
     - name: fetch RPM package facts
       ansible.builtin.package_facts:
