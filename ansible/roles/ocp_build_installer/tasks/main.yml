@@ -1,5 +1,10 @@
 ---
 
+- name: determine version of openshift-install to use
+  block:
+
+
+
 - name: build openshift-install binary
   block:
     - name: create temporary checkout directory
@@ -7,6 +12,30 @@
         state: directory
         suffix: ocpinst
       register: temp_dir
+
+    - name: download OpenShift release.txt file
+      ansible.builtin.get_url:
+        url: '{{ openshift_release_url }}'
+        dest: '{{ temp_dir.path }}/release.txt'
+        mode: '0440'
+        timeout: 120
+
+    - name: slurp OpenShift release.txt file
+      ansible.builtin.slurp:
+        src: '{{ temp_dir.path }}/release.txt'
+      register: ocp_release_txt
+
+    - name: determine version number of OpenShift release about to be installed
+      ansible.builtin.set_fact:
+        ocp_release_ver: "{{ ocp_release_txt['content'] | b64decode | trim | regex_search('^Name:[\\s]*([\\d.]*)$', '\\1', multiline=true) | parse_version }}"
+
+    - name: set openshift-install release version
+      ansible.builtin.set_fact:
+        openshift_installer_version: 'release-{{ ocp_release_ver.major }}.{{ ocp_release_ver.minor }}'
+      when:
+        - ocp_release_ver is defined
+        - ocp_release_ver.major is defined
+        - ocp_release_ver.minor is defined
 
     - name: fetch openshift-install source code
       ansible.builtin.git:
