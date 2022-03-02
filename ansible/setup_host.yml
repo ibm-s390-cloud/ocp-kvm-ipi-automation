@@ -2,6 +2,9 @@
 
 - hosts: s390x_kvm_host,ppc64le_kvm_host,x86_64_kvm_host
 
+  vars:
+    skip_libvirt_sanity_check: true
+
   roles:
     - role: sanity_check
       tags:
