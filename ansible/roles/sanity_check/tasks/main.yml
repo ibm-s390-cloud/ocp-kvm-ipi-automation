@@ -76,5 +76,5 @@
           "{{ ansible_facts.packages['libvirt'][0]['name'] }}-{{ ansible_facts.packages['libvirt'][0]['version'] }}-{{ ansible_facts.packages['libvirt'][0]['release'] }}"
           "Follow these instructions in the troubleshooting guide to resolve the issue:"
           "https://github.com/ibm-s390-cloud/ocp-kvm-ipi-automation/blob/main/docs/TROUBLESHOOTING.md#using-an-incompatible-libvirt-version"
-      when:
-        - "'libvirt' in ansible_facts.packages"
+      when: "'libvirt' in ansible_facts.packages"
+  when: skip_libvirt_sanity_check is not defined
