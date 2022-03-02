@@ -7,7 +7,6 @@
       tags:
         - sanity
         - preflight
-
       when: disable_sanity_check is undefined
 
     - role: ocp_prepare_install
