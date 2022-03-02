@@ -3,6 +3,7 @@
 - hosts: s390x_kvm_host
 
   vars:
+    skip_libvirt_sanity_check: true
     cluster_tuned_annotation: 'kvm-ipi-automation-tuned'
     cluster_version_patch: |-
       metadata:
