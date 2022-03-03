@@ -9,7 +9,9 @@
         owner: root
         group: root
         mode: '0644'
+        attributes: '+i'
         remote_src: true
+        force: false
 
     - name: enable dnsmasq module
       ansible.builtin.copy:
