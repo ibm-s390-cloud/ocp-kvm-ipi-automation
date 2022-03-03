@@ -143,7 +143,11 @@
     - name: remove /etc/resolv.conf backup file
       ansible.builtin.file:
         path: /etc/resolv.conf.bkup
-        state: absent
+        attributes: '-i'
+        state: '{{ item }}'
+      loop:
+        - touch
+        - absent
 
 - name: clean up libvirt hooks
   block:
