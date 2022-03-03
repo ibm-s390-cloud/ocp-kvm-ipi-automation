@@ -136,6 +136,7 @@
         owner: root
         group: root
         mode: '0644'
+        attributes: '-i'
         remote_src: true
       when: etc_resolv_conf_bkup_info.stat.exists
 
