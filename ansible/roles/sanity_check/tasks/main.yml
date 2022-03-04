@@ -36,29 +36,40 @@
 
     - name: calculate cluster configuration hardware demands
       ansible.builtin.set_fact:
+        total_cpu_cores_required: '{{ (openshift_master_number_of_cpus * 3 + openshift_worker_number_of_cpus * cluster_number_of_workers + openshift_infra_number_of_cpus * openshift_number_of_infra_nodes) / 2 }}'
         total_memory_required: '{{ openshift_master_memory_size * 3 + openshift_worker_memory_size * cluster_number_of_workers + openshift_infra_memory_size * openshift_number_of_infra_nodes }}'
         min_required_disk_space: '{{ (openshift_master_root_volume_size * 3 + openshift_worker_root_volume_size * cluster_number_of_workers + openshift_infra_root_volume_size * openshift_number_of_infra_nodes) / 5 }}'
       when: openshift_setup_dedicated_infra_nodes
 
     - name: calculate cluster configuration hardware demands
       ansible.builtin.set_fact:
+        total_cpu_cores_required: '{{ (openshift_master_number_of_cpus * 3 + openshift_worker_number_of_cpus * cluster_number_of_workers) / 2 }}'
         total_memory_required: '{{ openshift_master_memory_size * 3 + openshift_worker_memory_size * cluster_number_of_workers }}'
         min_required_disk_space: '{{ (openshift_master_root_volume_size * 3 + openshift_worker_root_volume_size * cluster_number_of_workers) / 5 }}'
       when: not openshift_setup_dedicated_infra_nodes
+
+    - name: set current number of CPU cores detected
+      ansible.builtin.set_fact:
+        total_cpu_cores_detected: '{{ ansible_processor_vcpus }}'
+      when: ansible_architecture is inlist(['ppc64le', 'x86_64'])
+
+    - name: set current number of CPU cores detected
+      ansible.builtin.set_fact:
+        total_cpu_cores_detected: '{{ ansible_processor_cores }}'
+      when: ansible_architecture == 's390x'
 
     - name: ensure that the hardware demands can be met by the KVM host
       ansible.builtin.assert:
         that:
           - 'ansible_memtotal_mb > total_memory_required | int'
-          - 'ansible_processor_cores > openshift_worker_number_of_cpus'
+          - 'total_cpu_cores_detected | int >= total_cpu_cores_required | int'
           - 'libvirt_free_space | int >= min_required_disk_space | int'
         fail_msg: |-
           "The KVM host does not meet the hardware demands required by your OpenShift cluster configuration."
           "Make sure the host has at least:"
-          "{{ total_memory_required }} MB of RAM available"
-          "{{ ansible_processor_cores }} CPU cores available"
-          "{{ min_required_disk_space | int | human_readable(unit='G') }} free disk space available at /var/lib/libvirt"
-      when: 0 > 1
+          "{{ total_memory_required | int }} MB of RAM available (current: {{ ansible_memtotal_mb }} MB)"
+          "{{ total_cpu_cores_required | int }} CPU cores available (current: {{ total_cpu_cores_detected | int }} CPU cores)"
+          "{{ min_required_disk_space | int | human_readable(unit='G') }} free disk space available at /var/lib/libvirt (current: {{ libvirt_free_space | int | human_readable(unit='G') }})"
 
 - name: ensure KVM host isn't using incompatible OS-level packages
   block:
