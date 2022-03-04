@@ -124,6 +124,10 @@
 
 - name: clean up /etc/resolv.conf
   block:
+    - name: remove immutability attribute from /etc/resolv.conf file
+      ansible.builtin.command:
+        cmd: 'chattr -i /etc/resolv.conf'
+
     - name: check if /etc/resolv.conf backup file exists
       ansible.builtin.stat:
         path: /etc/resolv.conf.bkup
@@ -136,7 +140,6 @@
         owner: root
         group: root
         mode: '0644'
-        attributes: '-i'
         remote_src: true
       when: etc_resolv_conf_bkup_info.stat.exists
 
@@ -148,6 +151,10 @@
       loop:
         - touch
         - absent
+  always:
+    - name: add immutability attribute to /etc/resolv.conf file
+      ansible.builtin.command:
+        cmd: 'chattr +i /etc/resolv.conf'
 
 - name: clean up libvirt hooks
   block:
