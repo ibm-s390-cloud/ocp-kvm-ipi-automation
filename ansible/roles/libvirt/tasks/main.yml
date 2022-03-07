@@ -10,6 +10,7 @@
         state: present
         reload: true
       loop:
+        - net.ipv4.conf.all.arp_filter
         - net.ipv4.conf.all.proxy_arp
         - net.ipv4.conf.all.forwarding
         - net.ipv4.ip_forward
