@@ -2,7 +2,7 @@
 
 ## Purpose / Target Audience
 
-The playbooks in this repository are intended for setting up OpenShift clusters on s390x Linux LPARs that will be used for demonstration, education or proof-of-concept type purposes and thus are short-lived by intent. These playbooks are not meant to set up OpenShift clusters for production purposes or any kind of production-level workloads. Please note that OpenShift clusters set up by these playbooks will not be supported by Red Hat nor IBM.
+The playbooks in this repository are intended for setting up OpenShift clusters on Linux hosts that will be used for demonstration, education or proof-of-concept type purposes and thus are short-lived by intent. These playbooks are not meant to set up OpenShift clusters for production purposes or any kind of production-level workloads. Please note that OpenShift clusters set up by these playbooks will not be supported by Red Hat nor IBM.
 
 ## Prerequisites
 
@@ -10,8 +10,11 @@ In order to run the Ansible playbooks in this repository you need:
 
 - an Ansible **compatible** workstation
 - a working **Ansible 2.10 (or newer)** installation on your workstation
-- a suitably powerful s390x Linux LPAR running RHEL 8.x (tested with RHEL 8.4) with an **active** Red Hat subscription
-- a working SSH connection to that s390x Linux LPAR from your workstation user account to the LPAR's *root* acccount (password-less SSH)
+- a suitably powerful Linux host running RHEL 8.x (tested with RHEL 8.4 and RHEL 8.5) with an **active** Red Hat subscription using one of the following hardware architectures:
+  - s390x (an IBM Z / LinuxONE LPAR, supported: z13 / z14 / z15)
+  - ppc64le (an IBM Power Systems bare metal host or LPAR, supported: POWER9)
+  - x86_64 (an Intel- or AMD-based bare metal host)
+- a working SSH connection to that Linux host from your workstation user account to the host's *root* acccount (password-less SSH)
 - the OpenShift cluster image pull secrets file - see also [here](../ansible/secrets/README.md) for details
 
 Installing Ansible on your workstation should be fairly easy. Please refer to the Ansible installation guide [here](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) for detailed instructions.
@@ -84,8 +87,10 @@ cd ocp-kvm-ipi-automation/ansible
 # create a copy of the 'inventory.template' file
 cp inventory.template inventory
 
-# edit your 'inventory' file and replace the placeholder '$$YOUR_KVM_HOST_NAME$$' with the name of your remote s390x Linux LPAR
-# (make sure you can actually SSH into the LPAR as *root* user, see section Preferences above)
+# edit your 'inventory' file and replace the placeholder '$$YOUR_KVM_HOST_NAME$$' with the name of your remote Linux host
+# make sure to put your Linux host into the correct host group in the 'inventory' file according to the hardware
+# architecture of your Linux host
+# (make sure you can actually SSH into the host as *root* user, see section Preferences above)
 
 # put the OpenShift cluster image pull secrets file you've obtained in the subdirectory 'secrets' and name it '.ocp4_pull_secret'
 # (don't worry, it won't be persisted in git!)
@@ -93,25 +98,25 @@ cp inventory.template inventory
 # chdir into the 'host_vars' subdirectory
 cd host_vars
 
-# create a copy of the 'host.yml.template' file and name it '$$YOUR_KVM_HOST_NAME$$.yml' (make sure to replace the placeholder with the name of your remote s390x Linux LPAR - the name of the YAML file must match the host name you've configured in your 'inventory' file in the previous step)
+# create a copy of the 'host.yml.template' file and name it '$$YOUR_KVM_HOST_NAME$$.yml' (make sure to replace the placeholder with the name of your remote Linux host - the name of the YAML file must match the host name you've configured in your 'inventory' file in the previous step)
 cp host.yml.template $$YOUR_KVM_HOST_NAME$$.yml
 
-# edit your '$$YOUR_KVM_HOST_NAME$$.yml' configuration file and adapt it according to your needs / usage scenario / capabilities of your s390x Linux LPAR
+# edit your '$$YOUR_KVM_HOST_NAME$$.yml' configuration file and adapt it according to your needs / usage scenario / capabilities of your Linux host
 ```
 
 Once you've finished with these preparations you can proceed to the actual OpenShift cluster installation.
 
-### s390x Linux LPAR
+### Linux host
 
 **You need to start with a vanilla installation of RHEL 8.x! This is very important as any existing KVM-based OpenShift cluster installation or remaining artifacts / configuration snippets thereof are very likely to interfere with the different setup and configuration steps done by these playbooks.**
 
-Once the initial RHEL OS installation is done, simply transfer your public SSH key to the target s390x Linux LPAR's *root* user account:
+Once the initial RHEL OS installation is done, simply transfer your public SSH key to the target Linux host's *root* user account:
 
 ```bash
 ssh-copy-id -i $HOME/.ssh/id_rsa root@$$YOUR_KVM_HOST_NAME$$
 ```
 
-Make sure that your target s390x Linux LPAR has a working Python3 installation. You can do so by running the following command:
+Make sure that your target Linux host has a working Python3 installation. You can do so by running the following command:
 
 ```bash
 ssh root@$$YOUR_KVM_HOST_NAME$$ 'yum install -y python3'
@@ -121,10 +126,10 @@ That is it, everything else (in terms of host configuration / customization) is 
 
 ## The Ansible playbooks
 
-The OpenShift cluster installation on the target s390x Linux LPAR is split into three separate playbooks:
+The OpenShift cluster installation on the target Linux host is split into three separate playbooks:
 
 - setup_host.yml
-  - prepares the Linux LPAR for running KVM workloads, e.g:
+  - prepares the Linux host for running KVM workloads, e.g:
     - installs required software packages
     - configures SELinux
     - configures required networking settings
@@ -146,7 +151,7 @@ The OpenShift cluster installation on the target s390x Linux LPAR is split into 
     - adds SSH connection profiles for all OpenShift cluster nodes for user 'root'
     - installs and configures vbmc and IPMI (if configured)
 
-All this is done **automatically** - no user interaction or any manual intervention is required whatsoever! On a fairly powerful s390x Linux LPAR the whole OpenShift cluster installation process (including host setup etc.) should not take more than 30 minutes.
+All this is done **automatically** - no user interaction or any manual intervention is required whatsoever! On a fairly powerful Linux host the whole OpenShift cluster installation process (including host setup etc.) should not take more than 45 minutes.
 
 To kick off the OpenShift installation process you can either run the Ansible playbooks individually or use the main playbook entrypoint 'site.yml':
 
@@ -165,7 +170,7 @@ ansible-playbook -i inventory prepare_ocp_install.yml
 ansible-playbook -i inventory run_ocp_install.yml
 ```
 
-When the OpenShift cluster installation has finished successfully, you'll get a corresponding Ansible message. At that point the *root* user's account on the target Linux LPAR is properly configured with the OpenShift client tooling and the appropriate `/root/.kube/config` file is present. For more information please refer to the section [State of the KVM host after OpenShift cluster installation has finished successfully](#state-of-the-kvm-host-after-openshift-cluster-installation-has-finished-successfully) in this document.
+When the OpenShift cluster installation has finished successfully, you'll get a corresponding Ansible message. At that point the *root* user's account on the target Linux host is properly configured with the OpenShift client tooling and the appropriate `/root/.kube/config` file is present. For more information please refer to the section [State of the KVM host after OpenShift cluster installation has finished successfully](#state-of-the-kvm-host-after-openshift-cluster-installation-has-finished-successfully) in this document.
 
 For OpenShift cluster cleanup purposes there's a dedicated Ansible playbook included in this repository: `cleanup_ocp_install.yml`. This playbook attempts to destroy an existing OpenShift cluster (using 'openshift-install') and delete all stale resources that were used by the previously existing cluster / cluster installation attempt. Run the cleanup playbook like this:
 
@@ -234,15 +239,15 @@ ansible-playbook -i inventory check_ocp_cluster_state.yml
 
 ## Caveats
 
-While it is theoretically possible to install multiple OpenShift clusters on the same s390x Linux LPAR KVM host, the Ansible playbooks in this repository have been designed and implemented with a *single* OpenShift cluster in mind. That means that in case there is an existing OpenShift cluster already running on your target Linux LPAR (likely installed manually via UPI) these playbooks should not be used to establish *yet another* OpenShift cluster. It is recommended to destroy the existing cluster first (e.g. by utilizing the 'cleanup_ocp_install.yml' playbook) before attempting another installation.
+While it is theoretically possible to install multiple OpenShift clusters on the same Linux KVM host, the Ansible playbooks in this repository have been designed and implemented with a *single* OpenShift cluster in mind. That means that in case there is an existing OpenShift cluster already running on your target Linux host (likely installed manually via UPI) these playbooks should not be used to establish *yet another* OpenShift cluster. It is recommended to destroy the existing cluster first (e.g. by utilizing the 'cleanup_ocp_install.yml' playbook) before attempting another installation.
 
-While the OpenShift cluster installation on a reasonably powerful Linux LPAR is quite fast, there might be occasions where the installation runs into some sort of timeout that is imposed by these Ansible playbooks. For the cluster installation itself, this timeout is set to 3600 seconds (one hour).
+While the OpenShift cluster installation on a reasonably powerful Linux host is quite fast, there might be occasions where the installation runs into some sort of timeout that is imposed by these Ansible playbooks. For the cluster installation itself, this timeout is set to 3600 seconds (one hour).
 
 For more information please see also the included [troubleshooting](TROUBLESHOOTING.md) document.
 
 ## Running the playbooks from within a Docker container
 
-This repository includes a Dockerfile that can be used to build a Docker image containing Ansible (and all packages required by Ansible) and the KVM IPI automation playbooks. This Docker image can then either be used as the base image for further customizations (e.g. adding your own playbooks or roles on top of the existing ones) or as-is in order to run the playbooks against any appropriate s390x Linux LPAR KVM host directly.
+This repository includes a Dockerfile that can be used to build a Docker image containing Ansible (and all packages required by Ansible) and the KVM IPI automation playbooks. This Docker image can then either be used as the base image for further customizations (e.g. adding your own playbooks or roles on top of the existing ones) or as-is in order to run the playbooks against any appropriate Linux KVM host directly.
 
 ### Building the Docker image yourself
 
@@ -270,7 +275,9 @@ Due to the way the The KVM IPI automation Docker image content has been structur
 │   └── FilterUtils.py
 ├── group_vars
 │   ├── all.yml
-│   └── s390x_kvm_host.yml
+│   ├── ppc64le_kvm_host.yml
+│   ├── s390x_kvm_host.yml
+│   └── x86_64_kvm_host.yml
 ├── inventory.template
 ├── prepare_ocp_install.yml
 ├── reboot_host.yml
@@ -338,6 +345,7 @@ Due to the way the The KVM IPI automation Docker image content has been structur
 │   │   ├── tasks
 │   │   │   └── main.yml
 │   │   └── templates
+│   │   │   ├── dnsmasq.openshift.conf.j2
 │   │       └── haproxy.cfg.j2
 │   ├── ocp_build_installer
 │   │   ├── defaults
@@ -427,6 +435,7 @@ Due to the way the The KVM IPI automation Docker image content has been structur
 │       └── templates
 │           └── ipmi_config.yaml.j2
 ├── run_ocp_install.yml
+├── run_sanity_checks.yml
 ├── setup_host.yml
 ├── site.yml
 ├── start_ocp_cluster_nodes.yml
@@ -471,7 +480,7 @@ ADD inventory inventory
 # add a fixed 'host_vars' directory (which is deliberately omitted from the base image)
 ADD host_vars host_vars
 
-# add EP11 binary packages to be installed on the host (optional)
+# add EP11 binary packages to be installed on the host (optional, s390x only)
 COPY ep11-host-*s390x.rpm roles/crypto/files/ep11/
 
 # add some more stuff...
