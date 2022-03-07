@@ -11,6 +11,7 @@ class TestModule(object):
             'startswith': self.startswith,
             'contains': self.contains,
             'isrange': self.isrange,
+            'inlist': self.inlist,
         }
 
     '''
@@ -54,5 +55,18 @@ class TestModule(object):
     def isrange(self, input, start=0):
         try:
             return sorted(input) == list(range(start, max(input) + 1))
+        except TypeError:
+            return False
+
+    '''
+    Jinja2 test that checks if a given input string is member of a given list of values.
+
+    Parameters:
+    - input: the string that is to be checked if it is a member of a list of values
+    - values: the list of values that input will be checked against
+    '''
+    def inlist(self, input, values):
+        try:
+            return input in values
         except TypeError:
             return False

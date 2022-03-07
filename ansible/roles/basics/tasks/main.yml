@@ -118,7 +118,7 @@
 
     - name: download go tarball
       ansible.builtin.get_url:
-        url: 'https://dl.google.com/go/go{{ go_version }}.linux-{{ ansible_architecture }}.tar.gz'
+        url: 'https://dl.google.com/go/go{{ go_version }}.linux-{{ architecture_alias }}.tar.gz'
         dest: '{{ temp_dir.path }}/go{{ go_version }}.tar.gz'
         mode: '0440'
         timeout: 120
@@ -214,7 +214,7 @@
 
     - name: create global terraform plugin directory
       ansible.builtin.file:
-        path: '/usr/local/share/terraform/plugins/local/ibm-cloud/ibm/{{ terraform_ibm_provider_version }}/linux_{{ ansible_architecture }}'
+        path: '/usr/local/share/terraform/plugins/local/ibm-cloud/ibm/{{ terraform_ibm_provider_version }}/linux_{{ architecture_alias }}'
         owner: root
         group: root
         mode: '0775'
@@ -222,13 +222,13 @@
 
     - name: remove existing terraform-provider-ibm binary if present
       ansible.builtin.file:
-        path: '/usr/local/share/terraform/plugins/local/ibm-cloud/ibm/{{ terraform_ibm_provider_version }}/linux_{{ ansible_architecture }}/terraform-provider-ibm'
+        path: '/usr/local/share/terraform/plugins/local/ibm-cloud/ibm/{{ terraform_ibm_provider_version }}/linux_{{ architecture_alias }}/terraform-provider-ibm'
         state: absent
 
     - name: copy terraform-provider-ibm binary to global terraform plugin directory
       ansible.builtin.copy:
         src: '{{ temp_dir.path }}/terraform-provider-ibm/terraform-provider-ibm'
-        dest: '/usr/local/share/terraform/plugins/local/ibm-cloud/ibm/{{ terraform_ibm_provider_version }}/linux_{{ ansible_architecture }}/terraform-provider-ibm'
+        dest: '/usr/local/share/terraform/plugins/local/ibm-cloud/ibm/{{ terraform_ibm_provider_version }}/linux_{{ architecture_alias }}/terraform-provider-ibm'
         owner: root
         group: root
         mode: '0755'
@@ -250,7 +250,7 @@
 
     - name: download helm tarball
       ansible.builtin.get_url:
-        url: 'https://get.helm.sh/helm-v{{ helm_version }}-linux-{{ ansible_architecture }}.tar.gz'
+        url: 'https://get.helm.sh/helm-v{{ helm_version }}-linux-{{ architecture_alias }}.tar.gz'
         dest: '{{ temp_dir.path }}/helm-v{{ helm_version }}.tar.gz'
         mode: '0440'
         timeout: 120
@@ -270,10 +270,10 @@
         mode: '0755'
         extra_opts:
           - --transform
-          - 's/^linux-{{ ansible_architecture }}//'
+          - 's/^linux-{{ architecture_alias }}//'
         exclude:
-          - 'linux-{{ ansible_architecture }}/README.md'
-          - 'linux-{{ ansible_architecture }}/LICENSE'
+          - 'linux-{{ architecture_alias }}/README.md'
+          - 'linux-{{ architecture_alias }}/LICENSE'
   always:
     - name: delete temporary download directory
       ansible.builtin.file:
@@ -310,7 +310,7 @@
 
     - name: copy butane binary to /usr/local/bin
       ansible.builtin.copy:
-        src: '{{ temp_dir.path }}/butane/bin/{{ ansible_architecture }}/butane'
+        src: '{{ temp_dir.path }}/butane/bin/{{ architecture_alias }}/butane'
         dest: /usr/local/bin/butane
         owner: root
         group: root

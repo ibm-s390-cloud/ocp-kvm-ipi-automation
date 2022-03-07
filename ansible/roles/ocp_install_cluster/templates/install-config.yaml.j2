@@ -1,12 +1,12 @@
 apiVersion: v1
 baseDomain: {{ cluster_base_domain }}
 compute:
-- architecture: {{ ansible_architecture }}
+- architecture: {{ architecture_alias }}
   hyperthreading: Enabled
   name: worker
   replicas: {{ cluster_number_of_workers }}
 controlPlane:
-  architecture: {{ ansible_architecture }}
+  architecture: {{ architecture_alias }}
   hyperthreading: Enabled
   name: master
   replicas: 3

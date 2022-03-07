@@ -1,0 +1,5 @@
+---
+
+# default settings that apply to all x86_64_kvm_host hosts
+
+architecture_alias: amd64

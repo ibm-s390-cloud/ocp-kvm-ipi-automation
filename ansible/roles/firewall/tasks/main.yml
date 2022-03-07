@@ -12,6 +12,7 @@
         name: firewalld
         state: started
         enabled: true
+        masked: false
 
     - name: add libvirt rich-rule
       ansible.posix.firewalld:

@@ -67,7 +67,7 @@
 
     - name: generate manifests using openshift-install binary
       ansible.builtin.command:
-        cmd: 'openshift-install create manifests --dir={{ openshift_installer_workdir }}'
+        cmd: '/usr/local/bin/openshift-install create manifests --dir={{ openshift_installer_workdir }}'
       environment:
         OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE: '{{ openshift_release_image.stdout }}'
         OPENSHIFT_INSTALL_OS_IMAGE_OVERRIDE: '{{ openshift_rhcos_image_url_local }}'
@@ -139,7 +139,7 @@
 
 - name: trigger cluster installation using openshift-install binary
   ansible.builtin.command:
-    cmd: 'openshift-install create cluster --dir={{ openshift_installer_workdir }}'
+    cmd: '/usr/local/bin/openshift-install create cluster --dir={{ openshift_installer_workdir }}'
   environment:
     OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE: '{{ openshift_release_image.stdout }}'
     OPENSHIFT_INSTALL_OS_IMAGE_OVERRIDE: '{{ openshift_rhcos_image_url }}'

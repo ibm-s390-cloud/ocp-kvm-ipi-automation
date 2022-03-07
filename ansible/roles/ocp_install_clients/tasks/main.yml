@@ -10,8 +10,8 @@
 
     - name: set default OpenShift and OPM client tarball download location variables
       ansible.builtin.set_fact:
-        oc_package_install_loc: 'http://mirror.openshift.com/pub/openshift-v4/{{ ansible_architecture }}/clients/ocp/{{ openshift_client_version }}/openshift-client-linux.tar.gz'
-        opm_package_install_loc: 'http://mirror.openshift.com/pub/openshift-v4/{{ ansible_architecture }}/clients/ocp/{{ openshift_client_version }}/opm-linux.tar.gz'
+        oc_package_install_loc: 'http://mirror.openshift.com/pub/openshift-v4/{{ architecture_alias }}/clients/ocp/{{ openshift_client_version }}/openshift-client-linux.tar.gz'
+        opm_package_install_loc: 'http://mirror.openshift.com/pub/openshift-v4/{{ architecture_alias }}/clients/ocp/{{ openshift_client_version }}/opm-linux.tar.gz'
 
     - name: download OpenShift and OPM client tarballs
       ansible.builtin.include_tasks: '{{ role_path }}/tasks/download_client_tarballs.yml'

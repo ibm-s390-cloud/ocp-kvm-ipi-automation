@@ -1,6 +1,6 @@
 ---
 
-- hosts: s390x_kvm_host
+- hosts: s390x_kvm_host,ppc64le_kvm_host,x86_64_kvm_host
 
   tasks:
     - name: start OpenShift cluster nodes

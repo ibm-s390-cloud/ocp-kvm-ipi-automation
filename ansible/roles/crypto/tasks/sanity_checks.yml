@@ -1,8 +1,10 @@
 ---
 
-- name: only continue if there are actually any crypto resources configured
+- name: only continue if the targeted KVM host architecture is s390x and there are actually any crypto resources configured
   ansible.builtin.assert:
-    that: crypto_adapters is defined
+    that:
+      - "ansible_architecture == 's390x'"
+      - crypto_adapters is defined
 
 - name: only continue if the number of workers assigned to crypto resources does not exceed the overall number of workers configured
   block:

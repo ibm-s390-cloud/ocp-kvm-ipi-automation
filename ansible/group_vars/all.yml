@@ -2,6 +2,8 @@
 
 # settings for all Ansible hosts
 
+# Ansible-specific settings
+
 ansible_python_interpreter: '/usr/bin/python3'
 
 ansible_ssh_common_args: >
@@ -9,3 +11,27 @@ ansible_ssh_common_args: >
   -o BatchMode=yes
   -o UserKnownHostsFile=/dev/null
   -o StrictHostKeyChecking=no
+
+ansible_user: root
+
+# OpenShift-specific default settings
+
+openshift_installer_workdir: /root/ocp4-workdir
+
+machine_network_prefix: 192.168.126
+machine_network_master_range: 10
+machine_network_worker_range: 50
+
+cluster_network: '10.128.0.0/14'
+cluster_network_hostprefix: 23
+
+service_networks:
+  - 172.30.0.0/16
+
+openshift_setup_dedicated_infra_nodes: false
+openshift_number_of_infra_nodes: 2
+openshift_infra_root_volume_size: 68719476736
+openshift_infra_number_of_cpus: 4
+openshift_infra_memory_size: 16384
+
+cluster_waiting_period: 600

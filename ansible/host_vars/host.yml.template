@@ -25,8 +25,8 @@ openshift_worker_root_volume_size: 137438953472   # in bytes
 openshift_worker_number_of_cpus: 16
 openshift_worker_memory_size: 32768               # in mebibytes (recommended **minimum** value)
 
-openshift_release_url: 'https://mirror.openshift.com/pub/openshift-v4/s390x/clients/ocp/stable-4.9/release.txt'
-openshift_rhcos_image_url: 'https://mirror.openshift.com/pub/openshift-v4/s390x/dependencies/rhcos/4.9/4.9.0/rhcos-4.9.0-s390x-qemu.s390x.qcow2.gz'
+openshift_release_url: 'https://mirror.openshift.com/pub/openshift-v4/{{ ansible_architecture }}/clients/ocp/stable-4.9/release.txt'
+openshift_rhcos_image_url: 'https://mirror.openshift.com/pub/openshift-v4/{{ ansible_architecture }}/dependencies/rhcos/4.9/4.9.0/rhcos-4.9.0-{{ ansible_architecture }}-qemu.{{ ansible_architecture }}.qcow2.gz'
 
 #############################################
 # <-- mandatory variables that need to be set
@@ -34,14 +34,15 @@ openshift_rhcos_image_url: 'https://mirror.openshift.com/pub/openshift-v4/s390x/
 
 #############################################
 # --> optional variables that don't necessarily to be set
+# (these apply to all support server architectures)
 #############################################
 
 # the version of the OpenShift client tools to be installed on the KVM host
 openshift_client_version: 'stable-4.9'
 
 # the download source location of the OpenShift client tools packages
-oc_package_binary_url: 'https://mirror.openshift.com/pub/openshift-v4/s390x/clients/ocp/{{ openshift_client_version }}/openshift-client-linux.tar.gz'
-opm_package_binary_url: 'https://mirror.openshift.com/pub/openshift-v4/s390x/clients/ocp/{{ openshift_client_version }}/opm-linux.tar.gz'
+oc_package_binary_url: 'https://mirror.openshift.com/pub/openshift-v4/{{ ansible_architecture }}/clients/ocp/{{ openshift_client_version }}/openshift-client-linux.tar.gz'
+opm_package_binary_url: 'https://mirror.openshift.com/pub/openshift-v4/{{ ansible_architecture }}/clients/ocp/{{ openshift_client_version }}/opm-linux.tar.gz'
 
 # whether to install and setup vbmc and ipmi (usually only needed if you intend to use 'ocs-ci' with your OpenShift cluster)
 setup_vbmc_ipmi: false
@@ -81,6 +82,16 @@ service_networks:
 # (see also: https://docs.openshift.com/container-platform/4.9/machine_management/creating-infrastructure-machinesets.html)
 openshift_setup_dedicated_infra_nodes: false
 
+#############################################
+# <-- optional variables that don't necessarily to be set
+# (these apply to all support server architectures)
+#############################################
+
+#############################################
+# --> optional variables that don't necessarily to be set
+# (these apply only to *s390x* server architecture)
+#############################################
+
 # a list of crypto resources present on the host that are to be exposed
 # to the OpenShift cluster worker nodes (using the k8s CEX device plugin)
 # (see also: https://github.com/ibm-s390-cloud/k8s-cex-dev-plugin)
@@ -97,4 +108,5 @@ crypto_config_set_project: kvm-ipi-automation
 
 #############################################
 # <-- optional variables that don't necessarily to be set
+# (these apply only to *s390x* server architecture)
 #############################################

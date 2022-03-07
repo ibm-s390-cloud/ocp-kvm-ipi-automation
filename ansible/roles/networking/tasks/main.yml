@@ -2,6 +2,10 @@
 
 - name: configure NetworkManager
   block:
+    - name: remove immutability attribute from /etc/resolv.conf file
+      ansible.builtin.command:
+        cmd: 'chattr -i /etc/resolv.conf'
+
     - name: create backup of /etc/resolv.conf file
       ansible.builtin.copy:
         src: /etc/resolv.conf
@@ -60,6 +64,10 @@
         line: '{{ item }}'
         insertafter: '^nameserver.*$'
       loop: "{{ original_etc_resolv_conf['content'] | b64decode | trim | regex_findall('^nameserver.*$', multiline=true) }}"
+  always:
+    - name: add immutability attribute to /etc/resolv.conf file
+      ansible.builtin.command:
+        cmd: 'chattr +i /etc/resolv.conf'
 
 - name: configure haproxy
   block:
