@@ -1,0 +1,15 @@
+---
+
+- name: wait for OpenShift cluster to be fully operational
+  ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/wait_for_cluster.yml'
+
+- name: apply 'receive flow steering' network configuration to cluster worker nodes
+  kubernetes.core.k8s:
+    kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+    state: present
+    definition: '{{ lookup("file", "{{ role_path }}/files/50-enable-rfs.yaml") | from_yaml }}'
+
+- name: wait for {{ cluster_waiting_period }} seconds for the cluster to apply changes
+  ansible.builtin.wait_for:
+    timeout: '{{ cluster_waiting_period }}'
+  delegate_to: localhost
