@@ -412,11 +412,13 @@ Due to the way the The KVM IPI automation Docker image content has been structur
 │   │   ├── defaults
 │   │   │   └── main.yml
 │   │   ├── files
-│   │   │   └── 50-enable-rps.yaml
+│   │   │   ├── 50-enable-rfs.yaml
+│   │   │   └── thp-workers-profile.yaml
 │   │   ├── meta
 │   │   │   └── main.yml
 │   │   └── tasks
-│   │       ├── k8s_enable_rps.yml
+│   │       ├── k8s_disable_thps.yml
+│   │       ├── k8s_enable_rfs.yml
 │   │       ├── libvirt_add_iothreads.yml
 │   │       ├── libvirt_disable_memballoon.yml
 │   │       ├── libvirt_optimize_disks.yml

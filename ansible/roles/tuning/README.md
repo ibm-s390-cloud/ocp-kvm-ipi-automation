@@ -18,6 +18,7 @@ The cluster tuning playbook (and by proxy the role) tunes various aspects of the
 - <https://docs.openshift.com/container-platform/4.8/scalability_and_performance/ibm-z-recommended-host-practices.html#ibm-z-rhel-kvm-host-recommendations_ibm-z-recommended-host-practices>
 - <https://www.ibm.com/docs/en/linux-on-systems?topic=cpus-virtual-cpu-tuning>
 - <https://public.dhe.ibm.com/software/dw/linux390/perf/OpenShift_on_IBM_Z_-_Performance_Experiences_V11.pdf>
+- <https://developer.ibm.com/tutorials/red-hat-openshift-on-ibm-z-tune-your-network-performance-with-rfs/>
 
 In order to change the various configuration parameters of the cluster nodes, the playbook is divided into two distinct phases and the corresponding subsequent actions:
 
@@ -29,7 +30,8 @@ In order to change the various configuration parameters of the cluster nodes, th
   - increase the CPU weight (shares) for all cluster worker nodes
 
 - OpenShift cluster is online:
-  - enable 'receive packet steering' network setting for all cluster worker nodes
+  - enable 'receive flow steering' network setting for all cluster worker nodes
+  - disable transparent huge pages for all cluster worker nodes
 
 At the end of the successful cluster tuning process, the OpenShift cluster is online and fully operational. The result of the cluster tuning process is documented *within* the cluster itself, using an annotation field in the `ClusterVersion` object's metadata:
 

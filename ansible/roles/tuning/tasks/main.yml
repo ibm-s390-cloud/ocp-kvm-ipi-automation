@@ -86,5 +86,8 @@
 
 - name: tune cluster nodes (OpenShift cluster modifications)
   block:
-    - name: enable 'receive package steering' network configuration
-      ansible.builtin.include_tasks: '{{ role_path }}/tasks/k8s_enable_rps.yml'
+    - name: enable 'receive flow steering' network configuration on cluster worker nodes
+      ansible.builtin.include_tasks: '{{ role_path }}/tasks/k8s_enable_rfs.yml'
+
+    - name: disable transparent huge pages on cluster worker nodes
+      ansible.builtin.include_tasks: '{{ role_path }}/tasks/k8s_disable_thps.yml'
