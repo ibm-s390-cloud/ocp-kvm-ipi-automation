@@ -1,7 +1,7 @@
-# OpenShift on KVM IPI Installation Automation for IBM Z / LinuxONE
+# OpenShift on KVM IPI Installation Automation for IBM Z / LinuxONE (and IBM Power Systems and Intel / AMD x86_64)
 
 This repository contains Ansible playbooks to install an OpenShift cluster via the OpenShift installer 'IPI' method (installer-provisioned infrastructure) using KVM and libvirt on a dedicated Linux host.
-The primary focus of these playbooks is installating and configuring OpenShift on IBM Z / LinuxONE hosts (architecture: s390x) but IBM Power System host (architecture: ppc64le) and Intel-based hosts (architecture: x86_64) are also supported.
+The primary focus of these playbooks is installating and configuring OpenShift on IBM Z / LinuxONE hosts (architecture: s390x) but IBM Power System hosts (architecture: ppc64le) and Intel-based hosts (architecture: x86_64) are also supported.
 
 ## Documentation
 

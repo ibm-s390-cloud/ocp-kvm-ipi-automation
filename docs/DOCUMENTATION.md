@@ -124,6 +124,12 @@ ssh root@$$YOUR_KVM_HOST_NAME$$ 'yum install -y python3'
 
 That is it, everything else (in terms of host configuration / customization) is done by the Ansible playbooks in this repository.
 
+### A note on IBM Power Systems
+
+These playbooks have been successfully tested on an IBM Power System LC922 bare metal server running Red Hat Enterprise Linux 8.5. Tests on older POWER8-based hardware were not successful however as some virtualization features required by OCP running on top of KVM and libvirt are not available on that type of hardware.
+
+Please note that Red Hat has issued a deprecation notice for KVM on IBM Power Systems that makes using these playbooks on POWER10 hardware less feasible. For more details please check out this link: <https://access.redhat.com/articles/6005061>.
+
 ## The Ansible playbooks
 
 The OpenShift cluster installation on the target Linux host is split into three separate playbooks:
