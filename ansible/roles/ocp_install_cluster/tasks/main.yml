@@ -197,7 +197,7 @@
         dest: ~root/.kube/config
         owner: root
         group: root
-        mode: '0644'
+        mode: '0600'
         remote_src: true
 
 - name: wait until cluster installation has finished
