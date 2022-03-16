@@ -36,7 +36,7 @@
 
     - name: calculate cluster configuration hardware demands
       ansible.builtin.set_fact:
-        total_cpu_cores_required: '{{ (openshift_master_number_of_cpus * 3 + openshift_worker_number_of_cpus * cluster_number_of_workers + openshift_infra_number_of_cpus * openshift_number_of_infra_nodes) / 2 }}'
+        total_cpu_cores_required: '{{ (openshift_master_number_of_cpus * 3 + openshift_worker_number_of_cpus * cluster_number_of_workers + openshift_infra_number_of_cpus * openshift_number_of_infra_nodes) / sanity_check_cpu_overcommit_factor }}'
         total_memory_required: '{{ openshift_master_memory_size * 3 + openshift_worker_memory_size * cluster_number_of_workers + openshift_infra_memory_size * openshift_number_of_infra_nodes }}'
         min_required_disk_space: '{{ (openshift_master_root_volume_size * 3 + openshift_worker_root_volume_size * cluster_number_of_workers + openshift_infra_root_volume_size * openshift_number_of_infra_nodes) / 5 }}'
       when: openshift_setup_dedicated_infra_nodes
