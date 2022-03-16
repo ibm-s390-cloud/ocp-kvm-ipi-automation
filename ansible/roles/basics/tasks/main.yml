@@ -95,6 +95,23 @@
           - bash-completion
         state: present
 
+- name: install optional software packages
+  block:
+    - name: install packages applicable to all host architectures
+      ansible.builtin.dnf:
+        name:
+          - 'https://tcping-multi-arch.s3.eu.cloud-object-storage.appdomain.cloud/tcping-1.0.1.{{ ansible_architecture }}.rpm'
+        state: present
+        disable_gpg_check: true
+
+    - name: install packages applicable to s390x hosts only
+      ansible.builtin.dnf:
+        name:
+          - 'https://zhwmodel.s3.eu.cloud-object-storage.appdomain.cloud/zhwmodel-1.4-529ca10.s390x.rpm'
+        state: present
+        disable_gpg_check: true
+      when: "ansible_architecture == 's390x'"
+
 - name: install prerequisite Python packages
   ansible.builtin.pip:
     name:
