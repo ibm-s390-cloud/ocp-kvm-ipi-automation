@@ -3,5 +3,4 @@
 # default settings that apply to all ppc64le_kvm_host hosts
 
 architecture_alias: ppc64le
-
 sanity_check_cpu_overcommit_factor: 4

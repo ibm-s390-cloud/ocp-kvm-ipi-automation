@@ -7,6 +7,8 @@ The primary focus of these playbooks is installating and configuring OpenShift o
 
 Please make sure to read the included project [documentation](docs/DOCUMENTATION.md) thoroughly before you get started.
 
+For frequently asked questions please refer to the [FAQ](docs/FAQ.md) document.
+
 If you've encountered an issue while using the playbooks in this repository you might want to take a look at the [troubleshooting](docs/TROUBLESHOOTING.md) document.
 
 ## Contributing
