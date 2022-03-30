@@ -25,8 +25,8 @@ openshift_worker_root_volume_size: 137438953472   # in bytes
 openshift_worker_number_of_cpus: 16
 openshift_worker_memory_size: 32768               # in mebibytes (recommended **minimum** value)
 
-openshift_release_url: 'https://mirror.openshift.com/pub/openshift-v4/{{ ansible_architecture }}/clients/ocp/stable-4.9/release.txt'
-openshift_rhcos_image_url: 'https://mirror.openshift.com/pub/openshift-v4/{{ ansible_architecture }}/dependencies/rhcos/4.9/4.9.0/rhcos-4.9.0-{{ ansible_architecture }}-qemu.{{ ansible_architecture }}.qcow2.gz'
+openshift_release_url: 'https://mirror.openshift.com/pub/openshift-v4/{{ ansible_architecture }}/clients/ocp/stable-4.10/release.txt'
+openshift_rhcos_image_url: 'https://mirror.openshift.com/pub/openshift-v4/{{ ansible_architecture }}/dependencies/rhcos/4.10/latest/rhcos-qemu.{{ ansible_architecture }}.qcow2.gz'
 
 #############################################
 # <-- mandatory variables that need to be set
@@ -38,7 +38,7 @@ openshift_rhcos_image_url: 'https://mirror.openshift.com/pub/openshift-v4/{{ ans
 #############################################
 
 # the version of the OpenShift client tools to be installed on the KVM host
-openshift_client_version: 'stable-4.9'
+openshift_client_version: 'stable-4.10'
 
 # the download source location of the OpenShift client tools packages
 oc_package_binary_url: 'https://mirror.openshift.com/pub/openshift-v4/{{ ansible_architecture }}/clients/ocp/{{ openshift_client_version }}/openshift-client-linux.tar.gz'
