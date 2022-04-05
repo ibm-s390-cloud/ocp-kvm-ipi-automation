@@ -122,6 +122,7 @@
         - /usr/local/share/terraform/plugins/local/ibm-cloud/ibm
         - /usr/local/bin/helm
         - /usr/local/bin/butane
+        - /usr/local/bin/ocm
         - /etc/bash_completion.d/oc
 
 - name: check if SSH configuration for user root exists
