@@ -8,3 +8,5 @@ terraform_ibm_provider_version: 1.38.0
 helm_version: 3.8.0
 
 butane_version: 0.14.0
+
+ocm_version: 0.1.62

@@ -1,3 +1,5 @@
 ---
 
 cleanup_ignore_errors: false
+
+ocm_api_token_file: '{{ inventory_dir }}/secrets/.ocm_api_token'
