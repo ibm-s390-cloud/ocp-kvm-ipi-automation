@@ -368,6 +368,7 @@ Due to the way the The KVM IPI automation Docker image content has been structur
 │   │   ├── meta
 │   │   │   └── main.yml
 │   │   └── tasks
+│   │       ├── archive_cluster_ocm.yml
 │   │       └── main.yml
 │   ├── ocp_install_clients
 │   │   ├── defaults
@@ -452,6 +453,7 @@ Due to the way the The KVM IPI automation Docker image content has been structur
 ├── tasks
 │   ├── check_cluster_state.yml
 │   ├── get_cluster_name.yml
+│   ├── get_cluster_uid.yml
 │   ├── reboot_host.yml
 │   ├── start_cluster_nodes.yml
 │   └── wait_for_cluster.yml
