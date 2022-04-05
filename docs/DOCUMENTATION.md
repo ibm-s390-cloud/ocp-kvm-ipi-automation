@@ -188,6 +188,8 @@ cd ansible
 ansible-playbook -i inventory cleanup_ocp_install.yml [-e cleanup_ignore_errors=true]
 ```
 
+The cleanup playbook can also take care of de-registering the OpenShift cluster that is being destroyed from OpenShift Cluster Manager (OCM). For details on how to enable this OCM integration please refer to [here](../ansible/secrets/README.md).
+
 ## State of the KVM host after OpenShift cluster installation has finished successfully
 
 When the OpenShift cluster installation was successful you can interact with it in the usual ways. If you want to use the OpenShift client tooling from the command line (using `oc` or `kubectl`) you can do so by logging into the *root* user's account via SSH and just type away - the tools have been installed as part of the automated cluster installation via the Ansible playbooks. The 'kubeconfig' file is present in `/root/.kube/config` should you be looking for it.

@@ -339,3 +339,45 @@
         path: '{{ temp_dir.path }}'
         state: absent
       when: temp_dir.path is defined
+
+- name: compile and install ocm
+  block:
+    - name: create temporary download directory
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: ocm
+      register: temp_dir
+
+    - name: fetch ocm source code
+      ansible.builtin.git:
+        repo: 'https://github.com/openshift-online/ocm-cli.git'
+        dest: '{{ temp_dir.path }}/ocm-cli'
+        version: 'v{{ ocm_version }}'
+
+    - name: build ocm binary
+      ansible.builtin.command:
+        cmd: 'make all'
+        chdir: '{{ temp_dir.path }}/ocm-cli'
+      environment:
+        GOPATH: '{{ temp_dir.path }}/go'
+        PATH: '{{ ansible_env.PATH }}:/usr/local/go/bin:{{ temp_dir.path }}/go/bin'
+
+    - name: remove existing ocm binary from /usr/local/bin
+      ansible.builtin.file:
+        path: /usr/local/bin/ocm
+        state: absent
+
+    - name: copy ocm binary to /usr/local/bin
+      ansible.builtin.copy:
+        src: '{{ temp_dir.path }}/ocm-cli/ocm'
+        dest: /usr/local/bin/ocm
+        owner: root
+        group: root
+        mode: '0755'
+        remote_src: true
+  always:
+    - name: delete temporary download directory
+      ansible.builtin.file:
+        path: '{{ temp_dir.path }}'
+        state: absent
+      when: temp_dir.path is defined

@@ -1,0 +1,59 @@
+---
+
+- name: check if the OCM API token file exists on the Ansible controller
+  ansible.builtin.stat:
+    path: '{{ ocm_api_token_file }}'
+  register: ocm_api_token_file_info
+  delegate_to: localhost
+
+- name: check if the ocm binary exists
+  ansible.builtin.stat:
+    path: /usr/local/bin/ocm
+  register: ocm_binary_info
+
+- name: archive the cluster in OCM
+  block:
+    - name: login to OCM
+      ansible.builtin.command:
+        cmd: '/usr/local/bin/ocm login --token={{ lookup("file", "{{ ocm_api_token_file }}") }}'
+
+    - name: create temporary working directory
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: ocmreq
+      register: temp_dir
+
+    - name: generate OCM request payload file
+      ansible.builtin.copy:
+        dest: '{{ temp_dir.path }}/subscription_patch.json'
+        content: '{{ subscription_patch | to_json }}'
+        owner: root
+        group: root
+        mode: '0777'
+      vars:
+        subscription_patch:
+          status: Archived
+
+    - name: determine Subscription resource in OCM assigned to cluster UID
+      ansible.builtin.command:
+        cmd: '/usr/local/bin/ocm get /api/accounts_mgmt/v1/subscriptions --parameter search="external_cluster_id = ''{{ external_cluster_id }}''"'
+      register: ocm_cluster_subscription
+
+    - name: patch Subscription resource in OCM to mark cluster as 'archived'
+      ansible.builtin.command:
+        cmd: '/usr/local/bin/ocm patch /api/accounts_mgmt/v1/subscriptions/{{ ocm_cluster_subscription.stdout | from_json | community.general.json_query("items[0].id") }} --body ''{{ temp_dir.path }}/subscription_patch.json'''
+      when: ocm_cluster_subscription is success
+  always:
+    - name: delete temporary download directory
+      ansible.builtin.file:
+        path: '{{ temp_dir.path }}'
+        state: absent
+      when: temp_dir.path is defined
+
+    - name: logout from OCM
+      ansible.builtin.command:
+        cmd: '/usr/local/bin/ocm logout'
+  when:
+    - ocm_api_token_file_info.stat.exists
+    - ocm_binary_info.stat.exists
+    - ocm_binary_info.stat.executable

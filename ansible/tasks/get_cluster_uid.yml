@@ -1,0 +1,13 @@
+---
+
+- name: get ClusterVersion object
+  kubernetes.core.k8s_info:
+    kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+    api_version: 'config.openshift.io/v1'
+    kind: ClusterVersion
+    name: 'version'
+  register: cluster_version
+
+- name: set fact containing cluster UID
+  ansible.builtin.set_fact:
+    cluster_uid: '{{ cluster_version.resources[0].spec.clusterID }}'

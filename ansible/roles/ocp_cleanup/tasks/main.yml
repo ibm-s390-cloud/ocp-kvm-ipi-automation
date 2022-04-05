@@ -35,6 +35,12 @@
   register: install_log_info
   when: workdir_info.stat.exists and workdir_info.stat.isdir
 
+- name: check if cluster installation kubeconfig file exists
+  ansible.builtin.stat:
+    path: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+  register: install_kubeconfig_info
+  when: workdir_info.stat.exists and workdir_info.stat.isdir
+
 - name: check if openshift-install binary exists
   ansible.builtin.stat:
     path: /usr/local/bin/openshift-install
@@ -44,9 +50,16 @@
   ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_cluster_name.yml'
   when: workdir_info.stat.exists and workdir_info.stat.isdir and install_log_info.stat.exists
 
+- name: determine UID of existing cluster
+  ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_cluster_uid.yml'
+  when:
+    - workdir_info.stat.exists
+    - workdir_info.stat.isdir
+    - install_kubeconfig_info.stat.exists
+
 - name: destroy any existing cluster
   ansible.builtin.command:
-    cmd: 'openshift-install destroy cluster --dir={{ openshift_installer_workdir }}'
+    cmd: '/usr/local/bin/openshift-install destroy cluster --dir={{ openshift_installer_workdir }}'
   register: cluster_destroy
   when: workdir_info.stat.exists and workdir_info.stat.isdir and openshift_install_info.stat.exists
   ignore_errors: '{{ cleanup_ignore_errors }}'
@@ -66,6 +79,15 @@
       ansible.builtin.debug:
         var: stale_cluster_domains
   when: cluster_destroy is not skipped and cluster_destroy.rc != 0
+
+- name: archive cluster in OCM (if applicable)
+  ansible.builtin.include_tasks: '{{ role_path }}/tasks/archive_cluster_ocm.yml'
+  vars:
+    external_cluster_id: '{{ cluster_uid }}'
+  when:
+    - cluster_uid is defined
+    - cluster_destroy is not skipped
+    - cluster_destroy is success
 
 - name: remove all stale files and directories
   block:
@@ -144,7 +166,7 @@
       when: etc_resolv_conf_bkup_info.stat.exists
 
     - name: remove /etc/resolv.conf backup file
-      ansible.builtin.file:
+      ansible.builtin.file: # noqa risky-file-permissions
         path: /etc/resolv.conf.bkup
         attributes: '-i'
         state: '{{ item }}'
