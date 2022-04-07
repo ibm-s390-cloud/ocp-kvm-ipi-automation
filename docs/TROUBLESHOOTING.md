@@ -24,28 +24,28 @@ ansible-galaxy collection install -r requirements.yml --force
 
 Please note that it is very likely for the `requirements.yml` file to be updated on a regular basis as the playbooks in this repository will be enhanced over time. Therefore it is probably a good idea to always update the Ansible collections *after* you've pulled a new version of the `ocp-kvm-ipi-automation` GitHub repository.
 
-## The OCP cluster installation task times out
+## The RHOCP cluster installation task times out
 
-If you get timeouts from one of the following OCP cluster installation tasks:
+If you get timeouts from one of the following RHOCP cluster installation tasks:
 
 - 'wait until libvirt cluster network has been created' (playbook: 'run_ocp_install.yml')
 - 'wait until cluster installation has finished' (playbook: 'run_ocp_install.yml')
 
-it is most likely due to an issue with the OpenShift installer process that is run on the target KVM host. There's actually quite a few things that can go wrong during the OCP cluster installation process - the following sections describe the *known* issues that have been observed so far.
+it is most likely due to an issue with the OpenShift installer process that is run on the target KVM host. There's actually quite a few things that can go wrong during the RHOCP cluster installation process - the following sections describe the *known* issues that have been observed so far.
 
-Debugging the OCP installation process can be daunting task and requires some knowledge about OpenShift and libvirt / KVM in general. As a starting point it's best to observe the OCP installation process on the target KVM host by looking at the cluster installation log file:
+Debugging the RHOCP installation process can be daunting task and requires some knowledge about OpenShift and libvirt / KVM in general. As a starting point it's best to observe the RHOCP installation process on the target KVM host by looking at the cluster installation log file:
 
 ```bash
 # login to the target KVM host via SSH
 ssh root@$$YOUR_KVM_HOST_NAME$$
 
-# observe the OCP cluster installation log file
+# observe the RHOCP cluster installation log file
 tail -fn +1 /root/ocp4-workdir/.openshift_install.log
 ```
 
 ### Using an incompatible libvirt version
 
-The OCP cluster installation times out and you'll find this error message in the OCP cluster installation log file:
+The RHOCP cluster installation times out and you'll find this error message in the RHOCP cluster installation log file:
 
 ```text
 FATAL failed to initialize the cluster: Some cluster operators are still updating: authentication, console, image-registry, ingress, monitoring
@@ -69,7 +69,7 @@ openshift-machine-api   test1-xpjr5-worker-0-bm4cl   Provisioning               
 openshift-machine-api   test1-xpjr5-worker-0-bqhng   Provisioning                          46m
 ```
 
-This issue is caused by incompatible libvirt packages installed on your KVM host, making it impossible for the OpenShift installer to modify the libvirt network of the OCP cluster during the installation process.
+This issue is caused by incompatible libvirt packages installed on your KVM host, making it impossible for the OpenShift installer to modify the libvirt network of the RHOCP cluster during the installation process.
 
 To resolve this problem make sure to downgrade all libvirt packages on your KVM host to a working version like this:
 
@@ -81,7 +81,7 @@ ssh root@$$YOUR_KVM_HOST_NAME$$
 yum downgrade -y libvirt
 ```
 
-Afterwards run the following playbooks in this repository to reboot the KVM host and cleanup the failed OCP cluster installation:
+Afterwards run the following playbooks in this repository to reboot the KVM host and cleanup the failed RHOCP cluster installation:
 
 ```bash
 cd ansible
@@ -91,9 +91,9 @@ ansible-playbook ansible-playbook cleanup_ocp_install.yml -e cleanup_ignore_erro
 
 Please note that the playbooks do implement a safeguard mechanism to ensure that under normal circumstances this libvirt incompatibility issue will not manifest itself. However depending on your actual KVM host configuration there's still the off chance for this to happen, hence it being mentioned here.
 
-### General OCP cluster bootstrapping issues
+### General RHOCP cluster bootstrapping issues
 
-The OCP cluster installation times out and you'll find an error message in the OCP cluster installation log file similar to this:
+The RHOCP cluster installation times out and you'll find an error message in the RHOCP cluster installation log file similar to this:
 
 ```text
 time="2022-02-23T09:11:17+01:00" level=debug msg="Still waiting for the Kubernetes API: Get \"https://api.perfocs1.lnxperf.boe:6443/version?timeout=32s\": dial tcp 192.168.126.13:6443: connect: connection refused"
@@ -116,7 +116,7 @@ virsh list --all
  4    perfocs1-mwxkx-master-2    running
 ```
 
-This usually indicates that the OCP cluster bootstrapping process has failed. You can try to find out as to what happened and why by logging into the bootstrap node and taking a look at the bootstrap logs:
+This usually indicates that the RHOCP cluster bootstrapping process has failed. You can try to find out as to what happened and why by logging into the bootstrap node and taking a look at the bootstrap logs:
 
 ```bash
 # login to the target KVM host via SSH

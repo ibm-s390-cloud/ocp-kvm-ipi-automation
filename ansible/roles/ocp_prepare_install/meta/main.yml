@@ -3,7 +3,7 @@
 galaxy_info:
   role_name: ocp_prepare_install
   author: Dirk Haubenreisser (haubenr@de.ibm.com)
-  description: Role performing setup and configuration tasks before the OCP cluster installation is attempted
+  description: Role performing setup and configuration tasks before the RHOCP cluster installation is attempted
   company: IBM
   license: Apache-2.0
   min_ansible_version: 2.10

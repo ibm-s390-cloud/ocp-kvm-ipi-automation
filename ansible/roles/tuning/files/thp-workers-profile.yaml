@@ -7,7 +7,7 @@ spec:
   profile:
   - data: |
       [main]
-      summary=Custom tuned profile for OpenShift on IBM Z to turn off THP on worker nodes
+      summary=Custom tuned profile for RHOCP on IBM zSystems to turn off THP on worker nodes
       include=openshift-node
 
       [vm]

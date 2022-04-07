@@ -3,7 +3,7 @@
 galaxy_info:
   role_name: ocp_cleanup
   author: Dirk Haubenreisser (haubenr@de.ibm.com)
-  description: Role performing cleanup of an existing OCP cluster and it's KVM host
+  description: Role performing cleanup of an existing RHOCP cluster and it's KVM host
   company: IBM
   license: Apache-2.0
   min_ansible_version: 2.10

@@ -3,7 +3,7 @@
 galaxy_info:
   role_name: tuning
   author: Dirk Haubenreisser (haubenr@de.ibm.com)
-  description: Role performing performance-related OCP cluster configuration tasks
+  description: Role performing performance-related RHOCP cluster configuration tasks
   company: IBM
   license: Apache-2.0
   min_ansible_version: 2.10

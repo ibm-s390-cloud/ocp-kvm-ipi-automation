@@ -11,7 +11,7 @@ In order to run the Ansible playbooks in this repository you need:
 - an Ansible **compatible** workstation
 - a working **Ansible 2.10 (or newer)** installation on your workstation
 - a suitably powerful Linux host running RHEL 8.x (tested with RHEL 8.4 and RHEL 8.5) with an **active** Red Hat subscription using one of the following hardware architectures:
-  - s390x (an IBM Z / LinuxONE LPAR, supported: z13 / z14 / z15)
+  - s390x (an IBM zSystems / LinuxONE LPAR, supported: z13 / z14 / z15 / z16)
   - ppc64le (an IBM Power Systems bare metal host or LPAR, supported: POWER9)
   - x86_64 (an Intel- or AMD-based bare metal host)
 - a working SSH connection to that Linux host from your workstation user account to the host's *root* acccount (password-less SSH)
@@ -126,7 +126,7 @@ That is it, everything else (in terms of host configuration / customization) is 
 
 ### A note on IBM Power Systems
 
-These playbooks have been successfully tested on an IBM Power System LC922 bare metal server running Red Hat Enterprise Linux 8.5. Tests on older POWER8-based hardware were not successful however as some virtualization features required by OCP running on top of KVM and libvirt are not available on that type of hardware.
+These playbooks have been successfully tested on an IBM Power System LC922 bare metal server running Red Hat Enterprise Linux 8.5. Tests on older POWER8-based hardware were not successful however as some virtualization features required by RHOCP running on top of KVM and libvirt are not available on that type of hardware.
 
 Please note that Red Hat has issued a deprecation notice for KVM on IBM Power Systems that makes using these playbooks on POWER10 hardware less feasible. For more details please check out this link: <https://access.redhat.com/articles/6005061>.
 
