@@ -1,3 +1,5 @@
+---
+
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
@@ -12,12 +14,13 @@ spec:
       labels:
         name: cex-plugin
     spec:
+      priorityClassName: system-cluster-critical
       tolerations:
       - key: CriticalAddonsOnly
         operator: Exists
       initContainers:
       - name: shadowsysfs
-        image: 'registry.access.redhat.com/ubi8/ubi-minimal'
+        image: 'registry.redhat.io/ubi8-minimal'
         command: ["/bin/sh"]
         args: ["-c", "mkdir -p -m 0755 /var/tmp/shadowsysfs && chcon -t container_file_t /var/tmp/shadowsysfs"]
         securityContext:
@@ -26,7 +29,7 @@ spec:
           - name: vartmp
             mountPath: /var/tmp
       containers:
-      - image: 'quay.io/ibm/ibm-cex-plugin-cm:v1.0.0'
+      - image: 'registry.connect.redhat.com/ibm/ibm-cex-device-plugin-cm:v1.0.0'
         imagePullPolicy: Always
         name: cex-plugin
         securityContext:
@@ -36,6 +39,8 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: spec.nodeName
+          - name: APQN_OVERCOMMIT_LIMIT
+            value: "1"
         volumeMounts:
           - name: device-plugin
             mountPath: /var/lib/kubelet/device-plugins
@@ -49,7 +54,6 @@ spec:
             mountPath: /sys
           - name: cex-resources-conf
             mountPath: /config/
-      priorityClassName: system-node-critical
       volumes:
         - name: device-plugin
           hostPath:
