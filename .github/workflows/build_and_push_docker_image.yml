@@ -9,6 +9,21 @@ permissions:
   packages: write
 
 jobs:
+  clean-ghcr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: determine repository name
+        run: echo "REPOSITORY_NAME=$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')" >> $GITHUB_ENV
+        shell: bash
+      - name: prune untagged images older than 24 hours
+        uses: snok/container-retention-policy@v1
+        with:
+          image-names: ${{ env.REPOSITORY_NAME }}
+          cut-off: A day ago UTC
+          account-type: org
+          org-name: ${{ github.repository_owner }}'
+          untagged-only: true
+          token: ${{ secrets.GITHUB_TOKEN }}
   build:
     runs-on: ubuntu-latest
     steps:
