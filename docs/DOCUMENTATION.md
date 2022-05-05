@@ -14,6 +14,7 @@ In order to run the Ansible playbooks in this repository you need:
   - s390x (an IBM zSystems / LinuxONE LPAR, supported: z13 / z14 / z15 / z16)
   - ppc64le (an IBM Power Systems bare metal host or LPAR, supported: POWER9)
   - x86_64 (an Intel- or AMD-based bare metal host)
+  - aarch64 (an ARM64-based bare metal host)
 - a working SSH connection to that Linux host from your workstation user account to the host's *root* acccount (password-less SSH)
 - the OpenShift cluster image pull secrets file - see also [here](../ansible/secrets/README.md) for details
 
@@ -282,6 +283,7 @@ Due to the way the The KVM IPI automation Docker image content has been structur
 ├── filter_plugins
 │   └── FilterUtils.py
 ├── group_vars
+│   ├── aarch64_kvm_host.yml
 │   ├── all.yml
 │   ├── ppc64le_kvm_host.yml
 │   ├── s390x_kvm_host.yml

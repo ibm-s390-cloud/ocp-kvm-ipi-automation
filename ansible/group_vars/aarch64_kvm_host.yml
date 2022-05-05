@@ -1,0 +1,6 @@
+---
+
+# default settings that apply to all aarch64_kvm_host hosts
+
+architecture_alias: arm64
+sanity_check_cpu_overcommit_factor: 4
