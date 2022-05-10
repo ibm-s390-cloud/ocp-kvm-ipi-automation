@@ -54,6 +54,11 @@ additional_host_ports:
   - 9200/tcp
   - 9300/tcp
 
+# the internal OpenShift network type
+# (this is the *internal* virtualized network for pod and service networks)
+# ATTENTION: must be either OpenShiftSDN (default) or OVNKubernetes
+openshift_network_type: OpenShiftSDN
+
 # the OpenShift cluster machine network prefix
 # (this is the network the OpenShift worker nodes (aka KVM guests) share to communicate to each other)
 # (see also: https://github.com/openshift/installer/blob/master/docs/user/customization.md)

@@ -18,6 +18,8 @@ ansible_user: root
 
 openshift_installer_workdir: /root/ocp4-workdir
 
+openshift_network_type: OpenShiftSDN
+
 machine_network_prefix: 192.168.126
 machine_network_master_range: 10
 machine_network_worker_range: 50
