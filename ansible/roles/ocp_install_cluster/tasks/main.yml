@@ -134,6 +134,13 @@
       loop_control:
         loop_var: manifest
 
+- name: put files for advanced cluster configuration in place
+  ansible.builtin.include_tasks: '{{ role_path }}/tasks/copy_advanced_configuration_files.yml'
+  loop:
+    - { 'name': 'cluster-network-03-config.yml', 'dest': '{{ openshift_installer_workdir }}/manifests/cluster-network-03-config.yml' }
+  loop_control:
+    loop_var: advanced_config_file
+
 - name: determine name of to-be-created cluster from installation log
   ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_cluster_name.yml'
 
