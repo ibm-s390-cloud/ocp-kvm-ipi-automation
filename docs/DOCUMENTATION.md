@@ -275,7 +275,7 @@ podman build . -t kvm-ipi-automation:base-latest --format docker
 Due to the way the The KVM IPI automation Docker image content has been structured, it's fairly easy to extend the image by adding additional Ansible roles or playbooks. The content of the Docker image is as follows (only the Ansible-related parts of the image are shown here):
 
 ```bash
-/ansible
+ansible
 ├── ansible.cfg
 ├── check_ocp_cluster_state.yml
 ├── cleanup_ocp_install.yml
@@ -288,6 +288,8 @@ Due to the way the The KVM IPI automation Docker image content has been structur
 │   ├── ppc64le_kvm_host.yml
 │   ├── s390x_kvm_host.yml
 │   └── x86_64_kvm_host.yml
+├── host_files
+│   └── README.md
 ├── inventory.template
 ├── prepare_ocp_install.yml
 ├── reboot_host.yml
@@ -345,6 +347,8 @@ Due to the way the The KVM IPI automation Docker image content has been structur
 │   │   │   └── main.yml
 │   │   └── tasks
 │   │       └── main.yml
+│   ├── named
+│   │   └── files
 │   ├── networking
 │   │   ├── files
 │   │   │   ├── dnsmasq.add-hosts.conf
@@ -355,7 +359,7 @@ Due to the way the The KVM IPI automation Docker image content has been structur
 │   │   ├── tasks
 │   │   │   └── main.yml
 │   │   └── templates
-│   │   │   ├── dnsmasq.openshift.conf.j2
+│   │       ├── dnsmasq.openshift.conf.j2
 │   │       └── haproxy.cfg.j2
 │   ├── ocp_build_installer
 │   │   ├── defaults
@@ -388,6 +392,7 @@ Due to the way the The KVM IPI automation Docker image content has been structur
 │   │   ├── meta
 │   │   │   └── main.yml
 │   │   ├── tasks
+│   │   │   ├── copy_advanced_configuration_files.yml
 │   │   │   ├── main.yml
 │   │   │   ├── setup_infra_cluster_nodes.yml
 │   │   │   └── update_master_configuration.yml

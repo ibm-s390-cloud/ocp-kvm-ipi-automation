@@ -1,0 +1,17 @@
+---
+
+- name: check if advanced cluster configuration file exists
+  ansible.builtin.stat:
+    path: '{{ inventory_dir }}/host_files/{{ inventory_hostname }}/{{ advanced_config_file.name }}'
+  register: advanced_config_file_info
+  delegate_to: localhost
+
+- name: copy advanced cluster configuration file to target directory
+  ansible.builtin.copy:
+    src: '{{ inventory_dir }}/host_files/{{ inventory_hostname }}/{{ advanced_config_file.name }}'
+    dest: '{{ advanced_config_file.dest }}'
+    owner: root
+    group: root
+    mode: '0644'
+  when:
+    - advanced_config_file_info.stat.exists

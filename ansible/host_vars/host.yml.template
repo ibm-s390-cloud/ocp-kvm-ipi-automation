@@ -34,7 +34,7 @@ openshift_rhcos_image_url: 'https://mirror.openshift.com/pub/openshift-v4/{{ ans
 
 #############################################
 # --> optional variables that don't necessarily to be set
-# (these apply to all support server architectures)
+# (these apply to all supported server architectures)
 #############################################
 
 # the version of the OpenShift client tools to be installed on the KVM host
@@ -89,7 +89,7 @@ openshift_setup_dedicated_infra_nodes: false
 
 #############################################
 # <-- optional variables that don't necessarily to be set
-# (these apply to all support server architectures)
+# (these apply to all supported server architectures)
 #############################################
 
 #############################################
