@@ -288,8 +288,6 @@ ansible
 │   ├── ppc64le_kvm_host.yml
 │   ├── s390x_kvm_host.yml
 │   └── x86_64_kvm_host.yml
-├── host_files
-│   └── README.md
 ├── inventory.template
 ├── prepare_ocp_install.yml
 ├── reboot_host.yml
@@ -469,7 +467,7 @@ ansible
 └── tune_ocp_install.yml
 ```
 
-As you can see the user-specific files required by Ansible to actually run the playbooks are missing from the Docker image - notably the main 'inventory' file, the 'host_vars' directory containing host-specific variables as well as the 'secrets' directory. Without these files the Docker image is not fully functional per se, the user has to provide these files before the Ansible playbooks within the image can be used.
+As you can see the user-specific files required by Ansible to actually run the playbooks are missing from the Docker image - notably the main 'inventory' file, the 'host_vars' and 'host_files' directories containing host-specific variables as well as the 'secrets' directory. Without these files the Docker image is not fully functional per se, the user has to provide these files before the Ansible playbooks within the image can be used.
 
 This is where the Docker image customization aspect comes in.
 
@@ -499,6 +497,9 @@ ADD inventory inventory
 # add a fixed 'host_vars' directory (which is deliberately omitted from the base image)
 ADD host_vars host_vars
 
+# add a fixed 'host_files' directory (which is deliberately omitted from the base image)
+ADD host_files host_files
+
 # add EP11 binary packages to be installed on the host (optional, s390x only)
 COPY ep11-host-*s390x.rpm roles/crypto/files/ep11/
 
@@ -513,6 +514,7 @@ If you do not want to customize the KVM IPI automation Docker image but rather u
 
 - /ansible/inventory
 - /ansible/host_vars
+- /ansible/host_files
 - /ansible/secrets
 - /ansible/roles/crypto/files/ep11
 - /root/.ssh
@@ -521,8 +523,8 @@ You can use the following commands as an example on how to run the main Ansible 
 
 ```bash
 # if using Docker
-docker run --rm -ti -v $HOME/.ssh:/root/.ssh:rw -v $PWD/ansible/inventory:/ansible/inventory:ro -v $PWD/ansible/host_vars:/ansible/host_vars:ro -v $PWD/ansible/secrets:/ansible/secrets:ro -v $PWD/ansible/roles/crypto/files/ep11:/ansible/roles/crypto/files/ep11:ro --rm kvm-ipi-automation:base-latest ansible-playbook -i inventory site.yml
+docker run --rm -ti -v $HOME/.ssh:/root/.ssh:rw -v $PWD/ansible/inventory:/ansible/inventory:ro -v $PWD/ansible/host_vars:/ansible/host_vars:ro -v $PWD/ansible/host_files:/ansible/host_filess:ro -v $PWD/ansible/secrets:/ansible/secrets:ro -v $PWD/ansible/roles/crypto/files/ep11:/ansible/roles/crypto/files/ep11:ro --rm kvm-ipi-automation:base-latest ansible-playbook -i inventory site.yml
 
 # if using podman
-podman run --rm -ti -v $HOME/.ssh:/root/.ssh:rw -v $PWD/ansible/inventory:/ansible/inventory:ro -v $PWD/ansible/host_vars:/ansible/host_vars:ro -v $PWD/ansible/secrets:/ansible/secrets:ro -v $PWD/ansible/roles/crypto/files/ep11:/ansible/roles/crypto/files/ep11:ro --rm kvm-ipi-automation:base-latest ansible-playbook -i inventory site.yml
+podman run --rm -ti -v $HOME/.ssh:/root/.ssh:rw -v $PWD/ansible/inventory:/ansible/inventory:ro -v $PWD/ansible/host_vars:/ansible/host_vars:ro -v $PWD/ansible/host_files:/ansible/host_filess:ro -v $PWD/ansible/secrets:/ansible/secrets:ro -v $PWD/ansible/roles/crypto/files/ep11:/ansible/roles/crypto/files/ep11:ro --rm kvm-ipi-automation:base-latest ansible-playbook -i inventory site.yml
 ```
