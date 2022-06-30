@@ -22,7 +22,7 @@
 
     - name: determine version number of OpenShift release about to be installed
       ansible.builtin.set_fact:
-        ocp_release_ver: "{{ ocp_release_txt['content'] | b64decode | trim | regex_search('^Name:[\\s]*([\\d.]*)$', '\\1', multiline=true) | parse_version }}"
+        ocp_release_ver: "{{ ocp_release_txt['content'] | b64decode | trim | regex_search('^Name:[\\s]*([\\d.]*)', '\\1', multiline=true) | parse_version }}"
 
     - name: set openshift-install release version
       ansible.builtin.set_fact:
