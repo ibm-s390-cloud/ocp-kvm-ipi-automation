@@ -365,7 +365,8 @@ ansible
 │   │   ├── meta
 │   │   │   └── main.yml
 │   │   └── tasks
-│   │       └── main.yml
+│   │       ├── main.yml
+│   │       └── patch_installer.yml
 │   ├── ocp_cleanup
 │   │   ├── defaults
 │   │   │   └── main.yml

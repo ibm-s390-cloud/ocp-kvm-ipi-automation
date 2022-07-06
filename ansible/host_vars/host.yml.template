@@ -76,6 +76,10 @@ cluster_network: 10.128.0.0/14
 # (see also: https://github.com/openshift/installer/blob/master/docs/user/customization.md)
 cluster_network_hostprefix: 23
 
+# the MTU size of the OpenShift cluster network
+# ATTENTION: if this variable is not set the cluster network will use the builtin default MTU size (which depends on your actual host configuration)
+cluster_network_mtu: 1500
+
 # a list of OpenShift cluster service networks
 # (this are the networks the services running in the OpenShift cluster are using)
 # (see also: https://github.com/openshift/installer/blob/master/docs/user/customization.md)

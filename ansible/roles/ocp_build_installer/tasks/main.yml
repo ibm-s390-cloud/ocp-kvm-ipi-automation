@@ -38,6 +38,9 @@
         dest: '{{ temp_dir.path }}/installer'
         version: '{{ openshift_installer_version }}'
 
+    - name: patch openshift-install source code
+      ansible.builtin.include_tasks: '{{ role_path }}/tasks/patch_installer.yml'
+
     - name: build openshift-install binary
       ansible.builtin.command:
         cmd: 'hack/build.sh'
