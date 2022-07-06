@@ -4,7 +4,7 @@
   ansible.builtin.lineinfile:
     path: '{{ temp_dir.path }}/installer/data/data/libvirt/cluster/main.tf'
     line: '  mtu = "{{ cluster_network_mtu }}"'
-    insertafter: '^.*bridge = var.libvirt_network_if.*$'
+    insertafter: '^.*bridge = var\.libvirt_network_if.*$'
   when:
     - cluster_network_mtu is defined
     - cluster_network_mtu
