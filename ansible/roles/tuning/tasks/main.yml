@@ -2,21 +2,29 @@
 
 - name: determine name of existing cluster from installation log
   ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_cluster_name.yml'
+  tags:
+    - always
 
 - name: list all existing libvirt domains
   community.libvirt.virt:
     command: list_vms
   register: all_libvirt_domains
+  tags:
+    - libvirt
 
 - name: determine list of libvirt domains belonging to current OpenShift cluster instance
   ansible.builtin.set_fact:
     all_libvirt_domains_for_cluster: '{{ all_libvirt_domains.list_vms | select("contains", cluster_id) | list }}'
+  tags:
+    - libvirt
 
 - name: determine list of cluster nodes
   ansible.builtin.set_fact:
     master_domains: '{{ all_libvirt_domains_for_cluster | select("contains", "master") | list }}'
     worker_domains: '{{ all_libvirt_domains_for_cluster | select("contains", "worker") | list }}'
     infra_domains: '{{ (all_libvirt_domains_for_cluster | select("contains", "infra") | list) | default([]) }}'
+  tags:
+    - libvirt
 
 - name: shutdown cluster nodes via libvirt
   community.libvirt.virt:
@@ -25,6 +33,8 @@
   loop: '{{ worker_domains + master_domains + infra_domains }}'
   loop_control:
     loop_var: cluster_node
+  tags:
+    - libvirt
 
 - name: check if the cluster nodes have been shut down successfully
   community.libvirt.virt:
@@ -34,6 +44,8 @@
   until: offline_libvirt_domains.list_vms is superset(worker_domains + master_domains + infra_domains)
   retries: 30
   delay: 10
+  tags:
+    - libvirt
 
 - name: tune cluster nodes (libvirt domain modifications)
   block:
@@ -83,6 +95,8 @@
       until: online_libvirt_domains.list_vms is superset(master_domains + worker_domains + infra_domains)
       retries: 30
       delay: 10
+  tags:
+    - libvirt
 
 - name: tune cluster nodes (OpenShift cluster modifications)
   block:
@@ -91,3 +105,5 @@
 
     - name: disable transparent huge pages on cluster worker nodes
       ansible.builtin.include_tasks: '{{ role_path }}/tasks/k8s_disable_thps.yml'
+  tags:
+    - ocp

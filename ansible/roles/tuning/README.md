@@ -8,7 +8,7 @@ To run the cluster tuning playbook simply issue the following commands:
 
 ```bash
 cd ansible
-ansible-playbook -i inventory tune_ocp_install.yml
+ansible-playbook -i inventory tune_ocp_install.yml [--tags libvirt|ocp]
 ```
 
 ## What it does
@@ -32,6 +32,11 @@ In order to change the various configuration parameters of the cluster nodes, th
 - OpenShift cluster is online:
   - enable 'receive flow steering' network setting for all cluster worker nodes
   - disable transparent huge pages for all cluster worker nodes
+
+The playbook actions for each of these phases can be triggered deliberately by using one of the following Ansible tags (see also: [How to run it](#how-to-run-it)):
+
+- libvirt (applies to all tuning actions that pertain to KVM guests)
+- ocp (applies to all tuning actions that pertain to the OpenShift cluster in general)
 
 At the end of the successful cluster tuning process, the OpenShift cluster is online and fully operational. The result of the cluster tuning process is documented *within* the cluster itself, using an annotation field in the `ClusterVersion` object's metadata:
 

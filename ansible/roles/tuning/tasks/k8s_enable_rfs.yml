@@ -3,6 +3,16 @@
 - name: wait for OpenShift cluster to be fully operational
   ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/wait_for_cluster.yml'
 
+- name: wait for MachineConfigOperator to be available
+  kubernetes.core.k8s_info:
+    kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+    api_version: 'machineconfiguration.openshift.io/v1'
+    kind: MachineConfig
+  register: existing_machineconfigs
+  until: existing_machineconfigs is success
+  retries: 30
+  delay: 10
+
 - name: apply 'receive flow steering' network configuration to cluster worker nodes
   kubernetes.core.k8s:
     kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
