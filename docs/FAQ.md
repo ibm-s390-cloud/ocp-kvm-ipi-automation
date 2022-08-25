@@ -64,3 +64,7 @@ A: Deleting clusters in state 'stale' in OCM is not possible at the moment. That
   ```
 
 You can also enable OCM integration with the playbooks in this repository so that whenever you delete an existing cluster via the `cleanup_ocp_install.yml` playbook it will be acrhived in OCM automatically. For details on how to enable this integration please see [here](../ansible/secrets/README.md).
+
+## Q: Whenever I do manual RHOCP installations on KVM hosts I am using a single virtual Linux instance (aka a KVM guest) on the same host where I am installing RHOCP to. Can I use the same setup with these playbooks?
+
+A: No, this kind of setup does not work with the Ansible playbooks. Make sure to run a dedicated standalone Ansible-compatible workstation (e.g. MacOSX, Linux) that is physically separate from the target host that you want to install RHOCP on. The Ansible playbooks need full control over the target host, including installing / configuring and stopping / restarting KVM. This is impossible with the Ansible controller being hosted by KVM on the target host itself.
