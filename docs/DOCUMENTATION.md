@@ -8,7 +8,7 @@ The playbooks in this repository are intended for setting up OpenShift clusters 
 
 In order to run the Ansible playbooks in this repository you need:
 
-- an Ansible **compatible** workstation
+- an Ansible **compatible** workstation (a dedicated standalone workstation that is physically separate from the target Linux host)
 - a working **Ansible 2.10 (or newer)** installation on your workstation
 - a suitably powerful Linux host running RHEL 8.x (tested with RHEL 8.4 and RHEL 8.5) with an **active** Red Hat subscription using one of the following hardware architectures:
   - s390x (an IBM zSystems / LinuxONE LPAR, supported: z13 / z14 / z15 / z16)
