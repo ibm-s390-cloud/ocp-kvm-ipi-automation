@@ -112,18 +112,59 @@
         disable_gpg_check: true
       when: "ansible_architecture == 's390x'"
 
+- name: upgrade essential Python packages
+  ansible.builtin.pip:
+    name:
+      - pip
+      - setuptools
+      - setuptools-rust
+      - wheel
+    state: latest
+    extra_args: --no-cache-dir
+
 - name: install prerequisite Python packages
   ansible.builtin.pip:
     name:
-      - setuptools-rust
       - openshift!=0.13.0
       - stormssh
       - xmltodict
-      - yq
-    state: '{{ item }}'
-    extra_args: --no-cache-dir
-  loop:
-    - present
+    state: present
+    extra_args: '--no-cache-dir --ignore-installed'
+
+- name: install yq
+  block:
+    - name: create temporary download directory
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: yq
+      register: temp_dir
+
+    - name: download yq binary
+      ansible.builtin.get_url:
+        url: 'https://github.com/mikefarah/yq/releases/download/v{{ yq_version }}/yq_linux_{{ architecture_alias }}'
+        dest: '{{ temp_dir.path }}/yq_linux_{{ yq_version }}'
+        mode: '0440'
+        timeout: 120
+
+    - name: remove existing yq installation
+      ansible.builtin.file:
+        path: '/usr/local/bin/yq'
+        state: absent
+
+    - name: install yq
+      ansible.builtin.copy:
+        src: '{{ temp_dir.path }}/yq_linux_{{ yq_version }}'
+        dest: /usr/local/bin/yq
+        owner: root
+        group: root
+        mode: '0755'
+        remote_src: true
+  always:
+    - name: delete temporary download directory
+      ansible.builtin.file:
+        path: '{{ temp_dir.path }}'
+        state: absent
+      when: temp_dir.path is defined
 
 - name: install go compiler
   block:
