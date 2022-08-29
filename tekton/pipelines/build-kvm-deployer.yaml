@@ -1,0 +1,53 @@
+---
+
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: build-kvm-deployer
+spec:
+  description: Build kvm-deployer image
+  params:
+  - name: repo-url
+    description: The URL of the git repository that is to be fetched
+    type: string
+    default: https://github.com/ibm-s390-cloud/ocp-kvm-ipi-automation.git
+  - name: branch-name
+    description: The name of the branch to fetch from the git repository
+    type: string
+    default: main
+  - name: image-tag
+    description: The Docker image tag to use for the final image
+    type: string
+    default: latest
+  tasks:
+  - name: fetch-repo
+    params:
+    - name: url
+      value: $(params.repo-url)
+    - name: revision
+      value: $(params.branch-name)
+    taskRef:
+      kind: ClusterTask
+      name: git-clone
+    workspaces:
+    - name: output
+      workspace: source
+  - name: build-image
+    params:
+    - name: TLSVERIFY
+      value: "false"
+    - name: DOCKERFILE
+      value: $(workspaces.source.path)/Dockerfile
+    - name: IMAGE
+      value: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/kvm-deployer:$(params.image-tag)
+    runAfter:
+    - fetch-repo
+    taskRef:
+      kind: ClusterTask
+      name: buildah
+    workspaces:
+    - name: source
+      workspace: source
+  workspaces:
+  - description: This workspace will be used to stored the fetched git repository
+    name: source
