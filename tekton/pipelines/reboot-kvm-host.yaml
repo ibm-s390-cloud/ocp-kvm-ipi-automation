@@ -1,0 +1,48 @@
+---
+
+apiVersion: tekton.dev/v1beta1
+kind: Pipeline
+metadata:
+  name: reboot-kvm-host
+spec:
+  params:
+  - description: Name of the target KVM host that will be rebooted
+    name: host
+    type: string
+  - description: URL of the git repository containing the cluster configuration data
+    name: configs-url
+    type: string
+  - description: Name of the git repository branch from which to fetch cluster configuration data
+    name: configs-branch
+    type: string
+    default: main
+  tasks:
+  - name: fetch-config
+    params:
+    - name: url
+      value: $(params.configs-url)
+    - name: revision
+      value: $(params.configs-branch)
+    taskRef:
+      kind: ClusterTask
+      name: git-clone
+    workspaces:
+    - name: output
+      workspace: configs
+  - name: kvm-run-playbook
+    params:
+    - name: host
+      value: $(params.host)
+    - name: playbook
+      value: reboot_host.yml
+    runAfter:
+    - fetch-config
+    taskRef:
+      kind: Task
+      name: kvm-run-playbook
+    timeout: "30m"
+    workspaces:
+    - name: configs
+      workspace: configs
+  workspaces:
+  - name: configs

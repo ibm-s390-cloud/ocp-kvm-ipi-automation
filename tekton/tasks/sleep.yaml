@@ -1,0 +1,19 @@
+---
+
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: sleep
+spec:
+  params:
+  - description: Sleep duration in seconds
+    name: duration
+    type: string
+    default: "60"
+  steps:
+  - image: registry.access.redhat.com/ubi9-micro
+    imagePullPolicy: IfNotPresent
+    name: sleep
+    script: |
+      #!/usr/bin/env bash
+      sleep $(params.duration)

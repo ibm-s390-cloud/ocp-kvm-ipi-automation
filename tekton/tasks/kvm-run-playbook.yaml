@@ -1,0 +1,72 @@
+---
+
+apiVersion: tekton.dev/v1beta1
+kind: Task
+metadata:
+  name: kvm-run-playbook
+spec:
+  params:
+  - description: Name of the target KVM host
+    name: host
+    type: string
+  - default: site.yml
+    description: Name of the Ansible playbook that will be run
+    name: playbook
+    type: string
+  - name: flags
+    description: An array of additional Ansible playbook flags
+    type: array
+    default: []
+  steps:
+  - image: image-registry.openshift-image-registry.svc:5000/$(context.taskRun.namespace)/kvm-deployer:latest
+    imagePullPolicy: Always
+    name: kvm-prepare
+    resources: {}
+    script: |
+      #!/usr/bin/env bash
+      # workaround for volume mount permission issue
+      mkdir -p -m 0700 /root/.ssh
+      cp /ansible/keys/id_ansible* /root/.ssh/
+      cp $(workspaces.configs.path)/config/$(params.host)/ssh_config /root/.ssh/config
+      chmod 400 /root/.ssh/id_ansible
+      chmod 640 /root/.ssh/id_ansible.pub /root/.ssh/config
+      # install Python3 on the target KVM host (required by subsequent Ansible step)
+      ssh $(params.host) "yum install -y python3"
+    volumeMounts:
+    - mountPath: /ansible/keys
+      name: ssh
+      readOnly: true
+  - image: image-registry.openshift-image-registry.svc:5000/$(context.taskRun.namespace)/kvm-deployer:latest
+    imagePullPolicy: Always
+    name: kvm-playbook
+    resources: {}
+    args: ["$(params.flags[*])"]
+    script: |
+      #!/usr/bin/env bash
+      # workaround for volume mount permission issue
+      mkdir -p -m 0700 /root/.ssh
+      cp /ansible/keys/id_ansible* /root/.ssh/
+      cp $(workspaces.configs.path)/config/$(params.host)/ssh_config /root/.ssh/config
+      chmod 400 /root/.ssh/id_ansible
+      chmod 640 /root/.ssh/id_ansible.pub /root/.ssh/config
+      # copy files in place
+      cp -R $(workspaces.configs.path)/config/$(params.host)/host_vars /ansible
+      cp $(workspaces.configs.path)/config/$(params.host)/inventory /ansible/inventory
+      # run Ansible playbook
+      ansible-playbook $(params.playbook) --limit $(params.host) $@
+    volumeMounts:
+    - mountPath: /ansible/secrets
+      name: secrets
+    - mountPath: /ansible/keys
+      name: ssh
+      readOnly: true
+  volumes:
+  - name: secrets
+    secret:
+      secretName: kvm-deployer-secrets
+  - name: ssh
+    secret:
+      defaultMode: 256
+      secretName: kvm-deployer-ssh
+  workspaces:
+  - name: configs
