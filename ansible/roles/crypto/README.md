@@ -86,7 +86,7 @@ The `setname` property will always reflect the internal cluster ID of the OpenSh
 
 ## Optional: installing the EP11 binaries on the KVM host
 
-The crypto resources enablement playbook allows you to automatically install the EP11 binaries on the KVM host. As these binaries are not part of the underlying RHEL 8.x distribution but need to be downloaded separately from IBM this installation step is completely optional and will be skipped if the binaries are not provided by the user. The most recent EP11 binaries (available as RPM or Debian packages) can be obtained from this website: <https://www.ibm.com/resources/mrs/assets?source=ibmzep11>.
+The crypto resources enablement playbook allows you to automatically install the EP11 binaries on the KVM host. As these binaries are not part of the underlying RHEL 8 distribution but need to be downloaded separately from IBM this installation step is completely optional and will be skipped if the binaries are not provided by the user. The most recent EP11 binaries (available as RPM or Debian packages) can be obtained from this website: <https://www.ibm.com/resources/mrs/assets?source=ibmzep11>.
 
 Make sure to download at least the following files:
 
