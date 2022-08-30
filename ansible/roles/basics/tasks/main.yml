@@ -27,73 +27,15 @@
         state: excluded
 
 - name: install prerequisite software packages
-  block:
-    - name: install and update required dnf modules and package groups
-      ansible.builtin.dnf:
-        name:
-          - '@virt:rhel/common'
-          - '@rust-toolset:rhel8/common'
-          - '@RPM Development Tools'
-          - '@Development Tools'
-        state: '{{ item }}'
-      loop:
-        - present
-
-    - name: install required packages
-      ansible.builtin.dnf:
-        name:
-          - bind-utils
-          - iputils
-          - podman
-          - tmux
-          - wget
-          - curl
-          - vim-enhanced
-          - rsync
-          - genisoimage
-          - qemu-img
-          - qemu-kvm
-          - libvirt
-          - libvirt-daemon-config-network
-          - libvirt-daemon-kvm
-          - libvirt-client
-          - libvirt-devel
-          - virt-install
-          - virt-manager
-          - libguestfs-tools-c
-          - openssl
-          - openssl-devel
-          - libffi
-          - libffi-devel
-          - policycoreutils-python-utils
-          - python3-jmespath
-          - python3-jsonpatch
-          - python3-pyyaml
-          - python3-pip
-          - python3-devel
-          - python3-netaddr
-          - python3-policycoreutils
-          - python3-wheel
-          - python3-setuptools
-          - python3-lxml
-          - python3-pyOpenSSL
-          - python3-firewall
-          - python3-libvirt
-          - python3-virtualenv
-          - python3-libselinux
-          - python3-libsemanage
-          - ipmitool
-          - gcc
-          - gcc-c++
-          - git-lfs
-          - clang
-          - jq
-          - lsof
-          - net-tools
-          - httpd
-          - fio
-          - bash-completion
-        state: present
+  ansible.builtin.dnf:
+    name: '{{ item }}'
+    state: present
+  loop:
+    - '{{ rhel_packages[rhel_version]["groups"] }}'
+    - '{{ rhel_packages[rhel_version]["modules"] }}'
+    - '{{ rhel_packages[rhel_version]["rpms"] }}'
+  vars:
+    rhel_version: '{{ (ansible_distribution_version | parse_version)["major"] | string + "_" + (ansible_distribution_version | parse_version)["minor"] | string }}'
 
 - name: install optional software packages
   block:
@@ -110,26 +52,28 @@
           - 'https://zhwmodel.s3.eu.cloud-object-storage.appdomain.cloud/zhwmodel-1.4-529ca10.s390x.rpm'
         state: present
         disable_gpg_check: true
-      when: "ansible_architecture == 's390x'"
-
-- name: upgrade essential Python packages
-  ansible.builtin.pip:
-    name:
-      - pip
-      - setuptools
-      - setuptools-rust
-      - wheel
-    state: latest
-    extra_args: --no-cache-dir
+      when: ansible_architecture == 's390x'
 
 - name: install prerequisite Python packages
-  ansible.builtin.pip:
-    name:
-      - openshift!=0.13.0
-      - stormssh
-      - xmltodict
-    state: present
-    extra_args: '--no-cache-dir --ignore-installed'
+  block:
+    - name: upgrade essential Python packages
+      ansible.builtin.pip:
+        name:
+          - pip
+          - setuptools
+          - setuptools-rust
+          - wheel
+        state: latest
+        extra_args: --no-cache-dir
+
+    - name: install common Python packages
+      ansible.builtin.pip:
+        name:
+          - openshift!=0.13.0
+          - stormssh
+          - xmltodict
+        state: present
+        extra_args: '--no-cache-dir --ignore-installed'
 
 - name: install yq
   block:

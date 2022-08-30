@@ -1,12 +1,40 @@
 ---
 
-- name: ensure the targeted KVM host is running RHEL 8.6 (or later) on s390x / ppc64le / x86_64 / aarch64
-  ansible.builtin.assert:
-    that:
-      - "ansible_os_family == 'RedHat'"
-      - "ansible_distribution_major_version == '8'"
-      - '{{ (ansible_distribution_version | parse_version)["minor"] >= 6 }}'
-      - '{{ ansible_architecture is inlist(["s390x", "ppc64le", "x86_64", "aarch64"]) }}'
+- name: ensure the targeted KVM host is running a supported version of RHEL
+  block:
+    - name: check if running RHEL in general
+      ansible.builtin.assert:
+        that:
+          - "ansible_os_family == 'RedHat'"
+
+    - name: ensure that the major RHEL version is either 8 or 9
+      ansible.builtin.assert:
+        that:
+          - '{{ ansible_distribution_major_version is inlist(["8", "9"]) }}'
+
+    - name: ensure that the minor version for RHEL 8 is 6 or higher
+      ansible.builtin.assert:
+        that:
+          - '{{ (ansible_distribution_version | parse_version)["minor"] >= 6 }}'
+      when: "ansible_distribution_major_version == '8'"
+
+- name: ensure the targeted KVM host architecture is supported by KVM on RHEL
+  block:
+    - name: RHEL 8 supports KVM on s390x / ppc64le / x86_64 / aarch64
+      ansible.builtin.assert:
+        that:
+          - '{{ ansible_architecture is inlist(["s390x", "ppc64le", "x86_64", "aarch64"]) }}'
+      when: "ansible_distribution_major_version == '8'"
+
+    - name: RHEL 9 supports KVM on s390x / x86_64
+      ansible.builtin.assert:
+        that:
+          - '{{ ansible_architecture is inlist(["s390x", "x86_64"]) }}'
+      fail_msg: |-
+        "The KVM host architecture is not supported by RHEL 9."
+        "For more information please refer to the following document:"
+        "https://ibm.biz/BdPYsd"
+      when: "ansible_distribution_major_version == '9'"
 
 - name: check if mandatory configuration variables are set
   ansible.builtin.assert:
