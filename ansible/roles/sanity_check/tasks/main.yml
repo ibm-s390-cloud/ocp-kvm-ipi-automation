@@ -1,10 +1,11 @@
 ---
 
-- name: ensure the targeted KVM host is running RHEL 8.x on s390x / ppc64le / x86_64 / aarch64
+- name: ensure the targeted KVM host is running RHEL 8.6 (or later) on s390x / ppc64le / x86_64 / aarch64
   ansible.builtin.assert:
     that:
       - "ansible_os_family == 'RedHat'"
       - "ansible_distribution_major_version == '8'"
+      - '{{ (ansible_distribution_version | parse_version)["minor"] >= 6 }}'
       - '{{ ansible_architecture is inlist(["s390x", "ppc64le", "x86_64", "aarch64"]) }}'
 
 - name: check if mandatory configuration variables are set
