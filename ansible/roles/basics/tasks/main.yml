@@ -111,7 +111,6 @@
         state: present
         disable_gpg_check: true
       when: "ansible_architecture == 's390x'"
-  when: 0 > 1
 
 - name: upgrade essential Python packages
   ansible.builtin.pip:
