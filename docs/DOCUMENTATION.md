@@ -2,7 +2,7 @@
 
 ## Purpose / Target Audience
 
-The playbooks in this repository are intended for setting up OpenShift clusters on Linux hosts that will be used for demonstration, education or proof-of-concept type purposes and thus are short-lived by intent. These playbooks are not meant to set up OpenShift clusters for production purposes or any kind of production-level workloads. Please note that OpenShift clusters set up by these playbooks will not be supported by Red Hat nor IBM.
+The playbooks in this repository are intended for setting up OpenShift clusters on Linux hosts that will be used for demonstration, education or proof-of-concept type purposes and thus are short-lived by intent. These playbooks are not meant to set up OpenShift clusters for production purposes or any kind of production-level workloads. Please note that OpenShift clusters set up by these playbooks will neither be supported by Red Hat nor IBM.
 
 ## Prerequisites
 
