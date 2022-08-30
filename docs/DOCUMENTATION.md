@@ -10,7 +10,7 @@ In order to run the Ansible playbooks in this repository you need:
 
 - an Ansible **compatible** workstation (a dedicated standalone workstation that is physically separate from the target Linux host)
 - a working **Ansible 2.10 (or newer)** installation on your workstation
-- a suitably powerful Linux host running RHEL 8.6 with an **active** Red Hat subscription using one of the following hardware architectures:
+- a suitably powerful Linux host running RHEL 8.6 (or later) with an **active** Red Hat subscription using one of the following hardware architectures:
   - s390x (an IBM zSystems / LinuxONE LPAR, supported: z13 / z14 / z15 / z16)
   - ppc64le (an IBM Power Systems bare metal host or LPAR, supported: POWER9)
   - x86_64 (an Intel- or AMD-based bare metal host)
