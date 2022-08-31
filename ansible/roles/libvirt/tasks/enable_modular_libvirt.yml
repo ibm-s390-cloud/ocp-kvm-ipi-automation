@@ -1,0 +1,28 @@
+---
+
+- name: disable monolithic libvirt
+  ansible.builtin.service:
+    name: '{{ item }}'
+    state: stopped
+    enabled: false
+    masked: true
+  loop: '{{ libvirt_monolithic["services"] + libvirt_monolithic["sockets"] }}'
+
+- name: disable auth_tcp for virtproxyd
+  ansible.builtin.replace:
+    path: /etc/libvirt/virtproxyd.conf
+    regexp: '^#(auth_tcp.*)'
+    replace: 'auth_tcp = "none"'
+
+- name: unmask and enable libvirt services and sockets
+  ansible.builtin.systemd:
+    name: '{{ item }}'
+    enabled: true
+    masked: false
+  loop: '{{ libvirt_modular["services"] + libvirt_modular["sockets"] }}'
+
+- name: start libvirt sockets
+  ansible.builtin.systemd:
+    name: '{{ item }}'
+    state: started
+  loop: '{{ libvirt_modular["sockets"] }}'

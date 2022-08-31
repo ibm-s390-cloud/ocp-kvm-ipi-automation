@@ -41,6 +41,25 @@
     - name: patch openshift-install source code
       ansible.builtin.include_tasks: '{{ role_path }}/tasks/patch_installer.yml'
 
+    - name: remove unnecessary terraform providers from the source code
+      ansible.builtin.file:
+        path: '{{ temp_dir.path }}/installer/terraform/providers/{{ item }}'
+        state: absent
+      loop:
+        - alicloud
+        - aws
+        - azureprivatedns
+        - azurerm
+        - azurestack
+        - google
+        - ibm
+        - ironic
+        - nutanix
+        - openstack
+        - ovirt
+        - vsphere
+        - vsphereprivate
+
     - name: build openshift-install binary
       ansible.builtin.command:
         cmd: 'hack/build.sh'
