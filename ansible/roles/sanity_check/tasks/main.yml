@@ -1,30 +1,49 @@
 ---
 
-- name: ensure the targeted KVM host is running a supported version of RHEL
+- name: ensure the targeted KVM host is running a supported OS
   block:
-    - name: check if running RHEL in general
+    - name: check if running a Red Hat-based OS in general
       ansible.builtin.assert:
         that:
           - "ansible_os_family == 'RedHat'"
 
-    - name: ensure that the major RHEL version is either 8 or 9
-      ansible.builtin.assert:
-        that:
-          - '{{ ansible_distribution_major_version is inlist(["8", "9"]) }}'
+    - name: check RHEL prerequisites
+      block:
+        - name: ensure that the major RHEL version is either 8 or 9
+          ansible.builtin.assert:
+            that:
+              - '{{ ansible_distribution_major_version is inlist(["8", "9"]) }}'
 
-    - name: ensure that the minor version for RHEL 8 is 6 or higher
-      ansible.builtin.assert:
-        that:
-          - '{{ (ansible_distribution_version | parse_version)["minor"] >= 6 }}'
-      when: "ansible_distribution_major_version == '8'"
+        - name: ensure that the minor version for RHEL 8 is 6 or higher
+          ansible.builtin.assert:
+            that:
+              - '{{ (ansible_distribution_version | parse_version)["minor"] >= 6 }}'
+          when: "ansible_distribution_major_version == '8'"
 
-- name: ensure the targeted KVM host architecture is supported by KVM on RHEL
+        - name: let the user know that RHEL 9 support is experimental for now
+          ansible.builtin.debug:
+            msg:
+              - "ATTENTION: Your target host '{{ inventory_hostname }}' is running RHEL {{ ansible_distribution_version }}."
+              - "The support for this OS version is considered experimental for now."
+              - "If you're experiencing any trouble running these platforms on that host please consider switching to RHEL 8.6."
+          when: "ansible_distribution_major_version == '9'"
+      when: "ansible_distribution == 'RedHat'"
+
+    - name: check Fedora prerequisites
+      block:
+        - name: ensure that the major Fedora version is 35
+          ansible.builtin.assert:
+            that:
+              - '{{ ansible_distribution_major_version is inlist(["35"]) }}'
+      when: "ansible_distribution == 'Fedora'"
+
+- name: ensure the targeted KVM host architecture is supported by KVM
   block:
     - name: RHEL 8 supports KVM on s390x / ppc64le / x86_64 / aarch64
       ansible.builtin.assert:
         that:
           - '{{ ansible_architecture is inlist(["s390x", "ppc64le", "x86_64", "aarch64"]) }}'
-      when: "ansible_distribution_major_version == '8'"
+      when: ansible_distribution_major_version is inlist(['8', '35'])
 
     - name: RHEL 9 supports KVM on s390x / x86_64
       ansible.builtin.assert:
@@ -35,6 +54,7 @@
           "For more information please refer to the following document:"
           "https://ibm.biz/BdPYsd"
       when: "ansible_distribution_major_version == '9'"
+  when: "ansible_distribution == 'RedHat'"
 
 - name: check if mandatory configuration variables are set
   ansible.builtin.assert:

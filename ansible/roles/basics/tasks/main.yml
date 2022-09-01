@@ -31,11 +31,11 @@
     name: '{{ item }}'
     state: present
   loop:
-    - '{{ rhel_packages[rhel_version]["groups"] }}'
-    - '{{ rhel_packages[rhel_version]["modules"] }}'
-    - '{{ rhel_packages[rhel_version]["rpms"] }}'
+    - '{{ os_packages[os_version]["groups"] }}'
+    - '{{ os_packages[os_version]["modules"] }}'
+    - '{{ os_packages[os_version]["rpms"] }}'
   vars:
-    rhel_version: '{{ (ansible_distribution_version | parse_version)["major"] | string + "_" + (ansible_distribution_version | parse_version)["minor"] | string }}'
+    os_version: '{{ (ansible_distribution_version | parse_version)["major"] | string + "_" + (ansible_distribution_version | parse_version)["minor"] | string }}'
 
 - name: install optional software packages
   block:

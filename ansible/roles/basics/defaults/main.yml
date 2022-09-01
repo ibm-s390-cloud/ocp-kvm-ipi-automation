@@ -9,8 +9,8 @@ butane_version: 0.15.0
 ocm_version: 0.1.64
 yq_version: 4.27.2
 
-# RHEL-related software modules
-rhel_packages:
+# OS-related software modules
+os_packages:
   '8_6':
     groups:
       - '@RPM Development Tools'
@@ -177,6 +177,160 @@ rhel_packages:
       - rust-src
       - rust-std-static
       - rust-toolset
+      - rustfmt
+    rpms:
+      - bind-utils
+      - iputils
+      - podman
+      - tmux
+      - wget
+      - curl
+      - vim-enhanced
+      - rsync
+      - genisoimage
+      - qemu-img
+      - qemu-kvm
+      - libvirt
+      - libvirt-daemon-config-network
+      - libvirt-daemon-kvm
+      - libvirt-client
+      - virt-install
+      - virt-manager
+      - libguestfs-tools-c
+      - openssl
+      - openssl-devel
+      - libffi
+      - libffi-devel
+      - policycoreutils-python-utils
+      - python3-jmespath
+      - python3-jsonpatch
+      - python3-pyyaml
+      - python3-pip
+      - python3-devel
+      - python3-netaddr
+      - python3-policycoreutils
+      - python3-setuptools
+      - python3-lxml
+      - python3-firewall
+      - python3-libvirt
+      - python3-libselinux
+      - python3-libsemanage
+      - ipmitool
+      - gcc
+      - gcc-c++
+      - git-lfs
+      - clang
+      - jq
+      - lsof
+      - net-tools
+      - httpd
+      - fio
+      - bash-completion
+  '35_0':
+    groups:
+      - '@RPM Development Tools'
+      - '@Development Tools'
+    modules:
+      # mimics @virt:rhel/common
+      - hivex
+      - hivex-devel
+      - libguestfs
+      - libguestfs-appliance
+      - libguestfs-bash-completion
+      - libguestfs-devel
+      - libguestfs-gfs2
+      - libguestfs-gobject
+      - libguestfs-gobject-devel
+      - libguestfs-rescue
+      - libguestfs-rsync
+      - libguestfs-xfs
+      - libiscsi
+      - libiscsi-devel
+      - libiscsi-utils
+      - libnbd
+      - libnbd-bash-completion
+      - libnbd-devel
+      - libtpms
+      - libtpms-devel
+      - libvirt
+      - libvirt-client
+      - libvirt-daemon
+      - libvirt-daemon-config-network
+      - libvirt-daemon-config-nwfilter
+      - libvirt-daemon-driver-interface
+      - libvirt-daemon-driver-network
+      - libvirt-daemon-driver-nodedev
+      - libvirt-daemon-driver-nwfilter
+      - libvirt-daemon-driver-qemu
+      - libvirt-daemon-driver-secret
+      - libvirt-daemon-driver-storage
+      - libvirt-daemon-driver-storage-core
+      - libvirt-daemon-driver-storage-disk
+      - libvirt-daemon-driver-storage-iscsi
+      - libvirt-daemon-driver-storage-logical
+      - libvirt-daemon-driver-storage-mpath
+      - libvirt-daemon-driver-storage-rbd
+      - libvirt-daemon-driver-storage-scsi
+      - libvirt-daemon-kvm
+      - libvirt-dbus
+      - libvirt-devel
+      - libvirt-docs
+      - libvirt-libs
+      - libvirt-lock-sanlock
+      - libvirt-nss
+      - libvirt-wireshark
+      - lua-guestfs
+      - nbdfuse
+      - nbdkit
+      - nbdkit-bash-completion
+      - nbdkit-basic-filters
+      - nbdkit-basic-plugins
+      - nbdkit-curl-plugin
+      - nbdkit-devel
+      - nbdkit-example-plugins
+      - nbdkit-gzip-filter
+      - nbdkit-linuxdisk-plugin
+      - nbdkit-nbd-plugin
+      - nbdkit-python-plugin
+      - nbdkit-server
+      - nbdkit-ssh-plugin
+      - nbdkit-tar-filter
+      - nbdkit-tmpdisk-plugin
+      - nbdkit-xz-filter
+      - netcf
+      - netcf-devel
+      - netcf-libs
+      - perl-Sys-Guestfs
+      - perl-Sys-Virt
+      - perl-hivex
+      - python3-hivex
+      - python3-libguestfs
+      - python3-libnbd
+      - python3-libvirt
+      - qemu-guest-agent
+      - qemu-img
+      - qemu-kvm
+      - qemu-kvm-core
+      - ruby-hivex
+      - ruby-libguestfs
+      - supermin
+      - supermin-devel
+      - swtpm
+      - swtpm-libs
+      - swtpm-tools
+      - virt-dib
+      # mimics @rust-toolset:rhel8/common
+      - cargo
+      - cargo-doc
+      - clippy
+      - rls
+      - rust
+      - rust-analysis
+      - rust-doc
+      - rust-gdb
+      - rust-lldb
+      - rust-src
+      - rust-std-static
       - rustfmt
     rpms:
       - bind-utils
