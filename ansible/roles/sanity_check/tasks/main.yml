@@ -21,12 +21,13 @@
           when: "ansible_distribution_major_version == '8'"
 
         - name: let the user know that RHEL 9 support is experimental for now
-          ansible.builtin.debug:
+          ansible.builtin.fail:
             msg:
               - "ATTENTION: Your target host '{{ inventory_hostname }}' is running RHEL {{ ansible_distribution_version }}."
-              - "The support for this OS version is considered experimental for now."
-              - "If you're experiencing any trouble running these platforms on that host please consider switching to RHEL 8.6."
-          when: "ansible_distribution_major_version == '9'"
+              - "Support for this OS version is considered experimental for now and needs to be explicitly enabled."
+          when:
+            - "ansible_distribution_major_version == '9'"
+            - enable_experimental_rhel9 is undefined
       when: "ansible_distribution == 'RedHat'"
 
     - name: check Fedora prerequisites

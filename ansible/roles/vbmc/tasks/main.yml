@@ -16,7 +16,7 @@
 
     - name: install vbmc Python package
       ansible.builtin.shell: |
-          python3 -m venv --system-site-packages --download /opt/vbmc
+          python3 -m virtualenv --system-site-packages --download /opt/vbmc
           /opt/vbmc/bin/pip install virtualbmc
 
     - name: stop any existing vbmc and vbmcd processes

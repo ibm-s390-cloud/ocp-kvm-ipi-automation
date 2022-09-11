@@ -55,25 +55,20 @@
       when: ansible_architecture == 's390x'
 
 - name: install prerequisite Python packages
-  block:
-    - name: upgrade essential Python packages
-      ansible.builtin.pip:
-        name:
-          - pip
-          - setuptools
-          - setuptools-rust
-          - wheel
-        state: latest
-        extra_args: --no-cache-dir
-
-    - name: install common Python packages
-      ansible.builtin.pip:
-        name:
-          - openshift!=0.13.0
-          - stormssh
-          - xmltodict
-        state: present
-        extra_args: '--no-cache-dir --ignore-installed'
+  ansible.builtin.pip:
+    name:
+      - pip
+      - pyOpenSSL
+      - setuptools
+      - setuptools-rust==1.1.2
+      - wheel
+      # common
+      - openshift!=0.13.0
+      - stormssh
+      - virtualenv
+      - xmltodict
+    state: present
+    extra_args: '--no-cache-dir --ignore-installed'
 
 - name: install yq
   block:
