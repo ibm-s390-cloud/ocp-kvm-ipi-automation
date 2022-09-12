@@ -112,24 +112,26 @@
         disable_gpg_check: true
       when: "ansible_architecture == 's390x'"
 
-- name: upgrade essential Python packages
-  ansible.builtin.pip:
-    name:
-      - pip
-      - setuptools
-      - setuptools-rust
-      - wheel
-    state: latest
-    extra_args: --no-cache-dir
-
 - name: install prerequisite Python packages
-  ansible.builtin.pip:
-    name:
-      - openshift!=0.13.0
-      - stormssh
-      - xmltodict
-    state: present
-    extra_args: '--no-cache-dir --ignore-installed'
+  block:
+    - name: upgrade essential Python packages to recent(-ish) versions
+      ansible.builtin.pip:
+        name:
+          - pip==21.3.1
+          - setuptools-rust==1.1.2
+        state: present
+        extra_args: '--no-cache-dir --ignore-installed'
+
+    - name: install / upgrade prerequisite Python packages
+      ansible.builtin.pip:
+        name:
+          - openshift==0.13.1
+          - pyOpenSSL==22.0.0
+          - stormssh==0.7.0
+          - virtualenv==20.16.5
+          - xmltodict==0.13.0
+        state: present
+        extra_args: '--no-cache-dir --ignore-installed'
 
 - name: install yq
   block:
