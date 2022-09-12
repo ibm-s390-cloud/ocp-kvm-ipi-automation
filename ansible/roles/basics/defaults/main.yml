@@ -11,6 +11,122 @@ yq_version: 4.27.2
 
 # OS-related software modules
 os_packages:
+  '8_4':
+    groups:
+      - '@RPM Development Tools'
+      - '@Development Tools'
+    modules:
+      - '@virt:rhel/common'
+      - '@rust-toolset:rhel8/common'
+    rpms:
+      - bind-utils
+      - iputils
+      - podman
+      - tmux
+      - wget
+      - curl
+      - vim-enhanced
+      - rsync
+      - genisoimage
+      - qemu-img
+      - qemu-kvm
+      - libvirt
+      - libvirt-daemon-config-network
+      - libvirt-daemon-kvm
+      - libvirt-client
+      - libvirt-devel
+      - virt-install
+      - virt-manager
+      - libguestfs-tools-c
+      - openssl
+      - openssl-devel
+      - libffi
+      - libffi-devel
+      - policycoreutils-python-utils
+      - python3-jmespath
+      - python3-jsonpatch
+      - python3-pyyaml
+      - python3-pip
+      - python3-devel
+      - python3-netaddr
+      - python3-policycoreutils
+      - python3-wheel
+      - python3-setuptools
+      - python3-lxml
+      - python3-pyOpenSSL
+      - python3-firewall
+      - python3-libvirt
+      - python3-libselinux
+      - python3-libsemanage
+      - ipmitool
+      - gcc
+      - gcc-c++
+      - git-lfs
+      - clang
+      - jq
+      - lsof
+      - net-tools
+      - httpd
+      - fio
+      - bash-completion
+  '8_5':
+    groups:
+      - '@RPM Development Tools'
+      - '@Development Tools'
+    modules:
+      - '@virt:rhel/common'
+      - '@rust-toolset:rhel8/common'
+    rpms:
+      - bind-utils
+      - iputils
+      - podman
+      - tmux
+      - wget
+      - curl
+      - vim-enhanced
+      - rsync
+      - genisoimage
+      - qemu-img
+      - qemu-kvm
+      - libvirt
+      - libvirt-daemon-config-network
+      - libvirt-daemon-kvm
+      - libvirt-client
+      - libvirt-devel
+      - virt-install
+      - virt-manager
+      - libguestfs-tools-c
+      - openssl
+      - openssl-devel
+      - libffi
+      - libffi-devel
+      - policycoreutils-python-utils
+      - python3-jmespath
+      - python3-jsonpatch
+      - python3-pyyaml
+      - python3-pip
+      - python3-devel
+      - python3-netaddr
+      - python3-policycoreutils
+      - python3-wheel
+      - python3-setuptools
+      - python3-lxml
+      - python3-pyOpenSSL
+      - python3-firewall
+      - python3-libvirt
+      - python3-libselinux
+      - python3-libsemanage
+      - ipmitool
+      - gcc
+      - gcc-c++
+      - git-lfs
+      - clang
+      - jq
+      - lsof
+      - net-tools
+      - httpd
+      - fio
+      - bash-completion
   '8_6':
     groups:
       - '@RPM Development Tools'
@@ -383,6 +499,28 @@ os_packages:
 
 # Python-related software packages
 python_packages:
+  '8_4':
+    essential:
+      - pip==21.3.1
+      - setuptools-rust==1.1.2
+    required:
+      - bcrypt==3.2.2
+      - openshift==0.13.1
+      - pyOpenSSL==22.0.0
+      - stormssh==0.7.0
+      - virtualenv==20.16.5
+      - xmltodict==0.13.0
+  '8_5':
+    essential:
+      - pip==21.3.1
+      - setuptools-rust==1.1.2
+    required:
+      - bcrypt==3.2.2
+      - openshift==0.13.1
+      - pyOpenSSL==22.0.0
+      - stormssh==0.7.0
+      - virtualenv==20.16.5
+      - xmltodict==0.13.0
   '8_6':
     essential:
       - pip==21.3.1
@@ -395,8 +533,8 @@ python_packages:
       - xmltodict==0.13.0
   '9_0':
     essential:
-      - pip==21.3.1
-      - setuptools-rust==1.1.2
+      - pip==22.2.2
+      - setuptools-rust==1.5.1
     required:
       - openshift==0.13.1
       - pyOpenSSL==22.0.0
@@ -405,8 +543,8 @@ python_packages:
       - xmltodict==0.13.0
   '35_0':
     essential:
-      - pip==21.3.1
-      - setuptools-rust==1.1.2
+      - pip==22.2.2
+      - setuptools-rust==1.5.1
     required:
       - openshift==0.13.1
       - pyOpenSSL==22.0.0

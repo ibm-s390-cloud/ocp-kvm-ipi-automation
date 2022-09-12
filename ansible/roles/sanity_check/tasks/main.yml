@@ -14,20 +14,17 @@
             that:
               - '{{ ansible_distribution_major_version is inlist(["8", "9"]) }}'
 
-        - name: ensure that the minor version for RHEL 8 is 6 or higher
+        - name: ensure that the minor version for RHEL 8 is 4, 5 or 6
           ansible.builtin.assert:
             that:
-              - '{{ (ansible_distribution_version | parse_version)["minor"] >= 6 }}'
+              - '{{ (ansible_distribution_version | parse_version)["minor"] | string is inlist(["4", "5", "6"]) }}'
           when: "ansible_distribution_major_version == '8'"
 
-        - name: let the user know that RHEL 9 support is experimental for now
-          ansible.builtin.fail:
-            msg:
-              - "ATTENTION: Your target host '{{ inventory_hostname }}' is running RHEL {{ ansible_distribution_version }}."
-              - "Support for this OS version is considered experimental for now and needs to be explicitly enabled."
-          when:
-            - "ansible_distribution_major_version == '9'"
-            - enable_experimental_rhel9 is undefined
+        - name: ensure that the minor version for RHEL 9 is 0
+          ansible.builtin.assert:
+            that:
+              - '{{ (ansible_distribution_version | parse_version)["minor"] | string is inlist(["0"]) }}'
+          when: "ansible_distribution_major_version == '9'"
       when: "ansible_distribution == 'RedHat'"
 
     - name: check Fedora prerequisites
@@ -38,13 +35,13 @@
               - '{{ ansible_distribution_major_version is inlist(["35"]) }}'
       when: "ansible_distribution == 'Fedora'"
 
-- name: ensure the targeted KVM host architecture is supported by KVM
+- name: ensure the targeted KVM host architecture is supported by KVM (RHEL only)
   block:
     - name: RHEL 8 supports KVM on s390x / ppc64le / x86_64 / aarch64
       ansible.builtin.assert:
         that:
           - '{{ ansible_architecture is inlist(["s390x", "ppc64le", "x86_64", "aarch64"]) }}'
-      when: ansible_distribution_major_version is inlist(['8', '35'])
+      when: "ansible_distribution_major_version == '8'"
 
     - name: RHEL 9 supports KVM on s390x / x86_64
       ansible.builtin.assert:
