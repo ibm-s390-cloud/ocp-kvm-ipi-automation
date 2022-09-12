@@ -52,23 +52,21 @@
           - 'https://zhwmodel.s3.eu.cloud-object-storage.appdomain.cloud/zhwmodel-1.4-529ca10.s390x.rpm'
         state: present
         disable_gpg_check: true
-      when: ansible_architecture == 's390x'
+      when: "ansible_architecture == 's390x'"
 
 - name: install prerequisite Python packages
-  ansible.builtin.pip:
-    name:
-      - pip
-      - pyOpenSSL
-      - setuptools
-      - setuptools-rust==1.1.2
-      - wheel
-      # common
-      - openshift!=0.13.0
-      - stormssh
-      - virtualenv
-      - xmltodict
-    state: present
-    extra_args: '--no-cache-dir --ignore-installed'
+  block:
+    - name: upgrade essential Python packages to recent(-ish) versions
+      ansible.builtin.pip:
+        name:  '{{ python_packages[os_version]["essential"] }}'
+        state: present
+        extra_args: '--no-cache-dir --ignore-installed'
+
+    - name: install / upgrade prerequisite Python packages
+      ansible.builtin.pip:
+        name:  '{{ python_packages[os_version]["required"] }}'
+        state: present
+        extra_args: '--no-cache-dir --ignore-installed'
 
 - name: install yq
   block:

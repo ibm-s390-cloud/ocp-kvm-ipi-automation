@@ -380,3 +380,36 @@ os_packages:
       - httpd
       - fio
       - bash-completion
+
+# Python-related software packages
+python_packages:
+  '8_6':
+    essential:
+      - pip==21.3.1
+      - setuptools-rust==1.1.2
+    required:
+      - openshift==0.13.1
+      - pyOpenSSL==22.0.0
+      - stormssh==0.7.0
+      - virtualenv==20.16.5
+      - xmltodict==0.13.0
+  '9_0':
+    essential:
+      - pip==21.3.1
+      - setuptools-rust==1.1.2
+    required:
+      - openshift==0.13.1
+      - pyOpenSSL==22.0.0
+      - stormssh==0.7.0
+      - virtualenv==20.16.5
+      - xmltodict==0.13.0
+  '35_0':
+    essential:
+      - pip==21.3.1
+      - setuptools-rust==1.1.2
+    required:
+      - openshift==0.13.1
+      - pyOpenSSL==22.0.0
+      - stormssh==0.7.0
+      - virtualenv==20.16.5
+      - xmltodict==0.13.0
