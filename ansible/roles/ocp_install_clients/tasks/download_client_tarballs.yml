@@ -1,6 +1,6 @@
 ---
 
-- name: download client '{{ tarball.name }}' with exponential backoff
+- name: download client '{{ tarball.name }}'
   ansible.builtin.get_url:
     url: '{{ tarball.src }}'
     dest: '{{ tarball.dest }}'

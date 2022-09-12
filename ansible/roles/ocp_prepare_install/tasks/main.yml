@@ -27,7 +27,7 @@
         mode: '0755'
         state: directory
 
-    - name: download CoreOS installation files from Red Hat mirror with exponential backoff
+    - name: download CoreOS installation files from Red Hat mirror
       ansible.builtin.get_url:
         url: '{{ openshift_rhcos_image_url }}'
         dest: '/var/www/html/bootfiles/{{ openshift_rhcos_image_url | basename }}'

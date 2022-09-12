@@ -10,11 +10,18 @@ In order to run the Ansible playbooks in this repository you need:
 
 - an Ansible **compatible** workstation (a dedicated standalone workstation that is physically separate from the target Linux host)
 - a working **Ansible 2.10 (or newer)** installation on your workstation
-- a suitably powerful Linux host running RHEL 8.6 (or later) with an **active** Red Hat subscription using one of the following hardware architectures:
-  - s390x (an IBM zSystems / LinuxONE LPAR, supported: z13 / z14 / z15 / z16)
-  - ppc64le (an IBM Power Systems bare metal host or LPAR, supported: POWER9)
-  - x86_64 (an Intel- or AMD-based bare metal host)
-  - aarch64 (an ARM64-based bare metal host)
+- a suitably powerful Linux host:
+  - running one of the following operating systems:
+    - RHEL 8.4 (with an **active** Red Hat subscription)
+    - RHEL 8.5 (with an **active** Red Hat subscription)
+    - RHEL 8.6 (with an **active** Red Hat subscription)
+    - RHEL 9.0 (with an **active** Red Hat subscription)
+    - Fedora 35
+  - using one of the following hardware architectures:
+    - s390x (an IBM zSystems / LinuxONE LPAR, supported: z13 / z14 / z15 / z16)
+    - ppc64le (an IBM Power Systems bare metal host or LPAR, supported: POWER9)
+    - x86_64 (an Intel- or AMD-based bare metal host)
+    - aarch64 (an ARM64-based bare metal host)
 - a working SSH connection to that Linux host from your workstation user account to the host's *root* acccount (password-less SSH)
 - the OpenShift cluster image pull secrets file - see also [here](../ansible/secrets/README.md) for details
 
@@ -109,9 +116,9 @@ Once you've finished with these preparations you can proceed to the actual OpenS
 
 ### Linux host
 
-**You need to start with a vanilla installation of RHEL 8.6! This is very important as any existing KVM-based OpenShift cluster installation or remaining artifacts / configuration snippets thereof are very likely to interfere with the different setup and configuration steps done by these playbooks.**
+**You need to start with a vanilla installation of the base operating system! This is very important as any existing KVM-based OpenShift cluster installation or remaining artifacts / configuration snippets thereof are very likely to interfere with the different setup and configuration steps done by these playbooks.**
 
-Once the initial RHEL OS installation is done, simply transfer your public SSH key to the target Linux host's *root* user account:
+Once the initial operating system installation is done, simply transfer your public SSH key to the target Linux host's *root* user account:
 
 ```bash
 ssh-copy-id -i $HOME/.ssh/id_rsa root@$$YOUR_KVM_HOST_NAME$$
@@ -339,14 +346,15 @@ ansible
 │   │   └── tasks
 │   │       └── main.yml
 │   ├── libvirt
+│   │   ├── defaults
+│   │   │   └── main.yml
 │   │   ├── files
 │   │   │   └── libvirt.profile.sh
 │   │   ├── meta
 │   │   │   └── main.yml
 │   │   └── tasks
+│   │       ├── enable_monolithic_libvirt.yml
 │   │       └── main.yml
-│   ├── named
-│   │   └── files
 │   ├── networking
 │   │   ├── files
 │   │   │   ├── dnsmasq.add-hosts.conf
