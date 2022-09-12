@@ -1,0 +1,40 @@
+---
+
+libvirt_monolithic:
+  services:
+    - libvirtd
+  sockets:
+    - libvirtd-ro.socket
+    - libvirtd-admin.socket
+    - libvirtd-tcp.socket
+    - libvirtd-tls.socket
+
+libvirt_modular:
+  services:
+    - virtqemud
+    - virtinterfaced
+    - virtnetworkd
+    - virtnodedevd
+    - virtnwfilterd
+    - virtproxyd
+    - virtsecretd
+    - virtstoraged
+  sockets:
+    - virtqemud-ro.socket
+    - virtinterfaced-ro.socket
+    - virtnetworkd-ro.socket
+    - virtnodedevd-ro.socket
+    - virtnwfilterd-ro.socket
+    - virtproxyd-ro.socket
+    - virtsecretd-ro.socket
+    - virtstoraged-ro.socket
+    - virtqemud-admin.socket
+    - virtinterfaced-admin.socket
+    - virtnetworkd-admin.socket
+    - virtnodedevd-admin.socket
+    - virtnwfilterd-admin.socket
+    - virtproxyd-admin.socket
+    - virtsecretd-admin.socket
+    - virtstoraged-admin.socket
+    - virtproxyd-tcp.socket
+    - virtproxyd-tls.socket

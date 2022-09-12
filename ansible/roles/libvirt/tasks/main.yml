@@ -1,43 +1,25 @@
 ---
 
-- name: configure libvirtd
-  block:
-    - name: enable IPv4 forwarding
-      ansible.posix.sysctl:
-        name: '{{ item }}'
-        value: '1'
-        sysctl_set: true
-        state: present
-        reload: true
-      loop:
-        - net.ipv4.conf.all.arp_filter
-        - net.ipv4.conf.all.proxy_arp
-        - net.ipv4.conf.all.forwarding
-        - net.ipv4.ip_forward
+- name: enable IPv4 forwarding
+  ansible.posix.sysctl:
+    name: '{{ item }}'
+    value: '1'
+    sysctl_set: true
+    state: present
+    reload: true
+  loop:
+    - net.ipv4.conf.all.arp_filter
+    - net.ipv4.conf.all.proxy_arp
+    - net.ipv4.conf.all.forwarding
+    - net.ipv4.ip_forward
 
-    - name: enable and start libvirtd-tcp.socket service
-      ansible.builtin.service:
-        name: libvirtd-tcp.socket
-        state: started
-        enabled: true
+- name: enable monolithic libvirt
+  ansible.builtin.include_tasks: '{{ role_path }}/tasks/enable_monolithic_libvirt.yml'
 
-    - name: disable auth_tcp for libvirtd
-      ansible.builtin.replace:
-        path: /etc/libvirt/libvirtd.conf
-        regexp: '^#(auth_tcp.*)'
-        replace: 'auth_tcp = "none"'
-        backup: true
-
-    - name: enable libvirtd service
-      ansible.builtin.service:
-        name: libvirtd
-        state: started
-        enabled: true
-
-    - name: set the default libvirt connection URI
-      ansible.builtin.copy:
-        src: '{{ role_path }}/files/libvirt.profile.sh'
-        dest: /etc/profile.d/libvirt.sh
-        owner: root
-        group: root
-        mode: '0644'
+- name: set the default libvirt connection URI
+  ansible.builtin.copy:
+    src: '{{ role_path }}/files/libvirt.profile.sh'
+    dest: /etc/profile.d/libvirt.sh
+    owner: root
+    group: root
+    mode: '0644'
