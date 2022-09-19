@@ -331,6 +331,7 @@ os_packages:
       - python3-libvirt
       - python3-libselinux
       - python3-libsemanage
+      - python3-wheel
       - ipmitool
       - gcc
       - gcc-c++
@@ -485,6 +486,159 @@ os_packages:
       - python3-libvirt
       - python3-libselinux
       - python3-libsemanage
+      - python3-wheel
+      - ipmitool
+      - gcc
+      - gcc-c++
+      - git-lfs
+      - clang
+      - jq
+      - lsof
+      - net-tools
+      - httpd
+      - fio
+      - bash-completion
+  '36_0':
+    groups:
+      - '@RPM Development Tools'
+      - '@Development Tools'
+    modules:
+      # mimics @virt:rhel/common
+      - hivex
+      - hivex-devel
+      - libguestfs
+      - libguestfs-appliance
+      - libguestfs-bash-completion
+      - libguestfs-devel
+      - libguestfs-gfs2
+      - libguestfs-gobject
+      - libguestfs-gobject-devel
+      - libguestfs-rescue
+      - libguestfs-rsync
+      - libguestfs-xfs
+      - libiscsi
+      - libiscsi-devel
+      - libiscsi-utils
+      - libnbd
+      - libnbd-bash-completion
+      - libnbd-devel
+      - libtpms
+      - libtpms-devel
+      - libvirt
+      - libvirt-client
+      - libvirt-daemon
+      - libvirt-daemon-config-network
+      - libvirt-daemon-config-nwfilter
+      - libvirt-daemon-driver-interface
+      - libvirt-daemon-driver-network
+      - libvirt-daemon-driver-nodedev
+      - libvirt-daemon-driver-nwfilter
+      - libvirt-daemon-driver-qemu
+      - libvirt-daemon-driver-secret
+      - libvirt-daemon-driver-storage
+      - libvirt-daemon-driver-storage-core
+      - libvirt-daemon-driver-storage-disk
+      - libvirt-daemon-driver-storage-iscsi
+      - libvirt-daemon-driver-storage-logical
+      - libvirt-daemon-driver-storage-mpath
+      - libvirt-daemon-driver-storage-rbd
+      - libvirt-daemon-driver-storage-scsi
+      - libvirt-daemon-kvm
+      - libvirt-dbus
+      - libvirt-devel
+      - libvirt-docs
+      - libvirt-libs
+      - libvirt-lock-sanlock
+      - libvirt-nss
+      - libvirt-wireshark
+      - lua-guestfs
+      - nbdfuse
+      - nbdkit
+      - nbdkit-bash-completion
+      - nbdkit-basic-filters
+      - nbdkit-basic-plugins
+      - nbdkit-curl-plugin
+      - nbdkit-devel
+      - nbdkit-example-plugins
+      - nbdkit-gzip-filter
+      - nbdkit-linuxdisk-plugin
+      - nbdkit-nbd-plugin
+      - nbdkit-python-plugin
+      - nbdkit-server
+      - nbdkit-ssh-plugin
+      - nbdkit-tar-filter
+      - nbdkit-tmpdisk-plugin
+      - nbdkit-xz-filter
+      - perl-Sys-Guestfs
+      - perl-Sys-Virt
+      - perl-hivex
+      - python3-hivex
+      - python3-libguestfs
+      - python3-libnbd
+      - python3-libvirt
+      - qemu-guest-agent
+      - qemu-img
+      - qemu-kvm
+      - qemu-kvm-core
+      - ruby-hivex
+      - ruby-libguestfs
+      - supermin
+      - supermin-devel
+      - swtpm
+      - swtpm-libs
+      - swtpm-tools
+      - virt-dib
+      # mimics @rust-toolset:rhel8/common
+      - cargo
+      - cargo-doc
+      - clippy
+      - rls
+      - rust
+      - rust-analysis
+      - rust-doc
+      - rust-gdb
+      - rust-lldb
+      - rust-src
+      - rust-std-static
+      - rustfmt
+    rpms:
+      - bind-utils
+      - iputils
+      - podman
+      - tmux
+      - wget
+      - curl
+      - vim-enhanced
+      - rsync
+      - genisoimage
+      - qemu-img
+      - qemu-kvm
+      - libvirt
+      - libvirt-daemon-config-network
+      - libvirt-daemon-kvm
+      - libvirt-client
+      - virt-install
+      - virt-manager
+      - libguestfs-tools-c
+      - openssl
+      - openssl-devel
+      - libffi
+      - libffi-devel
+      - policycoreutils-python-utils
+      - python3-jmespath
+      - python3-jsonpatch
+      - python3-pyyaml
+      - python3-pip
+      - python3-devel
+      - python3-netaddr
+      - python3-policycoreutils
+      - python3-setuptools
+      - python3-lxml
+      - python3-firewall
+      - python3-libvirt
+      - python3-libselinux
+      - python3-libsemanage
+      - python3-wheel
       - ipmitool
       - gcc
       - gcc-c++
@@ -548,6 +702,15 @@ python_packages:
     required:
       - openshift==0.13.1
       - pyOpenSSL==22.0.0
+      - stormssh==0.7.0
+      - virtualenv==20.16.5
+      - xmltodict==0.13.0
+  '36_0':
+    essential:
+      - pip==21.3.1
+    required:
+      - openshift==0.13.1
+      - pyOpenSSL==21.0.0
       - stormssh==0.7.0
       - virtualenv==20.16.5
       - xmltodict==0.13.0

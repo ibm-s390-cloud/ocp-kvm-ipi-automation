@@ -56,9 +56,9 @@
 
 - name: install prerequisite Python packages
   ansible.builtin.pip:
-    name:  '{{ item }}'
+    name: '{{ item }}'
     state: present
-    extra_args: '--no-cache-dir --ignore-installed'
+    extra_args: '--no-cache-dir --ignore-installed --prefer-binary'
   loop:
     - '{{ python_packages[os_version]["essential"] }}'
     - '{{ python_packages[os_version]["required"] }}'

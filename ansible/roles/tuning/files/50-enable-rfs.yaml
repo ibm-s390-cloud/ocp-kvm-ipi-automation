@@ -10,16 +10,16 @@ spec:
       version: 3.2.0
     storage:
       files:
-      - contents:
-          source: data:text/plain;charset=utf-8;base64,IyB0dXJuIG9uIFJlY2VpdmUgRmxvdyBTdGVlcmluZyAoUkZTKSBmb3IgYWxsIG5ldHdvcmsgaW50ZXJmYWNlcwpTVUJTWVNURU09PSJuZXQiLCBBQ1RJT049PSJhZGQiLCBSVU57cHJvZ3JhbX0rPSIvYmluL2Jhc2ggLWMgJ2ZvciB4IGluIC9zeXMvJERFVlBBVEgvcXVldWVzL3J4LSo7IGRvIGVjaG8gODE5MiA+ICR4L3Jwc19mbG93X2NudDsgZG9uZSciCg==
-        mode: 420
-        overwrite: true
-        path: /etc/udev/rules.d/71-net-tunings.rules
-      - contents:
-          source: data:text/plain;charset=utf-8;base64,IyBkZWZpbmUgc29jayBmbG93IGVudHJpZXMgZm9yIFJlY2VpdmUgRmxvdyBTdGVlcmluZyAoUkZTKQpuZXQuY29yZS5ycHNfc29ja19mbG93X2VudHJpZXM9ODE5Mgo=
-        mode: 420
-        overwrite: true
-        path: /etc/sysctl.d/95-enable-rfs.conf
+        - contents:
+            source: data:text/plain;charset=utf-8;base64,IyB0dXJuIG9uIFJlY2VpdmUgRmxvdyBTdGVlcmluZyAoUkZTKSBmb3IgYWxsIG5ldHdvcmsgaW50ZXJmYWNlcwpTVUJTWVNURU09PSJuZXQiLCBBQ1RJT049PSJhZGQiLCBSVU57cHJvZ3JhbX0rPSIvYmluL2Jhc2ggLWMgJ2ZvciB4IGluIC9zeXMvJERFVlBBVEgvcXVldWVzL3J4LSo7IGRvIGVjaG8gODE5MiA+ICR4L3Jwc19mbG93X2NudDsgZG9uZSciCg==
+          mode: 420
+          overwrite: true
+          path: /etc/udev/rules.d/71-net-tunings.rules
+        - contents:
+            source: data:text/plain;charset=utf-8;base64,IyBkZWZpbmUgc29jayBmbG93IGVudHJpZXMgZm9yIFJlY2VpdmUgRmxvdyBTdGVlcmluZyAoUkZTKQpuZXQuY29yZS5ycHNfc29ja19mbG93X2VudHJpZXM9ODE5Mgo=
+          mode: 420
+          overwrite: true
+          path: /etc/sysctl.d/95-enable-rfs.conf
   extensions: null
   fips: false
   kernelArguments: null

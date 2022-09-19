@@ -51,7 +51,7 @@
 
     - name: set /etc/hosts cluster nodes fact
       ansible.builtin.set_fact:
-        cluster_nodes_etc_hosts: '{{ (cluster_nodes_etc_hosts | default([])) + [ item.host.ip + " " + item.host.name.split(".")[0] ] }}'
+        cluster_nodes_etc_hosts: '{{ (cluster_nodes_etc_hosts | default([])) + [item.host.ip + " " + item.host.name.split(".")[0]] }}'
       loop: '{{ libvirt_cluster_nodes.matches }}'
       when: not "bootstrap" in item.host.name
 

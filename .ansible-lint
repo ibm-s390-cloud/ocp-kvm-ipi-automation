@@ -3,7 +3,12 @@ quiet: true
 skip_list:
   - command-instead-of-module
   - no-changed-when
+  - name[casing]
+  - schema[meta]
+  - yaml[line-length]
 exclude_paths:
+  - .github/
+  - docs/
   - tekton/
 use_default_rules: true
 verbosity: 1
