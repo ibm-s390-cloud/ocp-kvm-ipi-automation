@@ -75,7 +75,7 @@
 
     - name: bump CPU shares for worker nodes
       ansible.builtin.include_tasks: '{{ role_path }}/tasks/libvirt_set_cpu_shares.yml'
-      loop: '{{ worker_domains | product([ domain_cpu_shares.worker ]) | list }}'
+      loop: '{{ worker_domains | product([domain_cpu_shares.worker]) | list }}'
       loop_control:
         loop_var: cluster_node_share
   always:

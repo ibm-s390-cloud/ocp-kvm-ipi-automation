@@ -14,7 +14,7 @@
       ansible.builtin.shell:
         cmd: 'ip a | grep {{ ipmi_dummy_network }}'
       register: dummy_net_link
-      failed_when: dummy_net_link.rc not in [0,1]
+      failed_when: dummy_net_link.rc not in [0, 1]
 
     - name: delete the dummy network interface
       ansible.builtin.command:
@@ -145,39 +145,42 @@
     - '{{ libvirt_marker }}'
     - '{{ host_marker }}'
 
-- name: clean up /etc/resolv.conf
+- name: clean up resolv.conf
   block:
-    - name: remove immutability attribute from /etc/resolv.conf file
+    - name: determine location of resolv.conf file
+      ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_resolv_conf_location.yml'
+
+    - name: remove immutability attribute from resolv.conf file
       ansible.builtin.command:
-        cmd: 'chattr -i /etc/resolv.conf'
+        cmd: 'chattr -i {{ resolv_conf_location }}'
 
-    - name: check if /etc/resolv.conf backup file exists
+    - name: check if resolv.conf backup file exists
       ansible.builtin.stat:
-        path: /etc/resolv.conf.bkup
-      register: etc_resolv_conf_bkup_info
+        path: '{{ resolv_conf_location }}.bkup'
+      register: resolv_conf_bkup_info
 
-    - name: restore original /etc/resolv.conf from backup file
+    - name: restore original resolv.conf from backup file
       ansible.builtin.copy:
-        src: /etc/resolv.conf.bkup
-        dest: /etc/resolv.conf
+        src: '{{ resolv_conf_location }}.bkup'
+        dest: '{{ resolv_conf_location }}'
         owner: root
         group: root
         mode: '0644'
         remote_src: true
-      when: etc_resolv_conf_bkup_info.stat.exists
+      when: resolv_conf_bkup_info.stat.exists
 
-    - name: remove /etc/resolv.conf backup file
+    - name: remove resolv.conf backup file
       ansible.builtin.file: # noqa risky-file-permissions
-        path: /etc/resolv.conf.bkup
+        path: '{{ resolv_conf_location }}.bkup'
         attributes: '-i'
         state: '{{ item }}'
       loop:
         - touch
         - absent
   always:
-    - name: add immutability attribute to /etc/resolv.conf file
+    - name: add immutability attribute to resolv.conf file
       ansible.builtin.command:
-        cmd: 'chattr +i /etc/resolv.conf'
+        cmd: 'chattr +i {{ resolv_conf_location }}'
 
 - name: clean up libvirt hooks
   block:

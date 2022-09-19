@@ -2,14 +2,17 @@
 
 - name: configure NetworkManager
   block:
-    - name: remove immutability attribute from /etc/resolv.conf file
-      ansible.builtin.command:
-        cmd: 'chattr -i /etc/resolv.conf'
+    - name: determine location of resolv.conf file
+      ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_resolv_conf_location.yml'
 
-    - name: create backup of /etc/resolv.conf file
+    - name: remove immutability attribute from resolv.conf file
+      ansible.builtin.command:
+        cmd: 'chattr -i {{ resolv_conf_location }}'
+
+    - name: create backup of resolv.conf file
       ansible.builtin.copy:
-        src: /etc/resolv.conf
-        dest: /etc/resolv.conf.bkup
+        src: '{{ resolv_conf_location }}'
+        dest: '{{ resolv_conf_location }}.bkup'
         owner: root
         group: root
         mode: '0644'
@@ -53,21 +56,21 @@
         state: reloaded
         enabled: true
 
-    - name: slurp original of /etc/resolv.conf file from backup
+    - name: slurp original of resolv.conf file from backup
       ansible.builtin.slurp:
-        src: /etc/resolv.conf.bkup
-      register: original_etc_resolv_conf
+        src: '{{ resolv_conf_location }}.bkup'
+      register: original_resolv_conf
 
-    - name: retain any nameserver settings from the original /etc/resolv.conf file
+    - name: retain any nameserver settings from the original resolv.conf file
       ansible.builtin.lineinfile:
-        path: /etc/resolv.conf
+        path: '{{ resolv_conf_location }}'
         line: '{{ item }}'
         insertafter: '^nameserver.*$'
-      loop: "{{ original_etc_resolv_conf['content'] | b64decode | trim | regex_findall('^nameserver.*$', multiline=true) }}"
+      loop: "{{ original_resolv_conf['content'] | b64decode | trim | regex_findall('^nameserver.*$', multiline=true) }}"
   always:
-    - name: add immutability attribute to /etc/resolv.conf file
+    - name: add immutability attribute to resolv.conf file
       ansible.builtin.command:
-        cmd: 'chattr +i /etc/resolv.conf'
+        cmd: 'chattr +i {{ resolv_conf_location }}'
 
 - name: configure haproxy
   block:

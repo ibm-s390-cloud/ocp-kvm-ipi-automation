@@ -108,12 +108,12 @@
     - name: update worker configuration
       ansible.utils.update_fact:
         updates:
-        - path: openshift_worker_config.spec.template.spec.providerSpec.value.volume.volumeSize
-          value: '{{ openshift_worker_root_volume_size }}'
-        - path: openshift_worker_config.spec.template.spec.providerSpec.value.domainMemory
-          value: '{{ openshift_worker_memory_size }}'
-        - path: openshift_worker_config.spec.template.spec.providerSpec.value.domainVcpu
-          value: '{{ openshift_worker_number_of_cpus }}'
+          - path: openshift_worker_config.spec.template.spec.providerSpec.value.volume.volumeSize
+            value: '{{ openshift_worker_root_volume_size }}'
+          - path: openshift_worker_config.spec.template.spec.providerSpec.value.domainMemory
+            value: '{{ openshift_worker_memory_size }}'
+          - path: openshift_worker_config.spec.template.spec.providerSpec.value.domainVcpu
+            value: '{{ openshift_worker_number_of_cpus }}'
       register: updated
 
     - name: write back worker configuration to manifest file

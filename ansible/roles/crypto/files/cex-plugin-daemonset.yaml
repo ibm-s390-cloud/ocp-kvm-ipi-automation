@@ -16,44 +16,44 @@ spec:
     spec:
       priorityClassName: system-cluster-critical
       tolerations:
-      - key: CriticalAddonsOnly
-        operator: Exists
+        - key: CriticalAddonsOnly
+          operator: Exists
       initContainers:
-      - name: shadowsysfs
-        image: 'registry.redhat.io/ubi8-minimal'
-        command: ["/bin/sh"]
-        args: ["-c", "mkdir -p -m 0755 /var/tmp/shadowsysfs && chcon -t container_file_t /var/tmp/shadowsysfs"]
-        securityContext:
-          privileged: true
-        volumeMounts:
-          - name: vartmp
-            mountPath: /var/tmp
+        - name: shadowsysfs
+          image: 'registry.redhat.io/ubi8-minimal'
+          command: ["/bin/sh"]
+          args: ["-c", "mkdir -p -m 0755 /var/tmp/shadowsysfs && chcon -t container_file_t /var/tmp/shadowsysfs"]
+          securityContext:
+            privileged: true
+          volumeMounts:
+            - name: vartmp
+              mountPath: /var/tmp
       containers:
-      - image: 'registry.connect.redhat.com/ibm/ibm-cex-device-plugin-cm:v1.0.0'
-        imagePullPolicy: Always
-        name: cex-plugin
-        securityContext:
-          privileged: true
-        env:
-          - name: NODENAME
-            valueFrom:
-              fieldRef:
-                fieldPath: spec.nodeName
-          - name: APQN_OVERCOMMIT_LIMIT
-            value: "1"
-        volumeMounts:
-          - name: device-plugin
-            mountPath: /var/lib/kubelet/device-plugins
-          - name: pod-resources
-            mountPath: /var/lib/kubelet/pod-resources
-          - name: vartmp
-            mountPath: /var/tmp
-          - name: dev
-            mountPath: /dev
-          - name: sys
-            mountPath: /sys
-          - name: cex-resources-conf
-            mountPath: /config/
+        - image: 'registry.connect.redhat.com/ibm/ibm-cex-device-plugin-cm:v1.0.0'
+          imagePullPolicy: Always
+          name: cex-plugin
+          securityContext:
+            privileged: true
+          env:
+            - name: NODENAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: APQN_OVERCOMMIT_LIMIT
+              value: "1"
+          volumeMounts:
+            - name: device-plugin
+              mountPath: /var/lib/kubelet/device-plugins
+            - name: pod-resources
+              mountPath: /var/lib/kubelet/pod-resources
+            - name: vartmp
+              mountPath: /var/tmp
+            - name: dev
+              mountPath: /dev
+            - name: sys
+              mountPath: /sys
+            - name: cex-resources-conf
+              mountPath: /config/
       volumes:
         - name: device-plugin
           hostPath:

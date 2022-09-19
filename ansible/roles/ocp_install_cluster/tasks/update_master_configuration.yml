@@ -12,12 +12,12 @@
 - name: update master configuration
   ansible.utils.update_fact:
     updates:
-    - path: openshift_master_config.spec.providerSpec.value.volume.volumeSize
-      value: '{{ openshift_master_root_volume_size }}'
-    - path: openshift_master_config.spec.providerSpec.value.domainMemory
-      value: '{{ openshift_master_memory_size }}'
-    - path: openshift_master_config.spec.providerSpec.value.domainVcpu
-      value: '{{ openshift_master_number_of_cpus }}'
+      - path: openshift_master_config.spec.providerSpec.value.volume.volumeSize
+        value: '{{ openshift_master_root_volume_size }}'
+      - path: openshift_master_config.spec.providerSpec.value.domainMemory
+        value: '{{ openshift_master_memory_size }}'
+      - path: openshift_master_config.spec.providerSpec.value.domainVcpu
+        value: '{{ openshift_master_number_of_cpus }}'
   register: updated
 
 - name: write back master configuration to manifest file

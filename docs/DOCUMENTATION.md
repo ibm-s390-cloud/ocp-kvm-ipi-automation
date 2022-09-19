@@ -17,6 +17,7 @@ In order to run the Ansible playbooks in this repository you need:
     - RHEL 8.6 (with an **active** Red Hat subscription)
     - RHEL 9.0 (with an **active** Red Hat subscription)
     - Fedora 35
+    - Fedora 36
   - using one of the following hardware architectures:
     - s390x (an IBM zSystems / LinuxONE LPAR, supported: z13 / z14 / z15 / z16)
     - ppc64le (an IBM Power Systems bare metal host or LPAR, supported: POWER9)
@@ -468,6 +469,7 @@ ansible
 │   ├── check_cluster_state.yml
 │   ├── get_cluster_name.yml
 │   ├── get_cluster_uid.yml
+│   ├── get_resolv_conf_location.yml
 │   ├── reboot_host.yml
 │   ├── start_cluster_nodes.yml
 │   └── wait_for_cluster.yml

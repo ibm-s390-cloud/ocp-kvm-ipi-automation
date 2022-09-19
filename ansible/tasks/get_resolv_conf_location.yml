@@ -1,0 +1,27 @@
+---
+
+- name: determine file stats of /etc/resolv.conf file
+  ansible.builtin.stat:
+    path: /etc/resolv.conf
+  register: etc_resolv_conf_info
+
+- name: convert /etc/resolv.conf into a regular file (if symlink)
+  block:
+    - name: remove symlink /etc/resolv.conf
+      ansible.builtin.file:
+        path: /etc/resolv.conf
+        state: absent
+
+    - name: copy symlink source to /etc/resolv.conf
+      ansible.builtin.copy:
+        src: '{{ etc_resolv_conf_info.stat.lnk_source }}'
+        dest: /etc/resolv.conf
+        owner: root
+        group: root
+        mode: '0644'
+        remote_src: true
+  when: etc_resolv_conf_info.stat.exists and etc_resolv_conf_info.stat.islnk
+
+- name: set resolv.conf file location fact
+  ansible.builtin.set_fact:
+    resolv_conf_location: '/etc/resolv.conf'
