@@ -91,6 +91,10 @@ service_networks:
 # (see also: https://docs.openshift.com/container-platform/4.9/machine_management/creating-infrastructure-machinesets.html)
 openshift_setup_dedicated_infra_nodes: false
 
+# whether to setup the OpenShift cluster in FIPS mode
+# (see also: https://docs.openshift.com/container-platform/4.10/installing/installing-fips.html)
+openshift_setup_fips_mode: false
+
 #############################################
 # <-- optional variables that don't necessarily to be set
 # (these apply to all supported server architectures)
