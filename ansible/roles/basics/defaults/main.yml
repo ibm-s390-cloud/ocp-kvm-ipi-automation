@@ -707,10 +707,11 @@ python_packages:
       - xmltodict==0.13.0
   '36_0':
     essential:
-      - pip==21.3.1
+      - pip==22.2.2
+      - setuptools-rust==1.5.1
     required:
       - openshift==0.13.1
-      - pyOpenSSL==21.0.0
+      - pyOpenSSL==22.0.0
       - stormssh==0.7.0
       - virtualenv==20.16.5
       - xmltodict==0.13.0
