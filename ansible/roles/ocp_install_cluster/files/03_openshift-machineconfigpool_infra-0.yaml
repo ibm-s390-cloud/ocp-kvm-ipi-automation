@@ -8,7 +8,7 @@ spec:
   machineConfigSelector:
     matchExpressions:
       - { key: machineconfiguration.openshift.io/role, operator: In, values: [worker, infra] }
-  maxUnavailable: null
+  maxUnavailable: 1
   nodeSelector:
     matchLabels:
       node-role.kubernetes.io/infra: ""
