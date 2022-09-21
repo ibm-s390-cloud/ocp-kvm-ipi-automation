@@ -24,7 +24,7 @@ networking:
 {% for sn in service_networks %}
   - {{ sn }}
 {% endfor %}
-
+fips: {{ fips_mode | bool | to_json }}
 platform:
   libvirt:
     network:

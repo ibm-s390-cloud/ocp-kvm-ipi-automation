@@ -23,6 +23,10 @@
       ansible.builtin.set_fact:
         vbmc_ipmi: '{{ setup_vbmc_ipmi | default(true) }}'
 
+    - name: check if the cluster is to be installed in FIPS mode
+      ansible.builtin.set_fact:
+        fips_mode: '{{ openshift_setup_fips_mode | default(false) }}'
+
   roles:
     - role: sanity_check
       tags:
