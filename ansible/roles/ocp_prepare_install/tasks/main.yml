@@ -40,3 +40,78 @@
       loop: '{{ (range(1, 10) | map("pow", 2)) | list }}'
       loop_control:
         loop_var: delay
+
+- name: install nmon and njmon system performance monitors (s390x only)
+  block:
+    - name: create temporary download directory
+      ansible.builtin.tempfile:
+        state: directory
+        suffix: nmon
+      register: temp_dir
+
+    - name: download source code
+      ansible.builtin.get_url:
+        url: '{{ item.src }}'
+        dest: '{{ temp_dir.path }}/{{ item.tgt }}'
+        mode: '0440'
+        timeout: 120
+      loop:
+        - { 'src': 'https://sourceforge.net/projects/nmon/files/lmon16n.c', 'tgt': 'lmon.c' }
+        - { 'src': 'https://sourceforge.net/projects/nmon/files/njmon_linux_code_v80.zip', 'tgt': 'njmon.zip' }
+
+    - name: build nmon binary
+      ansible.builtin.command:
+        cmd: '/usr/bin/cc -o nmon lmon.c -g -O3 -Wall -lncurses -lm -D MAINFRAME -D RHEL7'
+        chdir: '{{ temp_dir.path }}'
+        creates: '{{ temp_dir.path }}/nmon'
+
+    - name: extract, patch and build njmon binary
+      block:
+        - name: extract source bundle
+          ansible.builtin.unarchive:
+            src: '{{ temp_dir.path }}/njmon.zip'
+            dest: '{{ temp_dir.path }}'
+            remote_src: true
+            owner: root
+            group: root
+            mode: '0755'
+            exclude:
+              - 'Makefile'
+
+        - name: patch njmon source code
+          ansible.posix.patch:
+            src: '{{ role_path }}/files/njmon_linux_v80.patch'
+            dest: '{{ temp_dir.path }}/njmon_linux_v80.c'
+
+        - name: build njmon binary
+          ansible.builtin.command:
+            cmd: '/usr/bin/cc -o njmon njmon_linux_v80.c -g -O4 -lm -D OSNAME=\"RHEL\" -D OSVERSION=\"8\" -D HW=\"s390x\" -D MAINFRAME'
+            chdir: '{{ temp_dir.path }}'
+            creates: '{{ temp_dir.path }}/njmon'
+
+    - name: remove existing binaries from /usr/local/bin
+      ansible.builtin.file:
+        path: '{{ item }}'
+        state: absent
+      loop:
+        - '/usr/local/bin/nmon'
+        - '/usr/local/bin/njmon'
+
+    - name: copy binaries to /usr/local/bin
+      ansible.builtin.copy:
+        src: '{{ temp_dir.path }}/{{ item.src }}'
+        dest: '{{ item.tgt }}'
+        owner: root
+        group: root
+        mode: '0755'
+        remote_src: true
+      loop:
+        - { 'src': 'nmon', 'tgt': '/usr/local/bin/nmon' }
+        - { 'src': 'njmon', 'tgt': '/usr/local/bin/njmon' }
+  always:
+    - name: delete temporary download directory
+      ansible.builtin.file:
+        path: '{{ temp_dir.path }}'
+        state: absent
+      when: temp_dir.path is defined
+  when: "ansible_architecture == 's390x'"

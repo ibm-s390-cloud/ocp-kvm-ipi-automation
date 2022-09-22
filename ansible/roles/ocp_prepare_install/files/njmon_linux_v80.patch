@@ -1,0 +1,23 @@
+--- njmon_linux_v80.c	2022-05-18 13:30:18.000000000 +0200
++++ njmon_linux_v80.fixed.c	2022-09-22 13:38:00.835593985 +0200
+@@ -3357,6 +3357,11 @@
+     double value;
+     int int_val;
+     int processor = 0;
++    int bogo = 0;
++    int ret;
++    int serialno_done = 0;
++    char label[1024];
++    char serialno[1024];
+ 
+     FUNCTION_START;
+ 
+@@ -3385,7 +3390,7 @@
+         if (!strncmp("processor ", buf, strlen("processor "))) {
+             ret = sscanf(buf, "%s %s %s %s %s %s %s %s", label, label, label, label, label, label, label, serialno);
+ 	    if(ret == 8 && serialno_done == 0) {
+-      	        for(i=0;i<strlen(serialno);i++)
++      	        for(int i=0;i<strlen(serialno);i++)
+ 	    	    if(serialno[i] == ',') 
+ 		        serialno[i] = 0;
+       		pstring("serialno", serialno);

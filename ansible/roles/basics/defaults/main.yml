@@ -69,6 +69,7 @@ os_packages:
       - httpd
       - fio
       - bash-completion
+      - ncurses-devel
   '8_5':
     groups:
       - '@RPM Development Tools'
@@ -127,6 +128,7 @@ os_packages:
       - httpd
       - fio
       - bash-completion
+      - ncurses-devel
   '8_6':
     groups:
       - '@RPM Development Tools'
@@ -185,6 +187,7 @@ os_packages:
       - httpd
       - fio
       - bash-completion
+      - ncurses-devel
   '9_0':
     groups:
       - '@RPM Development Tools'
@@ -343,6 +346,7 @@ os_packages:
       - httpd
       - fio
       - bash-completion
+      - ncurses-devel
   '35_0':
     groups:
       - '@RPM Development Tools'
@@ -498,6 +502,7 @@ os_packages:
       - httpd
       - fio
       - bash-completion
+      - ncurses-devel
   '36_0':
     groups:
       - '@RPM Development Tools'
@@ -650,6 +655,7 @@ os_packages:
       - httpd
       - fio
       - bash-completion
+      - ncurses-devel
 
 # Python-related software packages
 python_packages:

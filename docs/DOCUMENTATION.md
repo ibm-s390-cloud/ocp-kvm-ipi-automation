@@ -418,6 +418,8 @@ ansible
 │   │       ├── persist_libvirt_cluster_network.yml
 │   │       └── persist_ssh_config.yml
 │   ├── ocp_prepare_install
+│   │   ├── files
+│   │   │   └── njmon_linux_v80.patch
 │   │   ├── meta
 │   │   │   └── main.yml
 │   │   └── tasks
