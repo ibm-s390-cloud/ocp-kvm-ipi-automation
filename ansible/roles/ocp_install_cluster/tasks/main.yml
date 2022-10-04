@@ -148,10 +148,10 @@
   block:
     - name: start system performance monitor data collection (s390x only)
       ansible.builtin.command:
-        cmd: '/usr/local/bin/{{ collect_perf_data }} -f -s 15 -c 480 -m {{ openshift_installer_workdir }} {{ collect_data_args }}'
+        cmd: '/usr/local/bin/{{ collect_perf_data }} -f -s 10 -c 720 -m {{ openshift_installer_workdir }} {{ collect_data_args }}'
       register: collect_data_process
       vars:
-        collect_data_args: '{{ "-p" if collect_data == "nmon" else "" }}'
+        collect_data_args: '{{ "-p" if collect_perf_data == "nmon" else "" }}'
       when:
         - "ansible_architecture == 's390x'"
         - collect_perf_data is defined

@@ -29,7 +29,7 @@ spec:
             - name: vartmp
               mountPath: /var/tmp
       containers:
-        - image: 'registry.connect.redhat.com/ibm/ibm-cex-device-plugin-cm:v1.0.0'
+        - image: 'registry.connect.redhat.com/ibm/ibm-cex-device-plugin-cm:v1.0.2'
           imagePullPolicy: Always
           name: cex-plugin
           securityContext:
