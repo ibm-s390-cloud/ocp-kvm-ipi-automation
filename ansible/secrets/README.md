@@ -4,7 +4,7 @@ This directory is solely used to *temporarily* store secrets that are used to in
 
 These secrets are:
 
-- `.ocp_pull_secret` - RHOCP image pull secret file, required
+- `.ocp4_pull_secret` - RHOCP image pull secret file, required
 - `.ocm_api_token` - OCM API token, optional
 
 ## .ocp_pull_secret
