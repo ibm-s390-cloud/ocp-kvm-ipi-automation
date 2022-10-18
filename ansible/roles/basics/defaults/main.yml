@@ -1,7 +1,7 @@
 ---
 
 # third-party software versions
-go_version: 1.17.13
+go_version: 1.18.7
 terraform_version: 1.2.4
 terraform_ibm_provider_version: 1.43.0
 helm_version: 3.9.4
