@@ -1,10 +1,24 @@
 ---
 
+- name: determine file stats of main cluster terraform file
+  ansible.builtin.stat:
+    path: '{{ temp_dir.path }}/installer/data/data/libvirt/cluster/main.tf'
+  register: cluster_main_tf_file_info
+
 - name: add custom MTU size to libvirt_network terraform resource
   ansible.builtin.lineinfile:
     path: '{{ temp_dir.path }}/installer/data/data/libvirt/cluster/main.tf'
     line: '  mtu = "{{ cluster_network_mtu }}"'
     insertafter: '^.*bridge = var\.libvirt_network_if.*$'
   when:
+    - cluster_main_tf_file_info.stat.exists
     - cluster_network_mtu is defined
     - cluster_network_mtu
+
+- name: let the user know that configuring a custom MTU size is not supported
+  ansible.builtin.debug:
+    msg:
+      - "Your host-specific configuration YAML file contains a custom MTU size setting."
+      - "The OpenShift release you want to install however does not support custom MTU sizes."
+      - "So we simple ignore the custom MTU size setting and continue anyway."
+  when: not cluster_main_tf_file_info.stat.exists
