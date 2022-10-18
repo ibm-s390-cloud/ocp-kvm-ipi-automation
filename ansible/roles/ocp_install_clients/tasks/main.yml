@@ -20,6 +20,7 @@
         - { name: 'opm', src: '{{ opm_package_binary_url | default(opm_package_install_loc) }}', dest: '{{ temp_dir.path }}/opm_linux.tar.gz' }
       loop_control:
         loop_var: tarball
+        label: '{{ tarball.name }}'
 
     - name: remove existing OpenShift and OPM client installation from /usr/local/bin
       ansible.builtin.file:

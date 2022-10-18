@@ -19,7 +19,7 @@
           - '{{ crypto_resources_workers is isrange(start=0) }}'
 
 - name: fetch crypto adapter information
-  crypto_adapter_info:
+  crypto_adapter_info: # noqa fqcn[action]
     adapter: '{{ item["id"] }}'
   loop: '{{ crypto_adapters }}'
   register: crypto_adapters_info

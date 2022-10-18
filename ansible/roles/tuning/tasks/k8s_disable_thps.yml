@@ -9,7 +9,7 @@
     state: present
     definition: '{{ lookup("file", "{{ role_path }}/files/thp-workers-profile.yaml") | from_yaml }}'
 
-- name: wait for {{ cluster_waiting_period }} seconds for the cluster to apply changes
+- name: wait for the cluster to apply changes
   ansible.builtin.wait_for:
     timeout: '{{ cluster_waiting_period }}'
   delegate_to: localhost

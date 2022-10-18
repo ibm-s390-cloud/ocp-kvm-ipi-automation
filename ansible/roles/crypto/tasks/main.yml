@@ -43,13 +43,13 @@
 - name: enable given crypto adapters
   block:
     - name: set crypto adapters to 'configured' state
-      crypto_adapter:
+      crypto_adapter: # noqa fqcn[action]
         adapter: '{{ item["id"] }}'
         state: 'configured'
       loop: '{{ crypto_adapters }}'
 
     - name: set crypto adapters to 'enabled' state
-      crypto_adapter:
+      crypto_adapter: # noqa fqcn[action]
         adapter: '{{ item["id"] }}'
         state: 'enabled'
       loop: '{{ crypto_adapters }}'
@@ -92,7 +92,7 @@
             mode: '0644'
 
     - name: create uuids for mediated devices
-      mdev_uuid_gen:
+      mdev_uuid_gen: # noqa fqcn[action]
         worker_index: '{{ worker_index | int }}'
         resource_assignments: '{{ crypto_adapters }}'
       loop: '{{ worker_domains }}'
@@ -153,6 +153,8 @@
     - name: attach mediated devices to cluster worker nodes
       ansible.builtin.include_tasks: '{{ role_path }}/tasks/attach_mediated_device_to_domain.yml'
       loop: '{{ mdev_uuid_gen_result.results }}'
+      loop_control:
+        label: '{{ item["worker_name"] }}'
       when: item['mdev_uuids'] | length > 0
   always:
     - name: restart libvirtd service
@@ -184,7 +186,7 @@
 - name: create cluster resources
   block:
     - name: fetch crypto adapter information
-      crypto_adapter_info:
+      crypto_adapter_info: # noqa fqcn[action]
         adapter: '{{ item["id"] }}'
       loop: '{{ crypto_adapters }}'
       register: crypto_adapters_info
