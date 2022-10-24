@@ -12,6 +12,10 @@
   register: ocm_binary_info
 
 - name: archive the cluster in OCM
+  when:
+    - ocm_api_token_file_info.stat.exists
+    - ocm_binary_info.stat.exists
+    - ocm_binary_info.stat.executable
   block:
     - name: login to OCM
       ansible.builtin.command:
@@ -26,7 +30,7 @@
     - name: generate OCM request payload file
       ansible.builtin.copy:
         dest: '{{ temp_dir.path }}/subscription_patch.json'
-        content: '{{ subscription_patch | to_json }}'
+        content: '{{ subscription_patch | to_json }}' # noqa jinja[invalid]
         owner: root
         group: root
         mode: '0777'
@@ -40,11 +44,11 @@
       register: ocm_cluster_subscription
 
     - name: patch Subscription resource in OCM to mark cluster as 'archived'
+      when: ocm_cluster_subscription is success
       ansible.builtin.command:
         cmd: '/usr/local/bin/ocm patch /api/accounts_mgmt/v1/subscriptions/{{ ocm_cluster_subscription.stdout | from_json | community.general.json_query("items[0].id") }} --body ''{{ temp_dir.path }}/subscription_patch.json'''
-      when: ocm_cluster_subscription is success
   always:
-    - name: delete temporary download directory
+    - name: delete temporary working directory
       ansible.builtin.file:
         path: '{{ temp_dir.path }}'
         state: absent
@@ -53,7 +57,3 @@
     - name: logout from OCM
       ansible.builtin.command:
         cmd: '/usr/local/bin/ocm logout'
-  when:
-    - ocm_api_token_file_info.stat.exists
-    - ocm_binary_info.stat.exists
-    - ocm_binary_info.stat.executable

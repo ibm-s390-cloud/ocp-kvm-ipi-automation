@@ -6,7 +6,7 @@ metadata:
   name: tune-ocp-kvm-host
 spec:
   params:
-  - description: Name of the target KVM host whose OCP cluster will be tuned
+  - description: Name of the target KVM host whose RHOCP cluster will be tuned
     name: host
     type: string
   - description: URL of the git repository containing the cluster configuration data

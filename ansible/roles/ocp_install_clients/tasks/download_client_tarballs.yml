@@ -1,6 +1,6 @@
 ---
 
-- name: download client '{{ tarball.name }}'
+- name: download client tarball
   ansible.builtin.get_url:
     url: '{{ tarball.src }}'
     dest: '{{ tarball.dest }}'

@@ -100,6 +100,7 @@ cp inventory.template inventory
 # make sure to put your Linux host into the correct host group in the 'inventory' file according to the hardware
 # architecture of your Linux host
 # (make sure you can actually SSH into the host as *root* user, see section Preferences above)
+# delete all empty host groups (empty meaning: there are no hosts for that particular hardware architecture) from your inventory file as empty host groups or the presence of any kind of placeholder strings (e.g. '$$YOUR_KVM_HOST_NAME$$') might prevent Ansible from working properly
 
 # put the OpenShift cluster image pull secrets file you've obtained in the subdirectory 'secrets' and name it '.ocp4_pull_secret'
 # (don't worry, it won't be persisted in git!)
