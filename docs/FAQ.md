@@ -67,4 +67,19 @@ You can also enable OCM integration with the playbooks in this repository so tha
 
 ## Q: Whenever I do manual RHOCP installations on KVM hosts I am using a single virtual Linux instance (aka a KVM guest) on the same host where I am installing RHOCP to. Can I use the same setup with these playbooks?
 
-A: No, this kind of setup does not work with the Ansible playbooks. Make sure to run a dedicated standalone Ansible-compatible workstation (e.g. MacOSX, Linux) that is physically separate from the target host that you want to install RHOCP on. The Ansible playbooks need full control over the target host, including installing / configuring and stopping / restarting KVM. This is impossible with the Ansible controller being hosted by KVM on the target host itself.
+A: **No**, this kind of setup does not work with the Ansible playbooks. Make sure to run a dedicated standalone Ansible-compatible workstation (e.g. MacOSX, Linux) that is physically separate from the target host that you want to install RHOCP on. The Ansible playbooks need full control over the target host, including installing / configuring and stopping / restarting KVM. This is impossible with the Ansible controller being hosted by KVM on the target host itself.
+
+## Q: Unfortunately I don't have direct root access to my target LPAR / KVM host but I was given sudo access for my user ID. Can I still make use of these playbooks?
+
+A: **Yes**, using sudo instead of direct *root* access to the target LPAR / KVM host should work, too. Just make sure that the administrator of your target LPAR / KVM host has configured **password-less** sudo access for your user account for **all** commands / actions and that you have configured password-less SSH access to your user account on that host. Once that is done make sure to modify your Ansible 'inventory' file so that it looks like in this example:
+
+```yaml
+all:
+  children:
+    s390x_kvm_host:
+      hosts:
+        myhost-no-root:
+          ansible_user: myuserid
+          ansible_become: true
+    ...
+```

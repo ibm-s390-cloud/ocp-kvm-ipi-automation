@@ -48,7 +48,7 @@
       ansible.builtin.command:
         cmd: '/usr/local/bin/ocm patch /api/accounts_mgmt/v1/subscriptions/{{ ocm_cluster_subscription.stdout | from_json | community.general.json_query("items[0].id") }} --body ''{{ temp_dir.path }}/subscription_patch.json'''
   always:
-    - name: delete temporary download directory
+    - name: delete temporary working directory
       ansible.builtin.file:
         path: '{{ temp_dir.path }}'
         state: absent
