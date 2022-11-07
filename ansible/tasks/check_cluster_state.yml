@@ -6,6 +6,7 @@
   register: workdir_info
 
 - name: get existing non-ready Nodes
+  when: workdir_info.stat.exists and workdir_info.stat.isdir
   block:
     - name: list all existing Node objects
       kubernetes.core.k8s_info:
@@ -24,9 +25,9 @@
     - name: set has_nonready_nodes to True if there are non-ready Nodes
       ansible.builtin.set_fact:
         has_nonready_nodes: '{{ ("True" if nonready_nodes | length > 0 else "False") | bool }}'
-  when: workdir_info.stat.exists and workdir_info.stat.isdir
 
 - name: get existing unavailable ClusterOperators
+  when: workdir_info.stat.exists and workdir_info.stat.isdir
   block:
     - name: list all existing ClusterOperator objects
       kubernetes.core.k8s_info:
@@ -45,9 +46,9 @@
     - name: set has_unavailable_cos to True if there are unavailable ClusterOperators
       ansible.builtin.set_fact:
         has_unavailable_cos: '{{ ("True" if unavailable_cos | length > 0 else "False") | bool }}'
-  when: workdir_info.stat.exists and workdir_info.stat.isdir
 
 - name: get existing cluster alerts from Prometheus
+  when: workdir_info.stat.exists and workdir_info.stat.isdir
   block:
     - name: create temporary file
       ansible.builtin.tempfile:
@@ -134,7 +135,6 @@
         state: absent
         validate_certs: false
       when: ocp_login_details.openshift_auth.api_key is defined
-  when: workdir_info.stat.exists and workdir_info.stat.isdir
 
 - name: add cluster state facts to list
   ansible.builtin.set_fact:

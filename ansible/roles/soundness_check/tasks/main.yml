@@ -8,6 +8,7 @@
           - "ansible_os_family == 'RedHat'"
 
     - name: check RHEL prerequisites
+      when: "ansible_distribution == 'RedHat'"
       block:
         - name: ensure that the major RHEL version is either 8 or 9
           ansible.builtin.assert:
@@ -15,35 +16,36 @@
               - '{{ ansible_distribution_major_version is inlist(["8", "9"]) }}'
 
         - name: ensure that the minor version for RHEL 8 is 4, 5 or 6
+          when: "ansible_distribution_major_version == '8'"
           ansible.builtin.assert:
             that:
               - '{{ (ansible_distribution_version | parse_version)["minor"] | string is inlist(["4", "5", "6"]) }}'
-          when: "ansible_distribution_major_version == '8'"
 
         - name: ensure that the minor version for RHEL 9 is 0
+          when: "ansible_distribution_major_version == '9'"
           ansible.builtin.assert:
             that:
               - '{{ (ansible_distribution_version | parse_version)["minor"] | string is inlist(["0"]) }}'
-          when: "ansible_distribution_major_version == '9'"
-      when: "ansible_distribution == 'RedHat'"
 
     - name: check Fedora prerequisites
+      when: "ansible_distribution == 'Fedora'"
       block:
         - name: ensure that the major Fedora version is 35 or 36
           ansible.builtin.assert:
             that:
               - '{{ ansible_distribution_major_version is inlist(["35", "36"]) }}'
-      when: "ansible_distribution == 'Fedora'"
 
 - name: ensure the targeted KVM host architecture is supported by KVM (RHEL only)
+  when: "ansible_distribution == 'RedHat'"
   block:
     - name: RHEL 8 supports KVM on s390x / ppc64le / x86_64 / aarch64
+      when: "ansible_distribution_major_version == '8'"
       ansible.builtin.assert:
         that:
           - '{{ ansible_architecture is inlist(["s390x", "ppc64le", "x86_64", "aarch64"]) }}'
-      when: "ansible_distribution_major_version == '8'"
 
     - name: RHEL 9 supports KVM on s390x / x86_64
+      when: "ansible_distribution_major_version == '9'"
       ansible.builtin.assert:
         that:
           - '{{ ansible_architecture is inlist(["s390x", "x86_64"]) }}'
@@ -51,8 +53,6 @@
           "The KVM host architecture is not supported by RHEL 9."
           "For more information please refer to the following document:"
           "https://ibm.biz/BdPYsd"
-      when: "ansible_distribution_major_version == '9'"
-  when: "ansible_distribution == 'RedHat'"
 
 - name: check if mandatory configuration variables are set
   ansible.builtin.assert:
@@ -82,28 +82,28 @@
         libvirt_free_space: '{{ libvirt_df_result.stdout_lines | last }}'
 
     - name: calculate cluster configuration hardware demands
+      when: openshift_setup_dedicated_infra_nodes
       ansible.builtin.set_fact:
-        total_cpu_cores_required: '{{ (openshift_master_number_of_cpus * 3 + openshift_worker_number_of_cpus * cluster_number_of_workers + openshift_infra_number_of_cpus * openshift_number_of_infra_nodes) / sanity_check_cpu_overcommit_factor }}'
+        total_cpu_cores_required: '{{ (openshift_master_number_of_cpus * 3 + openshift_worker_number_of_cpus * cluster_number_of_workers + openshift_infra_number_of_cpus * openshift_number_of_infra_nodes) / soundness_check_cpu_overcommit_factor }}'
         total_memory_required: '{{ openshift_master_memory_size * 3 + openshift_worker_memory_size * cluster_number_of_workers + openshift_infra_memory_size * openshift_number_of_infra_nodes }}'
         min_required_disk_space: '{{ (openshift_master_root_volume_size * 3 + openshift_worker_root_volume_size * cluster_number_of_workers + openshift_infra_root_volume_size * openshift_number_of_infra_nodes) / 5 }}'
-      when: openshift_setup_dedicated_infra_nodes
 
     - name: calculate cluster configuration hardware demands
+      when: not openshift_setup_dedicated_infra_nodes
       ansible.builtin.set_fact:
-        total_cpu_cores_required: '{{ (openshift_master_number_of_cpus * 3 + openshift_worker_number_of_cpus * cluster_number_of_workers) / sanity_check_cpu_overcommit_factor }}'
+        total_cpu_cores_required: '{{ (openshift_master_number_of_cpus * 3 + openshift_worker_number_of_cpus * cluster_number_of_workers) / soundness_check_cpu_overcommit_factor }}'
         total_memory_required: '{{ openshift_master_memory_size * 3 + openshift_worker_memory_size * cluster_number_of_workers }}'
         min_required_disk_space: '{{ (openshift_master_root_volume_size * 3 + openshift_worker_root_volume_size * cluster_number_of_workers) / 5 }}'
-      when: not openshift_setup_dedicated_infra_nodes
 
     - name: set current number of CPU cores detected
+      when: ansible_architecture is inlist(['ppc64le', 'x86_64', 'aarch64'])
       ansible.builtin.set_fact:
         total_cpu_cores_detected: '{{ ansible_processor_vcpus }}'
-      when: ansible_architecture is inlist(['ppc64le', 'x86_64', 'aarch64'])
 
     - name: set current number of CPU cores detected
+      when: ansible_architecture == 's390x'
       ansible.builtin.set_fact:
         total_cpu_cores_detected: '{{ ansible_processor_cores }}'
-      when: ansible_architecture == 's390x'
 
     - name: ensure that the hardware demands can be met by the KVM host
       ansible.builtin.assert:
@@ -119,6 +119,7 @@
           "{{ min_required_disk_space | int | human_readable(unit='G') }} free disk space available at /var/lib/libvirt (current: {{ libvirt_free_space | int | human_readable(unit='G') }})"
 
 - name: ensure KVM host isn't using incompatible OS-level packages
+  when: skip_libvirt_soundness_check is not defined
   block:
     - name: fetch RPM package facts
       ansible.builtin.package_facts:
@@ -126,6 +127,7 @@
 
     # see: https://bugzilla.redhat.com/show_bug.cgi?id=2038812
     - name: ensure that the KVM host has a compatible version of libvirt installed
+      when: "'libvirt' in ansible_facts.packages"
       ansible.builtin.assert:
         that:
           - ansible_facts.packages['libvirt'][0]['release'] is not startswith('37.1.module')
@@ -134,5 +136,3 @@
           "{{ ansible_facts.packages['libvirt'][0]['name'] }}-{{ ansible_facts.packages['libvirt'][0]['version'] }}-{{ ansible_facts.packages['libvirt'][0]['release'] }}"
           "Follow these instructions in the troubleshooting guide to resolve the issue:"
           "https://github.com/ibm-s390-cloud/ocp-kvm-ipi-automation/blob/main/docs/TROUBLESHOOTING.md#using-an-incompatible-libvirt-version"
-      when: "'libvirt' in ansible_facts.packages"
-  when: skip_libvirt_sanity_check is not defined

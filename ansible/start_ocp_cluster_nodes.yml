@@ -1,7 +1,7 @@
 ---
 
-- hosts: s390x_kvm_host,ppc64le_kvm_host,x86_64_kvm_host,aarch64_kvm_host
-
+- name: start OpenShift cluster nodes
+  hosts: s390x_kvm_host,ppc64le_kvm_host,x86_64_kvm_host,aarch64_kvm_host
   tasks:
     - name: start OpenShift cluster nodes
       ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/start_cluster_nodes.yml'

@@ -1,16 +1,15 @@
 ---
 
-- hosts: s390x_kvm_host,ppc64le_kvm_host,x86_64_kvm_host,aarch64_kvm_host
-
+- name: setup the KVM host
+  hosts: s390x_kvm_host,ppc64le_kvm_host,x86_64_kvm_host,aarch64_kvm_host
   vars:
-    skip_libvirt_sanity_check: true
-
+    skip_libvirt_soundness_check: true
   roles:
-    - role: sanity_check
+    - role: soundness_check
+      when: disable_soundness_check is undefined
       tags:
-        - sanity
+        - soundness
         - preflight
-      when: disable_sanity_check is undefined
 
     - role: basics
       tags:
@@ -36,7 +35,7 @@
       tags:
         - setup
         - firewall
-
   tasks:
-    - ansible.builtin.debug:
+    - name: display final message
+      ansible.builtin.debug:
         msg: "Finished setting up the KVM host '{{ inventory_hostname }}'. All done."

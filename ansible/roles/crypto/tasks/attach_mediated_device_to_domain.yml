@@ -1,7 +1,7 @@
 ---
 
-- name: attach mediated devices to cluster worker node {{ item["worker_name"] }}
-  mdev_libvirt_attach:
+- name: attach mediated devices to cluster worker node
+  mdev_libvirt_attach: # noqa fqcn[action]
     device_index: '{{ device_index | int }}'
     device_uuid: '{{ uuid_resource_mapping["key"] }}'
     worker_name: '{{ item["worker_name"] }}'

@@ -17,12 +17,12 @@
       failed_when: dummy_net_link.rc not in [0, 1]
 
     - name: delete the dummy network interface
+      when: dummy_net_link.stdout | length > 0
       ansible.builtin.command:
         cmd: '{{ item }}'
       loop:
         - 'ip addr flush dev {{ ipmi_dummy_network }}'
         - 'ip link delete {{ ipmi_dummy_network }}'
-      when: dummy_net_link.stdout | length > 0
 
 - name: check if working directory exists
   ansible.builtin.stat:
@@ -30,16 +30,16 @@
   register: workdir_info
 
 - name: check if cluster installation log file exists
+  when: workdir_info.stat.exists and workdir_info.stat.isdir
   ansible.builtin.stat:
     path: '{{ openshift_installer_workdir }}/.openshift_install_state.json'
   register: install_log_info
-  when: workdir_info.stat.exists and workdir_info.stat.isdir
 
 - name: check if cluster installation kubeconfig file exists
+  when: workdir_info.stat.exists and workdir_info.stat.isdir
   ansible.builtin.stat:
     path: '{{ openshift_installer_workdir }}/auth/kubeconfig'
   register: install_kubeconfig_info
-  when: workdir_info.stat.exists and workdir_info.stat.isdir
 
 - name: check if openshift-install binary exists
   ansible.builtin.stat:
@@ -47,24 +47,25 @@
   register: openshift_install_info
 
 - name: determine name of existing cluster from installation log
-  ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_cluster_name.yml'
   when: workdir_info.stat.exists and workdir_info.stat.isdir and install_log_info.stat.exists
+  ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_cluster_name.yml'
 
 - name: determine UID of existing cluster
-  ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_cluster_uid.yml'
   when:
     - workdir_info.stat.exists
     - workdir_info.stat.isdir
     - install_kubeconfig_info.stat.exists
+  ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_cluster_uid.yml'
 
 - name: destroy any existing cluster
+  when: workdir_info.stat.exists and workdir_info.stat.isdir and openshift_install_info.stat.exists
   ansible.builtin.command:
     cmd: '/usr/local/bin/openshift-install destroy cluster --dir={{ openshift_installer_workdir }}'
   register: cluster_destroy
-  when: workdir_info.stat.exists and workdir_info.stat.isdir and openshift_install_info.stat.exists
   ignore_errors: '{{ cleanup_ignore_errors }}'
 
 - name: remove all stale libvirt cluster resources
+  when: cluster_destroy is not skipped and cluster_destroy.rc != 0
   block:
     - name: get list of all existing libvirt domains
       community.libvirt.virt:
@@ -78,16 +79,15 @@
     - name: display all remaining stale libvirt domains
       ansible.builtin.debug:
         var: stale_cluster_domains
-  when: cluster_destroy is not skipped and cluster_destroy.rc != 0
 
 - name: archive cluster in OCM (if applicable)
-  ansible.builtin.include_tasks: '{{ role_path }}/tasks/archive_cluster_ocm.yml'
-  vars:
-    external_cluster_id: '{{ cluster_uid }}'
   when:
     - cluster_uid is defined
     - cluster_destroy is not skipped
     - cluster_destroy is success
+  ansible.builtin.include_tasks: '{{ role_path }}/tasks/archive_cluster_ocm.yml'
+  vars:
+    external_cluster_id: '{{ cluster_uid }}'
 
 - name: remove all stale files and directories
   block:
@@ -131,10 +131,10 @@
   register: user_ssh_config_info
 
 - name: cleanup SSH configuration for user root
+  when: user_ssh_config_info.stat.exists
   ansible.builtin.blockinfile:
     path: '~root/.ssh/config'
     state: absent
-  when: user_ssh_config_info.stat.exists
 
 - name: clean up /etc/hosts
   ansible.builtin.blockinfile:
@@ -160,6 +160,7 @@
       register: resolv_conf_bkup_info
 
     - name: restore original resolv.conf from backup file
+      when: resolv_conf_bkup_info.stat.exists
       ansible.builtin.copy:
         src: '{{ resolv_conf_location }}.bkup'
         dest: '{{ resolv_conf_location }}'
@@ -167,7 +168,6 @@
         group: root
         mode: '0644'
         remote_src: true
-      when: resolv_conf_bkup_info.stat.exists
 
     - name: remove resolv.conf backup file
       ansible.builtin.file: # noqa risky-file-permissions
@@ -195,8 +195,8 @@
       ansible.builtin.service_facts:
 
     - name: restart libvirtd service
+      when: "'libvirtd' in ansible_facts.services"
       ansible.builtin.service:
         name: libvirtd
         state: reloaded
         enabled: true
-      when: "'libvirtd' in ansible_facts.services"

@@ -1,0 +1,11 @@
+{% for lcn in libvirt_cluster_nodes["matches"] %}
+{% if not "bootstrap" in lcn["host"]["name"] %}
+Host {{ lcn["host"]["name"].split(".")[0] }} {{ lcn["host"]["ip"] }}
+  HostName {{ lcn["host"]["ip"] }}
+  Port 22
+  IdentityFile {{ openshift_installer_workdir }}/id_ssh_ocp
+  User core
+  StrictHostKeyChecking no
+  UserKnownHostsFile /dev/null
+{% endif %}
+{% endfor %}

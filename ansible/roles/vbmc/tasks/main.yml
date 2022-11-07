@@ -8,15 +8,14 @@
       register: vbmc_bin
 
     - name: remove existing vbmc binary
+      when: vbmc_bin.stat.exists
       ansible.builtin.file:
         path: /opt/vbmc
         state: absent
-      when:
-        - vbmc_bin.stat.exists
 
     - name: install vbmc Python package
       ansible.builtin.shell: |
-          python3 -m virtualenv --system-site-packages --download /opt/vbmc
+          python3 -m virtualenv --download /opt/vbmc
           /opt/vbmc/bin/pip install virtualbmc
 
     - name: stop any existing vbmc and vbmcd processes
@@ -56,7 +55,7 @@
         group: root
         mode: '0644'
 
-- name: generate password for vbmc user '{{ vbmc_user }}'
+- name: generate password for vbmc user
   ansible.builtin.set_fact:
     vbmc_password: '{{ lookup("password", "/dev/null length=15 chars=ascii_letters") }}'
 
@@ -89,6 +88,7 @@
         index_var: node_index
 
     - name: consider dedicated infrastructure cluster nodes
+      when: openshift_setup_dedicated_infra_nodes
       block:
         - name: determine list of infrastructure cluster nodes
           ansible.builtin.set_fact:
@@ -101,19 +101,18 @@
           loop_control:
             loop_var: infra_node
             index_var: node_index
-      when: openshift_setup_dedicated_infra_nodes
 
 - name: start and verify vbmc nodes
   block:
     - name: concatenate lists of cluster master and worker and infrastucture nodes
+      when: openshift_setup_dedicated_infra_nodes
       ansible.builtin.set_fact:
         all_domains: "{{ worker_domains + infra_domains + master_domains }}"
-      when: openshift_setup_dedicated_infra_nodes
 
     - name: concatenate lists of cluster master and worker nodes
+      when: not openshift_setup_dedicated_infra_nodes
       ansible.builtin.set_fact:
         all_domains: "{{ worker_domains + master_domains }}"
-      when: not openshift_setup_dedicated_infra_nodes
 
     - name: start vbmc nodes
       ansible.builtin.command:
@@ -184,7 +183,7 @@
         that:
           - "'Chassis Power is on' in ipmi_status.stdout"
 
-- name: persist vbmc connection information to {{ openshift_installer_workdir }}
+- name: persist vbmc connection information to the OpenShift installation working directory
   ansible.builtin.template:
     src: '{{ role_path }}/templates/ipmi_config.yaml.j2'
     dest: '{{ openshift_installer_workdir }}/ipmi_config.yaml'

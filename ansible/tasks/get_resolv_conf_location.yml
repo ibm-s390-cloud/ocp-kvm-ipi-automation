@@ -6,6 +6,7 @@
   register: etc_resolv_conf_info
 
 - name: convert /etc/resolv.conf into a regular file (if symlink)
+  when: etc_resolv_conf_info.stat.exists and etc_resolv_conf_info.stat.islnk
   block:
     - name: remove symlink /etc/resolv.conf
       ansible.builtin.file:
@@ -20,7 +21,6 @@
         group: root
         mode: '0644'
         remote_src: true
-  when: etc_resolv_conf_info.stat.exists and etc_resolv_conf_info.stat.islnk
 
 - name: set resolv.conf file location fact
   ansible.builtin.set_fact:

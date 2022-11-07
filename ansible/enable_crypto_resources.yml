@@ -1,32 +1,31 @@
 ---
 
-- hosts: s390x_kvm_host
-
+- name: enable the use of crypto resources for the OpenShift cluster (s390x only)
+  hosts: s390x_kvm_host
   vars:
-    skip_libvirt_sanity_check: true
-
+    skip_libvirt_soundness_check: true
   roles:
-    - role: sanity_check
+    - role: soundness_check
+      when: disable_soundness_check is undefined
       tags:
-        - sanity
+        - soundness
         - preflight
-      when:
-        - disable_sanity_check is undefined
 
     - role: crypto
+      when: crypto_adapters is defined
       tags:
         - crypto
-      when: crypto_adapters is defined
-
   tasks:
-    - ansible.builtin.debug:
+    - name: display final message
+      when: crypto_adapters is defined
+      ansible.builtin.debug:
         msg:
           - "Finished enabling crypto resources for the KVM-based OpenShift cluster on host '{{ inventory_hostname }}'. All done."
           - "Enjoy!"
-      when: crypto_adapters is defined
 
-    - ansible.builtin.debug:
+    - name: display final message
+      when: crypto_adapters is undefined
+      ansible.builtin.debug:
         msg:
           - "No crypto resource configuration has been provided for host '{{ inventory_hostname }}'. Nothing to be done."
           - "Enjoy!"
-      when: crypto_adapters is undefined

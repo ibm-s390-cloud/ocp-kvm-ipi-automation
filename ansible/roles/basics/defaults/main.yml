@@ -1,7 +1,7 @@
 ---
 
 # third-party software versions
-go_version: 1.17.13
+go_version: 1.18.7
 terraform_version: 1.2.4
 terraform_ibm_provider_version: 1.43.0
 helm_version: 3.9.4
@@ -664,10 +664,7 @@ python_packages:
       - pip==21.3.1
       - setuptools-rust==1.1.2
     required:
-      - bcrypt==3.2.2
       - openshift==0.13.1
-      - pyOpenSSL==22.0.0
-      - stormssh==0.7.0
       - virtualenv==20.16.5
       - xmltodict==0.13.0
   '8_5':
@@ -675,10 +672,7 @@ python_packages:
       - pip==21.3.1
       - setuptools-rust==1.1.2
     required:
-      - bcrypt==3.2.2
       - openshift==0.13.1
-      - pyOpenSSL==22.0.0
-      - stormssh==0.7.0
       - virtualenv==20.16.5
       - xmltodict==0.13.0
   '8_6':
@@ -687,8 +681,6 @@ python_packages:
       - setuptools-rust==1.1.2
     required:
       - openshift==0.13.1
-      - pyOpenSSL==22.0.0
-      - stormssh==0.7.0
       - virtualenv==20.16.5
       - xmltodict==0.13.0
   '9_0':
@@ -697,8 +689,6 @@ python_packages:
       - setuptools-rust==1.5.1
     required:
       - openshift==0.13.1
-      - pyOpenSSL==22.0.0
-      - stormssh==0.7.0
       - virtualenv==20.16.5
       - xmltodict==0.13.0
   '35_0':
@@ -707,8 +697,6 @@ python_packages:
       - setuptools-rust==1.5.1
     required:
       - openshift==0.13.1
-      - pyOpenSSL==22.0.0
-      - stormssh==0.7.0
       - virtualenv==20.16.5
       - xmltodict==0.13.0
   '36_0':
@@ -717,7 +705,5 @@ python_packages:
       - setuptools-rust==1.5.1
     required:
       - openshift==0.13.1
-      - pyOpenSSL==22.0.0
-      - stormssh==0.7.0
       - virtualenv==20.16.5
       - xmltodict==0.13.0
