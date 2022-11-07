@@ -1,20 +1,15 @@
 ---
 
-- name: cleanup OpenShift cluster installation
+- name: run soundness checks
   hosts: s390x_kvm_host,ppc64le_kvm_host,x86_64_kvm_host,aarch64_kvm_host
   vars:
     skip_libvirt_soundness_check: true
   roles:
     - role: soundness_check
-      when: disable_soundness_check is undefined
       tags:
         - soundness
         - preflight
-
-    - role: ocp_cleanup
-      tags:
-        - cleanup
   tasks:
     - name: display final message
       ansible.builtin.debug:
-        msg: "Finished cleaning up the KVM-based OpenShift cluster installation on host '{{ inventory_hostname }}'. All done."
+        msg: "Finished running soundness checks for KVM host '{{ inventory_hostname }}'. All done."

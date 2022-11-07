@@ -336,7 +336,7 @@ ansible
 │   │   ├── tasks
 │   │   │   ├── attach_mediated_device_to_domain.yml
 │   │   │   ├── main.yml
-│   │   │   └── sanity_checks.yml
+│   │   │   └── soundness_checks.yml
 │   │   └── templates
 │   │       ├── cex-resources-config.yaml.j2
 │   │       ├── crypto-test-load.yaml.j2
@@ -414,21 +414,23 @@ ansible
 │   ├── ocp_install_cluster_wrapup
 │   │   ├── meta
 │   │   │   └── main.yml
-│   │   └── tasks
-│   │       ├── main.yml
-│   │       ├── persist_libvirt_cluster_network.yml
-│   │       └── persist_ssh_config.yml
+│   │   ├── tasks
+│   │   │   ├── main.yml
+│   │   │   ├── persist_libvirt_cluster_network.yml
+│   │   │   └── persist_ssh_config.yml
+│   │   └── templates
+│   │       └── ssh-config.j2
 │   ├── ocp_prepare_install
 │   │   ├── meta
 │   │   │   └── main.yml
 │   │   └── tasks
 │   │       └── main.yml
-│   ├── sanity_check
+│   ├── selinux
 │   │   ├── meta
 │   │   │   └── main.yml
 │   │   └── tasks
 │   │       └── main.yml
-│   ├── selinux
+│   ├── soundness_check
 │   │   ├── meta
 │   │   │   └── main.yml
 │   │   └── tasks
@@ -463,7 +465,7 @@ ansible
 │       └── templates
 │           └── ipmi_config.yaml.j2
 ├── run_ocp_install.yml
-├── run_sanity_checks.yml
+├── run_soundness_checks.yml
 ├── setup_host.yml
 ├── site.yml
 ├── start_ocp_cluster_nodes.yml

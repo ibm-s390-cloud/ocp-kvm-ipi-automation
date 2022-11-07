@@ -84,14 +84,14 @@
     - name: calculate cluster configuration hardware demands
       when: openshift_setup_dedicated_infra_nodes
       ansible.builtin.set_fact:
-        total_cpu_cores_required: '{{ (openshift_master_number_of_cpus * 3 + openshift_worker_number_of_cpus * cluster_number_of_workers + openshift_infra_number_of_cpus * openshift_number_of_infra_nodes) / sanity_check_cpu_overcommit_factor }}'
+        total_cpu_cores_required: '{{ (openshift_master_number_of_cpus * 3 + openshift_worker_number_of_cpus * cluster_number_of_workers + openshift_infra_number_of_cpus * openshift_number_of_infra_nodes) / soundness_check_cpu_overcommit_factor }}'
         total_memory_required: '{{ openshift_master_memory_size * 3 + openshift_worker_memory_size * cluster_number_of_workers + openshift_infra_memory_size * openshift_number_of_infra_nodes }}'
         min_required_disk_space: '{{ (openshift_master_root_volume_size * 3 + openshift_worker_root_volume_size * cluster_number_of_workers + openshift_infra_root_volume_size * openshift_number_of_infra_nodes) / 5 }}'
 
     - name: calculate cluster configuration hardware demands
       when: not openshift_setup_dedicated_infra_nodes
       ansible.builtin.set_fact:
-        total_cpu_cores_required: '{{ (openshift_master_number_of_cpus * 3 + openshift_worker_number_of_cpus * cluster_number_of_workers) / sanity_check_cpu_overcommit_factor }}'
+        total_cpu_cores_required: '{{ (openshift_master_number_of_cpus * 3 + openshift_worker_number_of_cpus * cluster_number_of_workers) / soundness_check_cpu_overcommit_factor }}'
         total_memory_required: '{{ openshift_master_memory_size * 3 + openshift_worker_memory_size * cluster_number_of_workers }}'
         min_required_disk_space: '{{ (openshift_master_root_volume_size * 3 + openshift_worker_root_volume_size * cluster_number_of_workers) / 5 }}'
 
@@ -119,7 +119,7 @@
           "{{ min_required_disk_space | int | human_readable(unit='G') }} free disk space available at /var/lib/libvirt (current: {{ libvirt_free_space | int | human_readable(unit='G') }})"
 
 - name: ensure KVM host isn't using incompatible OS-level packages
-  when: skip_libvirt_sanity_check is not defined
+  when: skip_libvirt_soundness_check is not defined
   block:
     - name: fetch RPM package facts
       ansible.builtin.package_facts:

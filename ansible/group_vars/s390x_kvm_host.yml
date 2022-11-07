@@ -3,4 +3,4 @@
 # default settings that apply to all s390x_kvm_host hosts
 
 architecture_alias: s390x
-sanity_check_cpu_overcommit_factor: 10
+soundness_check_cpu_overcommit_factor: 10

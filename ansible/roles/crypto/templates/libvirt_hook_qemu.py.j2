@@ -71,7 +71,7 @@ def main():
         if operation not in ['prepare', 'release']:
             sys.exit(0)
 
-        # sanity check:
+        # soundness check:
         # - check if the given domain XML contains a <domain><devices><hostdev model=vfio-ap type=mdev> node
         hostdevs = domain_dict['domain']['devices'].get('hostdev', None)
 
@@ -100,17 +100,17 @@ def main():
         if not domain_has_crypto_mdevs:
             sys.exit(0)
 
-        # sanity check:
+        # soundness check:
         # - check that domain_mdev_uuids is set (not empty)
         if not domain_mdev_uuids:
             raise MediatedDeviceException()
 
-        # sanity check:
+        # soundness check:
         # - check that the file which contains mediated device information for the given domain exists
         domain_mdev_config_file = DOMAIN_MDEV_CONFIG_FILE_TEMPLATE.format(OPENSHIFT_INSTALLER_WORKDIR, domain_name)
         check_filesystem_object(domain_mdev_config_file, 'file')
 
-        # sanity check:
+        # soundness check:
         # - check that the domain_mdev_uuids matches the uuids recorded in file OPENSHIFT_INSTALLER_WORKDIR/crypto_mdevs_{domain_name}.yaml
         domain_mdev_config_data = None
         with open(domain_mdev_config_file, 'r') as f:
@@ -130,7 +130,7 @@ def main():
             # do different things based on the given libvirt operation
             if operation == 'prepare':
 
-                # sanity check
+                # soundness check
                 # - ensure mediated device with the given mdev_uuid does not exist
                 mdev_path = Path('{}/{}'.format(SYS_DEVICES_VFIOAP_MATRIX, mdev_uuid))
                 if mdev_path.exists():
@@ -157,7 +157,7 @@ def main():
 
             if operation == 'release':
 
-                # sanity check
+                # soundness check
                 # - ensure mediated device with the given mdev_uuid exists
                 mdev_path = Path('{}/{}'.format(SYS_DEVICES_VFIOAP_MATRIX, mdev_uuid))
                 if not mdev_path.exists():

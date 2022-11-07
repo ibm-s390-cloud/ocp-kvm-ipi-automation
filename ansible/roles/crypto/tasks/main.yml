@@ -1,7 +1,7 @@
 ---
 
-- name: run sanity checks for crypto support
-  ansible.builtin.include_tasks: '{{ role_path }}/tasks/sanity_checks.yml'
+- name: run soundness checks for crypto support
+  ansible.builtin.include_tasks: '{{ role_path }}/tasks/soundness_checks.yml'
 
 - name: upload and install EP11 binary packages (if present)
   block:
