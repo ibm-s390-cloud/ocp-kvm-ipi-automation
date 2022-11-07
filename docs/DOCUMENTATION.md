@@ -421,6 +421,8 @@ ansible
 │   │   └── templates
 │   │       └── ssh-config.j2
 │   ├── ocp_prepare_install
+│   │   ├── files
+│   │   │   └── njmon_linux_v80.patch
 │   │   ├── meta
 │   │   │   └── main.yml
 │   │   └── tasks

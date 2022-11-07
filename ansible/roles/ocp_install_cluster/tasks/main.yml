@@ -144,76 +144,98 @@
 - name: determine name of to-be-created cluster from installation log
   ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_cluster_name.yml'
 
-- name: trigger cluster installation using openshift-install binary
-  ansible.builtin.command:
-    cmd: '/usr/local/bin/openshift-install create cluster --dir={{ openshift_installer_workdir }}'
-  environment:
-    OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE: '{{ openshift_release_image.stdout }}'
-    OPENSHIFT_INSTALL_OS_IMAGE_OVERRIDE: '{{ openshift_rhcos_image_url }}'
-  async: 3600
-  poll: 0
-  register: cluster_install
-
-- name: handle libvirt cluster network update
+- name: run cluster installation
   block:
-    - name: wait until libvirt cluster network has been created
-      community.libvirt.virt_net:
-        command: list_nets
-      register: libvirt_networks
-      until: cluster_id in libvirt_networks.list_nets
-      retries: 120
-      delay: 30
-
-    - name: create temporary directory
-      ansible.builtin.tempfile:
-        state: directory
-        suffix: libvirtnet
-      register: temp_dir
-
-    - name: create libvirt cluster network update file
-      ansible.builtin.template:
-        src: '{{ role_path }}/templates/libvirt_network_dns_xml.j2'
-        dest: '{{ temp_dir.path }}/libvirt_network_dns.xml'
-        owner: root
-        group: root
-        mode: '0644'
-
-    - name: add DNS records to the libvirt cluster network
+    - name: start system performance monitor data collection (s390x only)
       ansible.builtin.command:
-        cmd: 'virsh net-update --network {{ cluster_id }} --command add-last --section dns-host --xml {{ temp_dir.path }}/libvirt_network_dns.xml --live --config'
+        cmd: '/usr/local/bin/{{ collect_perf_data }} -f -s 10 -c 720 -m {{ openshift_installer_workdir }} {{ collect_data_args }}'
+      register: collect_data_process
+      vars:
+        collect_data_args: '{{ "-p" if collect_perf_data == "nmon" else "" }}'
+      when:
+        - "ansible_architecture == 's390x'"
+        - collect_perf_data is defined
+        - collect_perf_data is inlist(["nmon", "njmon"])
+
+    - name: trigger cluster installation using openshift-install binary
+      ansible.builtin.command:
+        cmd: '/usr/local/bin/openshift-install create cluster --dir={{ openshift_installer_workdir }}'
+      environment:
+        OPENSHIFT_INSTALL_RELEASE_IMAGE_OVERRIDE: '{{ openshift_release_image.stdout }}'
+        OPENSHIFT_INSTALL_OS_IMAGE_OVERRIDE: '{{ openshift_rhcos_image_url }}'
+      async: 3600
+      poll: 0
+      register: cluster_install
+
+    - name: handle libvirt cluster network update
+      block:
+        - name: wait until libvirt cluster network has been created
+          community.libvirt.virt_net:
+            command: list_nets
+          register: libvirt_networks
+          until: cluster_id in libvirt_networks.list_nets
+          retries: 120
+          delay: 30
+
+        - name: create temporary directory
+          ansible.builtin.tempfile:
+            state: directory
+            suffix: libvirtnet
+          register: temp_dir
+
+        - name: create libvirt cluster network update file
+          ansible.builtin.template:
+            src: '{{ role_path }}/templates/libvirt_network_dns_xml.j2'
+            dest: '{{ temp_dir.path }}/libvirt_network_dns.xml'
+            owner: root
+            group: root
+            mode: '0644'
+
+        - name: add DNS records to the libvirt cluster network
+          ansible.builtin.command:
+            cmd: 'virsh net-update --network {{ cluster_id }} --command add-last --section dns-host --xml {{ temp_dir.path }}/libvirt_network_dns.xml --live --config'
+      always:
+        - name: delete temporary directory
+          ansible.builtin.file:
+            path: '{{ temp_dir.path }}'
+            state: absent
+          when: temp_dir.path is defined
+
+    - name: copy kubeconfig file to enable OpenShift client tooling
+      block:
+        - name: create directory /root/.kube
+          ansible.builtin.file:
+            path: ~root/.kube
+            owner: root
+            group: root
+            mode: '0755'
+            state: directory
+
+        - name: copy kubeconfig file to /root/.kube
+          ansible.builtin.copy:
+            src: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+            dest: ~root/.kube/config
+            owner: root
+            group: root
+            mode: '0600'
+            remote_src: true
+
+    - name: wait until cluster installation has finished
+      ansible.builtin.async_status:
+        jid: '{{ cluster_install.ansible_job_id }}'
+      register: job_result
+      until: job_result.finished
+      retries: 120
+      delay: 60
   always:
-    - name: delete temporary directory
-      ansible.builtin.file:
-        path: '{{ temp_dir.path }}'
-        state: absent
-      when: temp_dir.path is defined
-
-- name: copy kubeconfig file to enable OpenShift client tooling
-  block:
-    - name: create directory /root/.kube
-      ansible.builtin.file:
-        path: ~root/.kube
-        owner: root
-        group: root
-        mode: '0755'
-        state: directory
-
-    - name: copy kubeconfig file to /root/.kube
-      ansible.builtin.copy:
-        src: '{{ openshift_installer_workdir }}/auth/kubeconfig'
-        dest: ~root/.kube/config
-        owner: root
-        group: root
-        mode: '0600'
-        remote_src: true
-
-- name: wait until cluster installation has finished
-  ansible.builtin.async_status:
-    jid: '{{ cluster_install.ansible_job_id }}'
-  register: job_result
-  until: job_result.finished
-  retries: 120
-  delay: 60
+    - name: stop system performance monitor data collection (s390x only)
+      ansible.builtin.command:
+        cmd: 'kill -USR2 {{ collect_data_process.stdout }}'
+      when:
+        - "ansible_architecture == 's390x'"
+        - collect_perf_data is defined
+        - collect_perf_data is inlist(["nmon", "njmon"])
+        - collect_data_process is defined
 
 - name: setup dedicated infrastructure cluster nodes
   ansible.builtin.include_tasks: '{{ role_path }}/tasks/setup_infra_cluster_nodes.yml'
