@@ -24,7 +24,7 @@ crypto_config_set_project: kvm-ipi-automation
 
 As you can see every resource that is to be used needs to be explicitly listed as a member of the  `crypto_adapter` array. The `id` field of the crypto resource needs to be fully qualified (meaning a combination of crypto adapter and crypto domain) and corresponds to the output given by the OS-level command `lszcrypt -V` run on the KVM host. The `assign_to_worker` field determines which cluster worker node the crypto resource will be attached to (the value actually denotes a worker node index).
 
-Please be aware that due to a current limitation of libvirt **only one crypto resource per worker node** is allowed. Upon running the playbook the given `crypto_adapters` configuration settings will be sanity-checked for validity.
+Please be aware that due to a current limitation of libvirt **only one crypto resource per worker node** is allowed. Upon running the playbook the given `crypto_adapters` configuration settings will be soundness-checked for validity.
 
 ## How to run it
 

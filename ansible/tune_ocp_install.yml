@@ -1,15 +1,14 @@
 ---
 
-- hosts: s390x_kvm_host
-
+- name: tune various aspects of the OpenShift cluster
+  hosts: s390x_kvm_host
   vars:
-    skip_libvirt_sanity_check: true
+    skip_libvirt_soundness_check: true
     cluster_tuned_annotation: 'kvm-ipi-automation-tuned'
     cluster_version_patch: |-
       metadata:
         annotations:
           {{ cluster_tuned_annotation }}: 'true'
-
   pre_tasks:
     - name: check if the cluster has already been tuned with the help of these playbooks
       block:
@@ -22,28 +21,27 @@
           register: cluster_version
 
         - name: set fact to mark cluster has been tuned already
-          ansible.builtin.set_fact:
-            is_cluster_tuned: true
           when:
             - cluster_version.resources | length > 0
             - cluster_version.resources[0].metadata.annotations[cluster_tuned_annotation] is defined
-
+          ansible.builtin.set_fact:
+            is_cluster_tuned: true
   roles:
-    - role: sanity_check
-      tags:
-        - sanity
-        - preflight
+    - role: soundness_check
       when:
-        - disable_sanity_check is undefined
+        - disable_soundness_check is undefined
         - is_cluster_tuned is undefined or not is_cluster_tuned
+      tags:
+        - soundness
+        - preflight
 
     - role: tuning
+      when: is_cluster_tuned is undefined or not is_cluster_tuned
       tags:
         - tune
-      when: is_cluster_tuned is undefined or not is_cluster_tuned
-
   tasks:
     - name: annotate OpenShift ClusterVersion object to record successful tuning
+      when: is_cluster_tuned is undefined or not is_cluster_tuned
       block:
         - name: wait until the cluster is operational
           ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/wait_for_cluster.yml'
@@ -56,9 +54,9 @@
             name: version
             state: present
             definition: '{{ cluster_version_patch | from_yaml }}'
-      when: is_cluster_tuned is undefined or not is_cluster_tuned
 
-    - ansible.builtin.debug:
+    - name: display final message
+      ansible.builtin.debug:
         msg:
           - "Finished tuning the KVM-based OpenShift cluster on host '{{ inventory_hostname }}'. All done."
           - "Enjoy!"

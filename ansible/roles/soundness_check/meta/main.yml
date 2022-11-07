@@ -1,9 +1,9 @@
 ---
 
 galaxy_info:
-  role_name: basics
+  role_name: soundness_check
   author: Dirk Haubenreisser (haubenr@de.ibm.com)
-  description: Role performing basic setup and configuration tasks
+  description: Role performing various configuration soundness checks
   company: IBM
   license: Apache-2.0
   min_ansible_version: "2.10"
