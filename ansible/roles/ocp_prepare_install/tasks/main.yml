@@ -114,4 +114,7 @@
         path: '{{ temp_dir.path }}'
         state: absent
       when: temp_dir.path is defined
-  when: "ansible_architecture == 's390x'"
+  when:
+    - "ansible_architecture == 's390x'"
+    - collect_perf_data is defined
+    - collect_perf_data is inlist(["nmon", "njmon"])
