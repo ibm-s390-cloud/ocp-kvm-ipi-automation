@@ -3,7 +3,7 @@
 - name: install the KVM-based OpenShift cluster
   hosts: s390x_kvm_host,ppc64le_kvm_host,x86_64_kvm_host,aarch64_kvm_host
   pre_tasks:
-    - name: check the cluster image pull secret file exists on the Ansible controller
+    - name: check if the cluster image pull secret file exists on the Ansible controller
       block:
         - name: get pull secret file stats
           ansible.builtin.stat:
@@ -26,6 +26,24 @@
     - name: check if the cluster is to be installed in FIPS mode
       ansible.builtin.set_fact:
         fips_mode: '{{ openshift_setup_fips_mode | default(false) }}'
+
+    - name: check if the performance monitor tools are installed on the target KVM host
+      when:
+        - "ansible_architecture == 's390x'"
+        - collect_perf_data is defined
+        - collect_perf_data is inlist(["nmon", "njmon"])
+      block:
+        - name: get performance monitor tool stats
+          ansible.builtin.stat:
+            path: '/usr/local/bin/{{ collect_perf_data }}'
+          register: perf_mon_file_info
+
+        - name: display playbook usage message
+          when: not perf_mon_file_info.stat.exists
+          ansible.builtin.fail:
+            msg:
+              - "The performance monitor tool {{ collect_perf_data }} does not exist on the target KVM host."
+              - "Make sure to run all playbooks using the '-e collect_perf_data=[nmon|njmon]' option."
 
   roles:
     - role: soundness_check

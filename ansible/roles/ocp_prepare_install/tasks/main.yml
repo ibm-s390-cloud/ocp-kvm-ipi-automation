@@ -42,6 +42,10 @@
         loop_var: delay
 
 - name: install nmon and njmon system performance monitors (s390x only)
+  when:
+    - "ansible_architecture == 's390x'"
+    - collect_perf_data is defined
+    - collect_perf_data is inlist(["nmon", "njmon"])
   block:
     - name: create temporary download directory
       ansible.builtin.tempfile:
@@ -114,7 +118,3 @@
         path: '{{ temp_dir.path }}'
         state: absent
       when: temp_dir.path is defined
-  when:
-    - "ansible_architecture == 's390x'"
-    - collect_perf_data is defined
-    - collect_perf_data is inlist(["nmon", "njmon"])
