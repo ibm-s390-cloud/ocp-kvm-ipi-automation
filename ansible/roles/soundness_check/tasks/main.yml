@@ -15,17 +15,17 @@
             that:
               - '{{ ansible_distribution_major_version is inlist(["8", "9"]) }}'
 
-        - name: ensure that the minor version for RHEL 8 is 4, 5 or 6
+        - name: ensure that the minor version for RHEL 8 is 4, 5, 6 or 7
           when: "ansible_distribution_major_version == '8'"
           ansible.builtin.assert:
             that:
-              - '{{ (ansible_distribution_version | parse_version)["minor"] | string is inlist(["4", "5", "6"]) }}'
+              - '{{ (ansible_distribution_version | parse_version)["minor"] | string is inlist(["4", "5", "6", "7"]) }}'
 
-        - name: ensure that the minor version for RHEL 9 is 0
+        - name: ensure that the minor version for RHEL 9 is 0 or 1
           when: "ansible_distribution_major_version == '9'"
           ansible.builtin.assert:
             that:
-              - '{{ (ansible_distribution_version | parse_version)["minor"] | string is inlist(["0"]) }}'
+              - '{{ (ansible_distribution_version | parse_version)["minor"] | string is inlist(["0", "1"]) }}'
 
     - name: check Fedora prerequisites
       when: "ansible_distribution == 'Fedora'"
