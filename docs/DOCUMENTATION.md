@@ -15,7 +15,9 @@ In order to run the Ansible playbooks in this repository you need:
     - RHEL 8.4 (with an **active** Red Hat subscription)
     - RHEL 8.5 (with an **active** Red Hat subscription)
     - RHEL 8.6 (with an **active** Red Hat subscription)
+    - RHEL 8.7 (with an **active** Red Hat subscription)
     - RHEL 9.0 (with an **active** Red Hat subscription)
+    - RHEL 9.1 (with an **active** Red Hat subscription)
     - Fedora 35
     - Fedora 36
   - using one of the following hardware architectures:
