@@ -46,7 +46,7 @@ class TestModule(object):
 
     '''
     Jinja2 test that checks if a given input list of integer values
-    is a consecutive range startring with the given start value.
+    is a consecutive range starting with the given start value.
 
     Parameters:
     - input: the list of integers that is to be checked if it is a consecutive range of integers

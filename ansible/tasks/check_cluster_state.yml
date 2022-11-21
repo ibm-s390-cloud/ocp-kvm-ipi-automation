@@ -116,7 +116,7 @@
         real_alerts: '{{ (real_alerts | default([])) + [item] if item }}'
       loop: '{{ ocp_prometheus_alert_results.json.data | to_json | from_json | community.general.json_query(alerts_query) }}'
       vars:
-        alerts_query: "alerts[?labels.alertname!='Watchdog' && labels.alertname!='AlertmanagerReceiversNotConfigured'].labels.alertname || [`0`]"
+        alerts_query: "alerts[?labels.alertname!='Watchdog' && labels.alertname!='AlertmanagerReceiversNotConfigured' && labels.alertname!='ClusterNotUpgradeable'].labels.alertname || [`0`]"
 
     - name: set has_real_alerts to True if there are currently any non-default alerts
       ansible.builtin.set_fact:
