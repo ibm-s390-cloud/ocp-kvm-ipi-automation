@@ -26,6 +26,32 @@
           - libvirt*6.0.0-37.1.* # see: https://bugzilla.redhat.com/show_bug.cgi?id=2038812
         state: excluded
 
+- name: disable swap permanently (if needed)
+  block:
+    - name: get /usr/lib/systemd/zram-generator.conf file stats
+      ansible.builtin.stat:
+        path: '/usr/lib/systemd/zram-generator.conf'
+      register: zram_generator_conf_file_info
+
+    - name: overwrite /usr/lib/systemd/zram-generator.conf file
+      when: zram_generator_conf_file_info.stat.exists
+      ansible.builtin.file:
+        path: /usr/lib/systemd/zram-generator.conf
+        state: '{{ item }}'
+        owner: root
+        group: root
+        mode: '0644'
+      loop:
+        - absent
+        - touch
+
+    - name: turn off swap completely
+      ansible.builtin.command:
+        cmd: 'swapoff -a'
+
+    - name: reboot host
+      ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/reboot_host.yml'
+
 - name: install prerequisite software packages
   ansible.builtin.dnf:
     name: '{{ item }}'
