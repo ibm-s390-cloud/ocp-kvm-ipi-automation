@@ -33,7 +33,7 @@
         path: '/usr/lib/systemd/zram-generator.conf'
       register: zram_generator_conf_file_info
 
-    - name: overwrite /usr/lib/systemd/zram-generator.conf file
+    - name: truncate /usr/lib/systemd/zram-generator.conf file
       when: zram_generator_conf_file_info.stat.exists
       ansible.builtin.file:
         path: /usr/lib/systemd/zram-generator.conf
