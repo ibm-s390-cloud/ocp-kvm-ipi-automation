@@ -27,6 +27,9 @@
         state: excluded
 
 - name: disable swap permanently (if needed)
+  when:
+    - ansible_memory_mb["swap"] is defined
+    - ansible_memory_mb["swap"]["total"] > 0
   block:
     - name: get /usr/lib/systemd/zram-generator.conf file stats
       ansible.builtin.stat:
