@@ -147,15 +147,15 @@
 - name: run cluster installation
   block:
     - name: start system performance monitor data collection (s390x only)
+      when:
+        - "ansible_architecture == 's390x'"
+        - collect_perf_data is defined
+        - collect_perf_data is inlist(["nmon", "njmon"])
       ansible.builtin.command:
         cmd: '/usr/local/bin/{{ collect_perf_data }} -f -s 10 -c 720 -m {{ openshift_installer_workdir }} {{ collect_data_args }}'
       register: collect_data_process
       vars:
         collect_data_args: '{{ "-p" if collect_perf_data == "nmon" else "" }}'
-      when:
-        - "ansible_architecture == 's390x'"
-        - collect_perf_data is defined
-        - collect_perf_data is inlist(["nmon", "njmon"])
 
     - name: trigger cluster installation using openshift-install binary
       ansible.builtin.command:
@@ -229,13 +229,13 @@
       delay: 60
   always:
     - name: stop system performance monitor data collection (s390x only)
-      ansible.builtin.command:
-        cmd: 'kill -USR2 {{ collect_data_process.stdout }}'
       when:
         - "ansible_architecture == 's390x'"
         - collect_perf_data is defined
         - collect_perf_data is inlist(["nmon", "njmon"])
         - collect_data_process is defined
+      ansible.builtin.command:
+        cmd: 'kill -USR2 {{ collect_data_process.stdout }}'
 
 - name: setup dedicated infrastructure cluster nodes
   ansible.builtin.include_tasks: '{{ role_path }}/tasks/setup_infra_cluster_nodes.yml'

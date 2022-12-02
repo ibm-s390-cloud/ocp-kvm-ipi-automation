@@ -53,6 +53,11 @@
         suffix: nmon
       register: temp_dir
 
+    - name: install prerequisite software packages
+      ansible.builtin.dnf:
+        name: ncurses-devel
+        state: present
+
     - name: download source code
       ansible.builtin.get_url:
         url: '{{ item.src }}'
