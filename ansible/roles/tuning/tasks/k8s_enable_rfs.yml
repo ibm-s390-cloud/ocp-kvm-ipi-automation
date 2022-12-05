@@ -17,7 +17,7 @@
   kubernetes.core.k8s:
     kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
     state: present
-    definition: '{{ lookup("file", "{{ role_path }}/files/50-enable-rfs.yaml") | from_yaml }}'
+    definition: '{{ lookup("file", "{{ role_path }}/files/50-enable-rfs.yml") | from_yaml }}'
 
 - name: wait for the cluster to apply changes
   ansible.builtin.wait_for:

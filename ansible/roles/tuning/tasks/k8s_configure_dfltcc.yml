@@ -1,0 +1,92 @@
+---
+
+- name: ensure that the dfltcc_compression parameter is set correctly
+  ansible.builtin.assert:
+    that:
+      - '{{ dfltcc_compression is inlist(["on", "off", "def_only", "inf_only", "always"]) }}'
+
+- name: wait for OpenShift cluster to be fully operational
+  ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/wait_for_cluster.yml'
+
+- name: install NodeFeatureDiscovery (NFD) operator (required for detecting cluster node CPU capabilities)
+  block:
+    - name: determine version of existing cluster
+      ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_cluster_semver.yml'
+
+    - name: set fact containing cluster version (major.minor)
+      ansible.builtin.set_fact:
+        cluster_version_major_minor: '{{ (cluster_semver["openshiftVersion"] | parse_version)["major"] | string + "." + (cluster_semver["openshiftVersion"] | parse_version)["minor"] | string }}'
+
+    - name: create NFD Namespace
+      kubernetes.core.k8s:
+        kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+        definition: '{{ lookup("file", "{{ role_path }}/files/nfd-namespace.yml") | from_yaml }}'
+
+    - name: create NFD OperatorGroup
+      kubernetes.core.k8s:
+        kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+        definition: '{{ lookup("file", "{{ role_path }}/files/nfd-operatorgroup.yml") | from_yaml }}'
+        state: present
+
+    - name: create NFD Subscription
+      kubernetes.core.k8s:
+        kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+        definition: '{{ lookup("file", "{{ role_path }}/files/nfd-subscription.yml") | from_yaml }}'
+        state: present
+        wait: true
+        wait_condition:
+          type: CatalogSourcesUnhealthy
+          status: 'False'
+          reason: AllCatalogSourcesHealthy
+        wait_sleep: 10
+        wait_timeout: 600
+      register: nfd_subscription_result
+
+    - name: wait for 300 seconds for all NFD resources to be installed successfully
+      when: nfd_subscription_result is changed
+      ansible.builtin.wait_for:
+        timeout: 300
+      delegate_to: localhost
+
+    - name: create NFD instance
+      kubernetes.core.k8s:
+        kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+        definition: '{{ lookup("template", "{{ role_path }}/templates/nfd-instance.yml.j2") | from_yaml }}'
+        state: present
+        wait_condition:
+          type: Available
+          status: 'True'
+        wait_sleep: 10
+        wait_timeout: 600
+      register: nfd_instance_result
+
+    - name: wait for 180 seconds for all cluster nodes to be labelled by NFD
+      when: nfd_instance_result is changed
+      ansible.builtin.wait_for:
+        timeout: 180
+      delegate_to: localhost
+
+- name: use the cluster worker node feature labels to determine if required CPU feature 'DFLT' is present
+  kubernetes.core.k8s_info:
+    kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+    kind: Node
+    label_selectors:
+      - 'node-role.kubernetes.io/worker'
+      - 'feature.node.kubernetes.io/cpu-cpuid.DFLT=true'
+  register: dflt_enabled_worker_nodes
+
+- name: configure 'dfltcc' kernel parameter for DFLT-enabled cluster worker nodes
+  when:
+    - dflt_enabled_worker_nodes.resources is defined
+    - (dflt_enabled_worker_nodes.resources | length) == cluster_number_of_workers
+  block:
+    - name: apply 'dfltcc' kernel parameter to cluster worker nodes
+      kubernetes.core.k8s:
+        kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+        state: present
+        definition: '{{ lookup("template", "{{ role_path }}/templates/05-worker-dfltcc.yml.j2") | from_yaml }}'
+
+    - name: wait for the cluster to apply changes
+      ansible.builtin.wait_for:
+        timeout: '{{ cluster_waiting_period }}'
+      delegate_to: localhost

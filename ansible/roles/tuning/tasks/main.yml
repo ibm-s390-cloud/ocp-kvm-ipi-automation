@@ -107,3 +107,6 @@
 
     - name: disable transparent huge pages on cluster worker nodes
       ansible.builtin.include_tasks: '{{ role_path }}/tasks/k8s_disable_thps.yml'
+
+    - name: configure dfltcc compression kernel parameter for cluster worker nodes
+      ansible.builtin.include_tasks: '{{ role_path }}/tasks/k8s_configure_dfltcc.yml'

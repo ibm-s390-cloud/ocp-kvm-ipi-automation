@@ -1,0 +1,10 @@
+---
+
+- name: fetch semantic version of installed cluster
+  ansible.builtin.command:
+    cmd: 'oc version -o yaml'
+  register: oc_version_result
+
+- name: cleanup version result output
+  ansible.builtin.set_fact:
+    cluster_semver: '{{ oc_version_result.stdout | trim | from_yaml }}'

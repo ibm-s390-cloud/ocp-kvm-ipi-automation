@@ -32,6 +32,7 @@ In order to change the various configuration parameters of the cluster nodes, th
 - OpenShift cluster is online:
   - enable 'receive flow steering' network setting for all cluster worker nodes
   - disable transparent huge pages for all cluster worker nodes
+  - configure 'dfltcc' hardware-based compression for all cluster worker nodes
 
 The playbook actions for each of these phases can be triggered deliberately by using one of the following Ansible tags (see also: [How to run it](#how-to-run-it)):
 
