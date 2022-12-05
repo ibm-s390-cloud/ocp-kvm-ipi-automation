@@ -209,7 +209,7 @@
       kubernetes.core.k8s:
         kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
         state: present
-        definition: '{{ lookup("file", "{{ role_path }}/files/cex-plugin-daemonset.yaml") | from_yaml }}'
+        definition: '{{ lookup("file", "{{ role_path }}/files/cex-plugin-daemonset.yml") | from_yaml }}'
         wait: true
         wait_timeout: 300
 

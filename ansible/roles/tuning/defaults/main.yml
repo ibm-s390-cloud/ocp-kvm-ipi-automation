@@ -15,3 +15,5 @@ domain_network_interface_driver:
 
 domain_cpu_shares:
   worker: 2048
+
+dfltcc_compression: 'on'

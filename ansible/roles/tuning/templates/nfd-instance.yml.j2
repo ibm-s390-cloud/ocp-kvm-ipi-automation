@@ -1,0 +1,17 @@
+---
+
+apiVersion: nfd.openshift.io/v1
+kind: NodeFeatureDiscovery
+metadata:
+  name: nfd-instance
+  namespace: openshift-nfd
+spec:
+  instance: ""
+  operand:
+    image: 'registry.redhat.io/openshift4/ose-node-feature-discovery:v{{ cluster_version_major_minor }}'
+    servicePort: 12000
+  topologyupdater: false
+  workerConfig:
+    configData: |
+      core:
+        sleepInterval: 60s

@@ -324,7 +324,7 @@ ansible
 │   │   ├── defaults
 │   │   │   └── main.yml
 │   │   ├── files
-│   │   │   ├── cex-plugin-daemonset.yaml
+│   │   │   ├── cex-plugin-daemonset.yml
 │   │   │   ├── ep11
 │   │   │   │   └── README.md
 │   │   │   └── vfio_ap.conf
@@ -444,19 +444,26 @@ ansible
 │   │   ├── defaults
 │   │   │   └── main.yml
 │   │   ├── files
-│   │   │   ├── 50-enable-rfs.yaml
-│   │   │   └── thp-workers-profile.yaml
+│   │   │   ├── 50-enable-rfs.yml
+│   │   │   ├── nfd-namespace.yml
+│   │   │   ├── nfd-operatorgroup.yml
+│   │   │   ├── nfd-subscription.yml
+│   │   │   └── thp-workers-profile.yml
 │   │   ├── meta
 │   │   │   └── main.yml
-│   │   └── tasks
-│   │       ├── k8s_disable_thps.yml
-│   │       ├── k8s_enable_rfs.yml
-│   │       ├── libvirt_add_iothreads.yml
-│   │       ├── libvirt_disable_memballoon.yml
-│   │       ├── libvirt_optimize_disks.yml
-│   │       ├── libvirt_optimize_network.yml
-│   │       ├── libvirt_set_cpu_shares.yml
-│   │       └── main.yml
+│   │   ├── tasks
+│   │   │   ├── k8s_configure_dfltcc.yml
+│   │   │   ├── k8s_disable_thps.yml
+│   │   │   ├── k8s_enable_rfs.yml
+│   │   │   ├── libvirt_add_iothreads.yml
+│   │   │   ├── libvirt_disable_memballoon.yml
+│   │   │   ├── libvirt_optimize_disks.yml
+│   │   │   ├── libvirt_optimize_network.yml
+│   │   │   ├── libvirt_set_cpu_shares.yml
+│   │   │   └── main.yml
+│   │   └── templates
+│   │       ├── 05-worker-dfltcc.yml.j2
+│   │       └── nfd-instance.yml.j2
 │   └── vbmc
 │       ├── defaults
 │       │   └── main.yml
@@ -476,6 +483,7 @@ ansible
 ├── tasks
 │   ├── check_cluster_state.yml
 │   ├── get_cluster_name.yml
+│   ├── get_cluster_semver.yml
 │   ├── get_cluster_uid.yml
 │   ├── get_resolv_conf_location.yml
 │   ├── reboot_host.yml
