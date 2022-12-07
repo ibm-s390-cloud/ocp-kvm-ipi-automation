@@ -128,6 +128,8 @@
       ansible.builtin.set_fact:
         etc_hosts_template:
           - '{{ ansible_default_ipv4.address }}'
+          - 'api.{{ cluster_name }}.{{ cluster_base_domain }}'
+          - 'api-int.{{ cluster_name }}.{{ cluster_base_domain }}'
           - 'noobaa-mgmt-openshift-storage.apps.{{ cluster_name }}.{{ cluster_base_domain }}'
           - 'alertmanager-main-openshift-monitoring.apps.{{ cluster_name }}.{{ cluster_base_domain }}'
           - 'console-openshift-console.apps.{{ cluster_name }}.{{ cluster_base_domain }}'

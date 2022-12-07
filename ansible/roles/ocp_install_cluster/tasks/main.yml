@@ -28,6 +28,11 @@
         - openshift_release_image.rc != 0
         - openshift_release_image.stdout | length == 0
 
+    - name: generate list of master manifests
+      ansible.builtin.set_fact:
+        master_manifests: '{{ (master_manifests | default([])) + ["99_openshift-cluster-api_master-machines-" + item | string + ".yaml"] }}'
+      loop: '{{ range(0, (cluster_number_of_masters | default(3, true)) | int, 1) | list }}'
+
 - name: create OpenShift installation manifests
   block:
     - name: put the OpenShift installation configuration file in place
@@ -73,17 +78,23 @@
         OPENSHIFT_INSTALL_OS_IMAGE_OVERRIDE: '{{ openshift_rhcos_image_url_local }}'
 
     - name: check if manifests have been created successfully
-      ansible.builtin.stat:
-        path: '{{ item }}'
-      register: file_info
-      failed_when: not file_info.stat.exists
-      loop:
-        - '{{ openshift_installer_workdir }}/manifests'
-        - '{{ openshift_installer_workdir }}/openshift'
-        - '{{ openshift_installer_workdir }}/openshift/99_openshift-cluster-api_worker-machineset-0.yaml'
-        - '{{ openshift_installer_workdir }}/openshift/99_openshift-cluster-api_master-machines-0.yaml'
-        - '{{ openshift_installer_workdir }}/openshift/99_openshift-cluster-api_master-machines-1.yaml'
-        - '{{ openshift_installer_workdir }}/openshift/99_openshift-cluster-api_master-machines-2.yaml'
+      block:
+        - name: get common manifest file stats
+          ansible.builtin.stat:
+            path: '{{ item }}'
+          register: file_info
+          failed_when: not file_info.stat.exists
+          loop:
+            - '{{ openshift_installer_workdir }}/manifests'
+            - '{{ openshift_installer_workdir }}/openshift'
+            - '{{ openshift_installer_workdir }}/openshift/99_openshift-cluster-api_worker-machineset-0.yaml'
+
+        - name: get master nodes manifest file stats
+          ansible.builtin.stat:
+            path: '{{ openshift_installer_workdir }}/openshift/{{ item }}'
+          register: file_info
+          failed_when: not file_info.stat.exists
+          loop: '{{ master_manifests }}'
 
     - name: create backup of manifests (for debugging purposes)
       ansible.posix.synchronize:
@@ -127,12 +138,10 @@
 
     - name: update master manifests
       ansible.builtin.include_tasks: '{{ role_path }}/tasks/update_master_configuration.yml'
-      loop:
-        - 99_openshift-cluster-api_master-machines-0.yaml
-        - 99_openshift-cluster-api_master-machines-1.yaml
-        - 99_openshift-cluster-api_master-machines-2.yaml
+      loop: '{{ master_manifests }}'
       loop_control:
         loop_var: manifest
+        index_var: master_node_index
 
 - name: put files for advanced cluster configuration in place
   ansible.builtin.include_tasks: '{{ role_path }}/tasks/copy_advanced_configuration_files.yml'
@@ -193,7 +202,7 @@
 
         - name: add DNS records to the libvirt cluster network
           ansible.builtin.command:
-            cmd: 'virsh net-update --network {{ cluster_id }} --command add-last --section dns-host --xml {{ temp_dir.path }}/libvirt_network_dns.xml --live --config'
+            cmd: 'virsh net-update --network {{ cluster_id }} --command add --section dns-host --xml {{ temp_dir.path }}/libvirt_network_dns.xml --live --config'
       always:
         - name: delete temporary directory
           ansible.builtin.file:

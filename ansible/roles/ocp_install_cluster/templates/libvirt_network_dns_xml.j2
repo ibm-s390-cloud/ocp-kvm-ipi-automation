@@ -1,4 +1,6 @@
 <host ip='{{ machine_network_prefix }}.1'>
+  <hostname>api.{{ cluster_name }}.{{ cluster_base_domain }}</hostname>
+  <hostname>api-int.{{ cluster_name }}.{{ cluster_base_domain }}</hostname>
   <hostname>noobaa-mgmt-openshift-storage.apps.{{ cluster_name }}.{{ cluster_base_domain }}</hostname>
   <hostname>alertmanager-main-openshift-monitoring.apps.{{ cluster_name }}.{{ cluster_base_domain }}</hostname>
   <hostname>console-openshift-console.apps.{{ cluster_name }}.{{ cluster_base_domain }}</hostname>

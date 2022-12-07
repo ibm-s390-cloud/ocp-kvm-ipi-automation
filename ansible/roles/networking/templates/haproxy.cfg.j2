@@ -2,67 +2,82 @@
 # OpenShift API frontend
 #---------------------------------------------------------------------
 frontend {{ cluster_name }}-kubeapi
-   mode tcp
-   option tcplog
-   bind *:6443
+  mode tcp
+  option tcplog
+  bind *:6443
 
-   tcp-request inspect-delay 5s
-   tcp-request content accept if { req_ssl_hello_type 1 }
+  tcp-request inspect-delay 5s
+  tcp-request content accept if { req_ssl_hello_type 1 }
 
-   acl {{ cluster_name }} req_ssl_sni -m end .{{ cluster_name }}.{{ cluster_base_domain }}
-   use_backend {{ cluster_name }}-kubeapi if {{ cluster_name }}
+  acl {{ cluster_name }} req_ssl_sni -m end .{{ cluster_name }}.{{ cluster_base_domain }}
+  use_backend {{ cluster_name }}-kubeapi if {{ cluster_name }}
 
 #---------------------------------------------------------------------
 # OpenShift API backend
 #---------------------------------------------------------------------
 backend {{ cluster_name }}-kubeapi
-   mode tcp
-   balance source
-   server {{ cluster_name }}-master-0 {{ machine_network_prefix }}.{{ machine_network_master_range + 1 }}:6443 check
-   server {{ cluster_name }}-master-1 {{ machine_network_prefix }}.{{ machine_network_master_range + 2 }}:6443 check
-   server {{ cluster_name }}-master-2 {{ machine_network_prefix }}.{{ machine_network_master_range + 3 }}:6443 check
+  mode tcp
+  balance source
+  server {{ cluster_name }}-bootstrap {{ machine_network_prefix }}.{{ machine_network_master_range }}:6443 check
+{% for master_index in range(0, (cluster_number_of_masters | default(3, true) | int), 1) %}
+  server {{ cluster_name }}-master-{{ master_index }} {{ machine_network_prefix }}.{{ machine_network_master_range + 1 + master_index }}:6443 check
+{% endfor %}
 
 #---------------------------------------------------------------------
 # OpenShift HTTPS frontend
 #---------------------------------------------------------------------
 frontend {{ cluster_name }}-https
-   mode tcp
-   option tcplog
-   bind *:443
+  mode tcp
+  option tcplog
+  bind *:443
 
-   tcp-request inspect-delay 5s
-   tcp-request content accept if { req_ssl_hello_type 1 }
+  tcp-request inspect-delay 5s
+  tcp-request content accept if { req_ssl_hello_type 1 }
 
-   acl {{ cluster_name }} req_ssl_sni -m end .{{ cluster_name }}.{{ cluster_base_domain }}
-   use_backend {{ cluster_name }}-https if {{ cluster_name }}
+  acl {{ cluster_name }} req_ssl_sni -m end .{{ cluster_name }}.{{ cluster_base_domain }}
+  use_backend {{ cluster_name }}-https if {{ cluster_name }}
 
 #---------------------------------------------------------------------
 # OpenShift HTTPS backend
 #---------------------------------------------------------------------
 backend {{ cluster_name }}-https
-   mode tcp
-   balance source
-   {% for worker_index in range(0, cluster_number_of_workers | int, 1) %}
-   server {{ cluster_name }}-worker-{{ worker_index }} {{ machine_network_prefix }}.{{ machine_network_worker_range + 1 + worker_index }}:443 check
-   {% endfor %}
+  mode tcp
+  balance source
+{% if (cluster_number_of_workers | int) > 0 %}
+{% for worker_index in range(0, cluster_number_of_workers | int, 1) %}
+  server {{ cluster_name }}-worker-{{ worker_index }} {{ machine_network_prefix }}.{{ machine_network_worker_range + 1 + worker_index }}:443 check
+{% endfor %}
+{% endif %}
+{% if (cluster_number_of_masters | default(3, true) | int) == 1 %}
+{% for master_index in range(0, cluster_number_of_masters | int, 1) %}
+  server {{ cluster_name }}-master-{{ master_index }} {{ machine_network_prefix }}.{{ machine_network_master_range + 1 + master_index }}:443 check
+{% endfor %}
+{% endif %}
 
 #---------------------------------------------------------------------
 # OpenShift HTTP frontend
 #---------------------------------------------------------------------
 frontend {{ cluster_name }}-http
-   mode http
-   option tcplog
-   bind *:80
+  mode http
+  option tcplog
+  bind *:80
 
-   acl {{ cluster_name }} hdr(host) -m end .{{ cluster_name }}.{{ cluster_base_domain }}
-   use_backend {{ cluster_name }}-http if {{ cluster_name }}
+  acl {{ cluster_name }} hdr(host) -m end .{{ cluster_name }}.{{ cluster_base_domain }}
+  use_backend {{ cluster_name }}-http if {{ cluster_name }}
 
 #---------------------------------------------------------------------
 # OpenShift HTTP backend
 #---------------------------------------------------------------------
 backend {{ cluster_name }}-http
-   mode http
-   balance source
-   {% for worker_index in range(0, cluster_number_of_workers | int, 1) %}
-   server {{ cluster_name }}-worker-{{ worker_index }} {{ machine_network_prefix }}.{{ machine_network_worker_range + 1 + worker_index }}:80 check
-   {% endfor %}
+  mode http
+  balance source
+{% if (cluster_number_of_workers | int) > 0 %}
+{% for worker_index in range(0, cluster_number_of_workers | int, 1) %}
+  server {{ cluster_name }}-worker-{{ worker_index }} {{ machine_network_prefix }}.{{ machine_network_worker_range + 1 + worker_index }}:80 check
+{% endfor %}
+{% endif %}
+{% if (cluster_number_of_masters | default(3, true) | int) == 1 %}
+{% for master_index in range(0, cluster_number_of_masters | int, 1) %}
+  server {{ cluster_name }}-master-{{ master_index }} {{ machine_network_prefix }}.{{ machine_network_master_range + 1 + master_index }}:80 check
+{% endfor %}
+{% endif %}
