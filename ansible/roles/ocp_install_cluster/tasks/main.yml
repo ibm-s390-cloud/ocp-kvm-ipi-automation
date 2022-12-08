@@ -156,6 +156,8 @@
 - name: run cluster installation
   block:
     - name: start system performance monitor data collection (s390x only)
+      vars:
+        collect_data_args: '{{ "-p" if collect_perf_data == "nmon" else "" }}'
       when:
         - "ansible_architecture == 's390x'"
         - collect_perf_data is defined
@@ -163,8 +165,6 @@
       ansible.builtin.command:
         cmd: '/usr/local/bin/{{ collect_perf_data }} -f -s 10 -c 720 -m {{ openshift_installer_workdir }} {{ collect_data_args }}'
       register: collect_data_process
-      vars:
-        collect_data_args: '{{ "-p" if collect_perf_data == "nmon" else "" }}'
 
     - name: trigger cluster installation using openshift-install binary
       ansible.builtin.command:
@@ -202,7 +202,7 @@
 
         - name: add DNS records to the libvirt cluster network
           ansible.builtin.command:
-            cmd: 'virsh net-update --network {{ cluster_id }} --command add --section dns-host --xml {{ temp_dir.path }}/libvirt_network_dns.xml --live --config'
+            cmd: 'virsh net-update --network {{ cluster_id }} --command add-last --section dns-host --xml {{ temp_dir.path }}/libvirt_network_dns.xml --live --config'
       always:
         - name: delete temporary directory
           ansible.builtin.file:
