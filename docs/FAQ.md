@@ -83,3 +83,24 @@ all:
           ansible_become: true
     ...
 ```
+
+## Q: Which cluster topologies / layouts are supported by these playbooks? Can I install a single-node OpenShift (SNO) cluster as well?
+
+A: While the playbooks have been created with the standard multi-node cluster layout in mind you do have the option to install cluster with different layouts and sizes:
+
+| master nodes | worker nodes | cluster layout |
+|---------|----------|---------|
+| 3 | 1 to n | multi-node cluster |
+| 1 | 0 | single-node cluster |
+
+The following parameters in the `ansible/host_vars/host.yml.template` file are used to configure the topology of the OpenShift cluster and the sizes of the different cluster nodes:
+
+- openshift_master_root_volume_size
+- openshift_master_number_of_cpus
+- openshift_master_memory_size
+- cluster_number_of_workers
+- openshift_worker_root_volume_size
+- openshift_worker_number_of_cpus
+- openshift_worker_memory_size
+
+Please note that there is a special configuration parameter `cluster_number_of_masters` *not* present in the `host.yml.template` which determines how many cluster master nodes are to be installed. It is not listed along with the other aforementioned parameters as it basically determines the *general* cluster installation topology - single-node vs. multi-node. Setting this parameter to anything else than '1' is not supported at the moment - if this parameter is not defined at all then the number of master nodes to be installed defaults to '3'. Also make sure that whenever you do set the `cluster_number_of_masters` on purpose in your host-specific configuration YAML file that you set the corresponding parameter `cluster_number_of_workers` to '0'.
