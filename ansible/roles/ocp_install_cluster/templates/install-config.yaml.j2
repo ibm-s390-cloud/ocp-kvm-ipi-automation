@@ -9,7 +9,7 @@ controlPlane:
   architecture: {{ architecture_alias }}
   hyperthreading: Enabled
   name: master
-  replicas: 3
+  replicas: {{ cluster_number_of_masters | default(3, true) }}
 metadata:
   creationTimestamp: null
   name: {{ cluster_name }}

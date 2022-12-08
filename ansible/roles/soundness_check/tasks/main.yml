@@ -55,20 +55,34 @@
           "https://ibm.biz/BdPYsd"
 
 - name: check if mandatory configuration variables are set
-  ansible.builtin.assert:
-    that: '{{ item }}'
-  loop:
-    - cluster_base_domain is defined and cluster_base_domain | trim | length > 0
-    - cluster_name is defined and cluster_base_domain | trim | length > 0
-    - cluster_number_of_workers is defined and cluster_number_of_workers | int > 0
-    - openshift_master_root_volume_size is defined and openshift_master_root_volume_size | int > 0
-    - openshift_master_number_of_cpus is defined and openshift_master_number_of_cpus | int > 0
-    - openshift_master_memory_size is defined and openshift_master_memory_size | int > 0
-    - openshift_worker_root_volume_size is defined and openshift_worker_root_volume_size | int > 0
-    - openshift_worker_number_of_cpus is defined and openshift_worker_number_of_cpus | int > 0
-    - openshift_worker_memory_size is defined and openshift_worker_memory_size | int > 0
-    - openshift_release_url is defined and openshift_release_url | trim | length > 0
-    - openshift_rhcos_image_url is defined and openshift_rhcos_image_url | trim | length > 0
+  block:
+    - name: check for common configuration variables
+      ansible.builtin.assert:
+        that: '{{ item }}'
+      loop:
+        - cluster_base_domain is defined and cluster_base_domain | trim | length > 0
+        - cluster_name is defined and cluster_base_domain | trim | length > 0
+        - openshift_master_root_volume_size is defined and openshift_master_root_volume_size | int > 0
+        - openshift_master_number_of_cpus is defined and openshift_master_number_of_cpus | int > 0
+        - openshift_master_memory_size is defined and openshift_master_memory_size | int > 0
+        - openshift_worker_root_volume_size is defined and openshift_worker_root_volume_size | int > 0
+        - openshift_worker_number_of_cpus is defined and openshift_worker_number_of_cpus | int > 0
+        - openshift_worker_memory_size is defined and openshift_worker_memory_size | int > 0
+        - openshift_release_url is defined and openshift_release_url | trim | length > 0
+        - openshift_rhcos_image_url is defined and openshift_rhcos_image_url | trim | length > 0
+
+    - name: check if the number of cluster workers is set properly (if applicable)
+      when: cluster_number_of_masters is undefined
+      ansible.builtin.assert:
+        that:
+          - 'cluster_number_of_workers is defined and cluster_number_of_workers | int > 0'
+
+    - name:  check if the number of cluster masters is set properly (if applicable)
+      when: cluster_number_of_masters is defined
+      ansible.builtin.assert:
+        that:
+          - 'cluster_number_of_masters | int == 1'
+          - 'cluster_number_of_workers | int == 0'
 
 - name: ensure KVM host is capable of fulfilling requested cluster configuration hardware demands
   block:
@@ -84,16 +98,16 @@
     - name: calculate cluster configuration hardware demands
       when: openshift_setup_dedicated_infra_nodes
       ansible.builtin.set_fact:
-        total_cpu_cores_required: '{{ (openshift_master_number_of_cpus * 3 + openshift_worker_number_of_cpus * cluster_number_of_workers + openshift_infra_number_of_cpus * openshift_number_of_infra_nodes) / soundness_check_cpu_overcommit_factor }}'
-        total_memory_required: '{{ openshift_master_memory_size * 3 + openshift_worker_memory_size * cluster_number_of_workers + openshift_infra_memory_size * openshift_number_of_infra_nodes }}'
-        min_required_disk_space: '{{ (openshift_master_root_volume_size * 3 + openshift_worker_root_volume_size * cluster_number_of_workers + openshift_infra_root_volume_size * openshift_number_of_infra_nodes) / 5 }}'
+        total_cpu_cores_required: '{{ (openshift_master_number_of_cpus * (cluster_number_of_masters | default(3, true)) + openshift_worker_number_of_cpus * cluster_number_of_workers + openshift_infra_number_of_cpus * openshift_number_of_infra_nodes) / soundness_check_cpu_overcommit_factor }}'
+        total_memory_required: '{{ openshift_master_memory_size * (cluster_number_of_masters | default(3, true)) + openshift_worker_memory_size * cluster_number_of_workers + openshift_infra_memory_size * openshift_number_of_infra_nodes }}'
+        min_required_disk_space: '{{ (openshift_master_root_volume_size * (cluster_number_of_masters | default(3, true)) + openshift_worker_root_volume_size * cluster_number_of_workers + openshift_infra_root_volume_size * openshift_number_of_infra_nodes) / 5 }}'
 
     - name: calculate cluster configuration hardware demands
       when: not openshift_setup_dedicated_infra_nodes
       ansible.builtin.set_fact:
-        total_cpu_cores_required: '{{ (openshift_master_number_of_cpus * 3 + openshift_worker_number_of_cpus * cluster_number_of_workers) / soundness_check_cpu_overcommit_factor }}'
-        total_memory_required: '{{ openshift_master_memory_size * 3 + openshift_worker_memory_size * cluster_number_of_workers }}'
-        min_required_disk_space: '{{ (openshift_master_root_volume_size * 3 + openshift_worker_root_volume_size * cluster_number_of_workers) / 5 }}'
+        total_cpu_cores_required: '{{ (openshift_master_number_of_cpus * (cluster_number_of_masters | default(3, true)) + openshift_worker_number_of_cpus * cluster_number_of_workers) / soundness_check_cpu_overcommit_factor }}'
+        total_memory_required: '{{ openshift_master_memory_size * (cluster_number_of_masters | default(3, true)) + openshift_worker_memory_size * cluster_number_of_workers }}'
+        min_required_disk_space: '{{ (openshift_master_root_volume_size * (cluster_number_of_masters | default(3, true)) + openshift_worker_root_volume_size * cluster_number_of_workers) / 5 }}'
 
     - name: set current number of CPU cores detected
       when: ansible_architecture is inlist(['ppc64le', 'x86_64', 'aarch64'])

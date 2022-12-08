@@ -78,7 +78,7 @@
 - name: configure 'dfltcc' kernel parameter for DFLT-enabled cluster worker nodes
   when:
     - dflt_enabled_worker_nodes.resources is defined
-    - (dflt_enabled_worker_nodes.resources | length) == cluster_number_of_workers
+    - (dflt_enabled_worker_nodes.resources | length) > 0
   block:
     - name: apply 'dfltcc' kernel parameter to cluster worker nodes
       kubernetes.core.k8s:
