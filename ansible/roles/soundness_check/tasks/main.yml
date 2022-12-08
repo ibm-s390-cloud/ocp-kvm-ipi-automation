@@ -77,7 +77,7 @@
         that:
           - 'cluster_number_of_workers is defined and cluster_number_of_workers | int > 0'
 
-    - name:  check if the number of cluster masters is set properly (if applicable)
+    - name: check if the number of cluster masters is set properly (if applicable)
       when: cluster_number_of_masters is defined
       ansible.builtin.assert:
         that:
