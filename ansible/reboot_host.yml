@@ -5,3 +5,17 @@
   tasks:
     - name: reboot host
       ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/reboot_host.yml'
+
+    - name: run post-boot host customizations
+      vars:
+        post_boot_tasks_file: '{{ inventory_dir }}/host_files/{{ inventory_hostname }}/post_boot_tasks.yml'
+      block:
+        - name: check if host-specific post-boot customizations file exists
+          ansible.builtin.stat:
+            path: '{{ post_boot_tasks_file }}'
+          register: post_boot_tasks_file_info
+          delegate_to: localhost
+
+        - name: run post-boot customization tasks
+          when: post_boot_tasks_file_info.stat.exists
+          ansible.builtin.include_tasks: '{{ post_boot_tasks_file }}'
