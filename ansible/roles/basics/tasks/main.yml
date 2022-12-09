@@ -63,6 +63,8 @@
       ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/reboot_host.yml'
 
 - name: install prerequisite software packages
+  vars:
+    os_version: '{{ (ansible_distribution_version | parse_version)["major"] | string + "_" + (ansible_distribution_version | parse_version)["minor"] | string }}'
   ansible.builtin.dnf:
     name: '{{ item }}'
     state: present
@@ -70,8 +72,6 @@
     - '{{ os_packages[os_version]["groups"] }}'
     - '{{ os_packages[os_version]["modules"] }}'
     - '{{ os_packages[os_version]["rpms"] }}'
-  vars:
-    os_version: '{{ (ansible_distribution_version | parse_version)["major"] | string + "_" + (ansible_distribution_version | parse_version)["minor"] | string }}'
 
 - name: install optional software packages
   block:
@@ -91,14 +91,14 @@
       when: "ansible_architecture == 's390x'"
 
 - name: install prerequisite Python packages (from source)
+  vars:
+    os_version: '{{ (ansible_distribution_version | parse_version)["major"] | string + "_" + (ansible_distribution_version | parse_version)["minor"] | string }}'
   ansible.builtin.include_tasks: '{{ role_path }}/tasks/install_python_packages.yml'
   loop:
     - '{{ python_packages[os_version]["essential"] }}'
     - '{{ python_packages[os_version]["required"] }}'
   loop_control:
     loop_var: python_prereq_packages
-  vars:
-    os_version: '{{ (ansible_distribution_version | parse_version)["major"] | string + "_" + (ansible_distribution_version | parse_version)["minor"] | string }}'
 
 - name: install yq
   block:

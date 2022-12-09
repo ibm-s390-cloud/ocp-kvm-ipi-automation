@@ -81,13 +81,13 @@
         var: stale_cluster_domains
 
 - name: archive cluster in OCM (if applicable)
+  vars:
+    external_cluster_id: '{{ cluster_uid }}'
   when:
     - cluster_uid is defined
     - cluster_destroy is not skipped
     - cluster_destroy is success
   ansible.builtin.include_tasks: '{{ role_path }}/tasks/archive_cluster_ocm.yml'
-  vars:
-    external_cluster_id: '{{ cluster_uid }}'
 
 - name: remove all stale files and directories
   block:

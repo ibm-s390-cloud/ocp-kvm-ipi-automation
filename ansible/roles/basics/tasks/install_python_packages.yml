@@ -10,9 +10,9 @@
     pip_version: '{{ pip_version_output.stdout.split()[1] }}'
 
 - name: install prerequisite Python packages (from source)
+  vars:
+    pip_extra_args: '{{ "--no-build-isolation" if (pip_version is version("21.3", ">=")) else "" }}'
   ansible.builtin.pip:
     name: '{{ python_prereq_packages }}'
     state: present
     extra_args: '--force-reinstall --no-cache-dir --ignore-installed {{ pip_extra_args }}'
-  vars:
-    pip_extra_args: '{{ "--no-build-isolation" if (pip_version is version("21.3", ">=")) else "" }}'

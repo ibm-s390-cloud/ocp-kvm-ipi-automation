@@ -28,15 +28,15 @@
       register: temp_dir
 
     - name: generate OCM request payload file
+      vars:
+        subscription_patch:
+          status: Archived
       ansible.builtin.copy:
         dest: '{{ temp_dir.path }}/subscription_patch.json'
         content: '{{ subscription_patch | to_json }}' # noqa jinja[invalid]
         owner: root
         group: root
         mode: '0777'
-      vars:
-        subscription_patch:
-          status: Archived
 
     - name: determine Subscription resource in OCM assigned to cluster UID
       ansible.builtin.command:
