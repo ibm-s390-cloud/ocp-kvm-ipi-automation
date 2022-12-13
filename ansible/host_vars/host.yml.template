@@ -86,11 +86,6 @@ cluster_network_mtu: 1500
 service_networks:
   - 172.30.0.0/16
 
-# whether to setup the OpenShift cluster with dedicated infrastructure nodes
-# (this will ensure that two infrastructure nodes with 4 CPUs and 16GiB of RAM each will be installed in addition to the standard worker nodes)
-# (see also: https://docs.openshift.com/container-platform/4.9/machine_management/creating-infrastructure-machinesets.html)
-openshift_setup_dedicated_infra_nodes: false
-
 # whether to setup the OpenShift cluster in FIPS mode
 # (see also: https://docs.openshift.com/container-platform/4.10/installing/installing-fips.html)
 openshift_setup_fips_mode: false

@@ -215,6 +215,18 @@ If you've set the host variable `setup_vbmc_ipmi` to `true` in your '$$YOUR_KVM_
 
 In addition to the main Ansible playbooks mentioned above this repository contains the following auxiliary playbooks:
 
+- provision_ocp_worker_nodes.yml
+  - adds more worker nodes to the OpenShift cluster on the KVM host
+  - cannot be used if the OpenShift cluster on the KVM host:
+    - is a single-node installation (SNO)
+    - has existing infrastructure nodes
+
+- provision_ocp_infra_nodes.yml
+  - adds dedicated infrastructure nodes to the OpenShift cluster on the KVM host
+  - moves existing cluster workloads (router, internal registry, cluster monitoring) to dedicated infrastructure nodes
+  - cannot be used if the OpenShift cluster on the KVM host:
+    - is a single-node installation (SNO)
+
 - tune_ocp_install.yml
   - see [here](../ansible/roles/tuning/README.md) for detailed information
 
@@ -225,7 +237,7 @@ In addition to the main Ansible playbooks mentioned above this repository contai
   - reboots the targeted KVM host and waits until the host has finished rebooting
 
 - start_ocp_cluster_nodes.yml
-  - starts the OpenShift cluster nodes using libvirt
+  - starts the OpenShift cluster nodes on the KVM host using libvirt
 
 - check_ocp_cluster_state.yml
   - runs a basic health check for the OpenShift cluster on the KVM host:
@@ -245,6 +257,12 @@ ansible-playbook -i inventory reboot_host.yml
 
 # start the OpenShift cluster nodes (e.g. after a KVM host reboot was performed)
 ansible-playbook -i inventory start_ocp_cluster_nodes.yml
+
+# provision additional worker nodes for the installed OpenShift clutser on the targeted KVM host
+ansible-playbook -i inventory provision_ocp_worker_nodes.yml -e addl_cluster_nodes=<number_of_worker_nodes_to_add>
+
+# provision dedicated infrastructure nodes for the installed OpenShift clutser on the targeted KVM host
+ansible-playbook -i inventory provision_ocp_infra_nodes.yml -e addl_cluster_nodes=<number_of_infrastructure_nodes_to_add>
 
 # tune the installed OpenShift cluster on the targeted KVM host
 # (this will mainly reconfigure the KVM guests and KVM network settings)
@@ -301,6 +319,8 @@ ansible
 │   └── x86_64_kvm_host.yml
 ├── inventory.template
 ├── prepare_ocp_install.yml
+├── provision_ocp_infra_nodes.yml
+├── provision_ocp_worker_nodes.yml
 ├── reboot_host.yml
 ├── requirements.yml
 ├── roles
@@ -368,6 +388,7 @@ ansible
 │   │   ├── meta
 │   │   │   └── main.yml
 │   │   ├── tasks
+│   │   │   ├── configure_haproxy.yml
 │   │   │   └── main.yml
 │   │   └── templates
 │   │       ├── dnsmasq.openshift.conf.j2
@@ -399,18 +420,13 @@ ansible
 │   ├── ocp_install_cluster
 │   │   ├── defaults
 │   │   │   └── main.yml
-│   │   ├── files
-│   │   │   └── 03_openshift-machineconfigpool_infra-0.yaml
 │   │   ├── meta
 │   │   │   └── main.yml
 │   │   ├── tasks
 │   │   │   ├── copy_advanced_configuration_files.yml
 │   │   │   ├── main.yml
-│   │   │   ├── setup_infra_cluster_nodes.yml
 │   │   │   └── update_master_configuration.yml
 │   │   └── templates
-│   │       ├── 01_openshift-cluster-api_infra-machineset-0.yaml.j2
-│   │       ├── 02_openshift-machineconfig_99-infra-ssh.yaml.j2
 │   │       ├── install-config.yaml.j2
 │   │       └── libvirt_network_dns_xml.j2
 │   ├── ocp_install_cluster_wrapup
@@ -429,6 +445,18 @@ ansible
 │   │   │   └── main.yml
 │   │   └── tasks
 │   │       └── main.yml
+│   ├── ocp_provision_nodes
+│   │   ├── files
+│   │   │   ├── configmap-clustermonitoringconfig.yaml
+│   │   │   ├── imageregistry-cluster.yaml
+│   │   │   └── ingresscontroller-default.yaml
+│   │   ├── meta
+│   │   │   └── main.yml
+│   │   ├── tasks
+│   │   │   ├── main.yml
+│   │   │   └── soundness_checks.yml
+│   │   └── templates
+│   │       └── infra-node.yml.j2
 │   ├── selinux
 │   │   ├── meta
 │   │   │   └── main.yml
@@ -460,7 +488,8 @@ ansible
 │   │   │   ├── libvirt_optimize_disks.yml
 │   │   │   ├── libvirt_optimize_network.yml
 │   │   │   ├── libvirt_set_cpu_shares.yml
-│   │   │   └── main.yml
+│   │   │   ├── main.yml
+│   │   │   └── soundness_checks.yml
 │   │   └── templates
 │   │       ├── 05-worker-dfltcc.yml.j2
 │   │       └── nfd-instance.yml.j2
@@ -483,8 +512,10 @@ ansible
 ├── tasks
 │   ├── check_cluster_state.yml
 │   ├── get_cluster_name.yml
+│   ├── get_cluster_nodes.yml
 │   ├── get_cluster_semver.yml
 │   ├── get_cluster_uid.yml
+│   ├── get_infra_nodes.yml
 │   ├── get_resolv_conf_location.yml
 │   ├── reboot_host.yml
 │   ├── start_cluster_nodes.yml

@@ -1,0 +1,17 @@
+---
+
+galaxy_info:
+  role_name: ocp_provision_nodes
+  author: Dirk Haubenreisser (haubenr@de.ibm.com)
+  description: Role performing the provisioning of additional nodes for an existing RHOCP cluster installation
+  company: IBM
+  license: Apache-2.0
+  min_ansible_version: "2.10"
+  platforms:
+    - name: EL
+      versions:
+        - "8"
+        - "9"
+
+dependencies:
+  - role: common

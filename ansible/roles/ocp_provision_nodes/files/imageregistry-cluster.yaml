@@ -1,0 +1,23 @@
+---
+
+apiVersion: imageregistry.operator.openshift.io/v1
+kind: Config
+metadata:
+  name: cluster
+spec:
+  affinity:
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - podAffinityTerm:
+            namespaces:
+              - openshift-image-registry
+            topologyKey: kubernetes.io/hostname
+          weight: 100
+  logLevel: Normal
+  managementState: Managed
+  nodeSelector:
+    node-role.kubernetes.io/infra: ""
+  tolerations:
+    - key: node-role.kubernetes.io/infra
+      operator: Exists
+      effect: NoSchedule

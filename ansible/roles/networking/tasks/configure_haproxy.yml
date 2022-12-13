@@ -1,0 +1,35 @@
+---
+
+- name: enable non-local IPv4 port bindings
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_nonlocal_bind
+    value: '1'
+    sysctl_set: true
+    state: present
+    reload: true
+
+- name: ensure haproxy package is present
+  ansible.builtin.dnf:
+    name: haproxy
+    state: present
+
+- name: start haproxy service
+  ansible.builtin.service:
+    name: haproxy
+    state: started
+    enabled: true
+
+- name: configure haproxy
+  ansible.builtin.blockinfile:
+    path: /etc/haproxy/haproxy.cfg
+    marker: '{{ host_marker }}'
+    block: '{{ item }}'
+  loop:
+    - ''
+    - '{{ lookup("template", "{{ role_path }}/templates/haproxy.cfg.j2") }}'
+
+- name: restart haproxy service
+  ansible.builtin.service:
+    name: haproxy
+    state: restarted
+    enabled: true

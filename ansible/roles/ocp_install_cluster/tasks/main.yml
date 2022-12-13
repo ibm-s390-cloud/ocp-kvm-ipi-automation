@@ -245,9 +245,3 @@
         - collect_data_process is defined
       ansible.builtin.command:
         cmd: 'kill -USR2 {{ collect_data_process.stdout }}'
-
-- name: setup dedicated infrastructure cluster nodes (multi-node cluster configurations only)
-  ansible.builtin.include_tasks: '{{ role_path }}/tasks/setup_infra_cluster_nodes.yml'
-  when:
-    - openshift_setup_dedicated_infra_nodes
-    - cluster_number_of_masters is undefined

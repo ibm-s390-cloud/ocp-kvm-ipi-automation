@@ -10,14 +10,8 @@
         path: ~root/.vbmc
         state: absent
 
-    - name: check if the dummy network interface used by vbmc exists
-      ansible.builtin.shell:
-        cmd: 'ip a | grep {{ ipmi_dummy_network }}'
-      register: dummy_net_link
-      failed_when: dummy_net_link.rc not in [0, 1]
-
     - name: delete the dummy network interface
-      when: dummy_net_link.stdout | length > 0
+      when: ipmi_dummy_network is inlist(ansible_interfaces)
       ansible.builtin.command:
         cmd: '{{ item }}'
       loop:

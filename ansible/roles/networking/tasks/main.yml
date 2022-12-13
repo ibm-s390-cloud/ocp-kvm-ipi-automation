@@ -73,36 +73,7 @@
         cmd: 'chattr +i {{ resolv_conf_location }}'
 
 - name: configure haproxy
-  block:
-    - name: enable non-local IPv4 port bindings
-      ansible.posix.sysctl:
-        name: net.ipv4.ip_nonlocal_bind
-        value: '1'
-        sysctl_set: true
-        state: present
-        reload: true
-
-    - name: ensure haproxy package is present
-      ansible.builtin.dnf:
-        name: haproxy
-        state: present
-
-    - name: start haproxy service
-      ansible.builtin.service:
-        name: haproxy
-        state: started
-        enabled: true
-
-    - name: configure haproxy
-      ansible.builtin.blockinfile:
-        path: /etc/haproxy/haproxy.cfg
-        block: '{{ lookup("template", "{{ role_path }}/templates/haproxy.cfg.j2") }}'
-
-    - name: restart haproxy service
-      ansible.builtin.service:
-        name: haproxy
-        state: restarted
-        enabled: true
+  ansible.builtin.include_tasks: '{{ role_path }}/tasks/configure_haproxy.yml'
 
 - name: configure Apache httpd
   block:

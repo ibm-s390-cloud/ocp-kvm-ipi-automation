@@ -54,25 +54,8 @@
         state: 'enabled'
       loop: '{{ crypto_adapters }}'
 
-- name: determine cluster node details
-  block:
-    - name: determine name of existing cluster from installation log
-      ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_cluster_name.yml'
-
-    - name: list all existing libvirt domains
-      community.libvirt.virt:
-        command: list_vms
-      register: all_libvirt_domains
-
-    - name: determine list of libvirt domains belonging to current OpenShift cluster instance
-      ansible.builtin.set_fact:
-        all_libvirt_domains_for_cluster: '{{ all_libvirt_domains.list_vms | select("contains", cluster_id) | list }}'
-
-    - name: determine list of cluster worker nodes
-      ansible.builtin.set_fact:
-        master_domains: '{{ all_libvirt_domains_for_cluster | select("contains", "master") | list }}'
-        worker_domains: '{{ all_libvirt_domains_for_cluster | select("contains", "worker") | list }}'
-        infra_domains: '{{ (all_libvirt_domains_for_cluster | select("contains", "infra") | list) | default([]) }}'
+- name: get list of all existing cluster nodes
+  ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_cluster_nodes.yml'
 
 - name: generate mediated devices for cluster worker nodes
   block:
@@ -135,7 +118,7 @@
       community.libvirt.virt:
         command: shutdown
         name: '{{ cluster_node }}'
-      loop: '{{ worker_domains + master_domains + infra_domains }}'
+      loop: '{{ worker_domains + master_domains }}'
       loop_control:
         loop_var: cluster_node
 
@@ -144,7 +127,7 @@
         command: list_vms
         state: shutdown
       register: offline_libvirt_domains
-      until: offline_libvirt_domains.list_vms is superset(worker_domains + master_domains + infra_domains)
+      until: offline_libvirt_domains.list_vms is superset(worker_domains + master_domains)
       retries: 30
       delay: 10
 
@@ -167,7 +150,7 @@
       community.libvirt.virt:
         name: '{{ cluster_node }}'
         state: running
-      loop: '{{ master_domains + worker_domains + infra_domains }}'
+      loop: '{{ master_domains + worker_domains }}'
       loop_control:
         loop_var: cluster_node
 
@@ -176,7 +159,7 @@
         command: list_vms
         state: running
       register: online_libvirt_domains
-      until: online_libvirt_domains.list_vms is superset(master_domains + worker_domains + infra_domains)
+      until: online_libvirt_domains.list_vms is superset(master_domains + worker_domains)
       retries: 30
       delay: 10
 

@@ -1,30 +1,14 @@
 ---
 
-- name: determine name of existing cluster from installation log
+- name: run soundness checks for cluster tuning
   tags:
     - always
-  ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_cluster_name.yml'
+  ansible.builtin.include_tasks: '{{ role_path }}/tasks/soundness_checks.yml'
 
-- name: list all existing libvirt domains
+- name: get list of all existing cluster nodes
   tags:
-    - libvirt
-  community.libvirt.virt:
-    command: list_vms
-  register: all_libvirt_domains
-
-- name: determine list of libvirt domains belonging to current OpenShift cluster instance
-  tags:
-    - libvirt
-  ansible.builtin.set_fact:
-    all_libvirt_domains_for_cluster: '{{ all_libvirt_domains.list_vms | select("contains", cluster_id) | list }}'
-
-- name: determine list of cluster nodes
-  tags:
-    - libvirt
-  ansible.builtin.set_fact:
-    master_domains: '{{ all_libvirt_domains_for_cluster | select("contains", "master") | list }}'
-    worker_domains: '{{ all_libvirt_domains_for_cluster | select("contains", "worker") | list }}'
-    infra_domains: '{{ (all_libvirt_domains_for_cluster | select("contains", "infra") | list) | default([]) }}'
+    - always
+  ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_cluster_nodes.yml'
 
 - name: shutdown cluster nodes via libvirt
   tags:
@@ -32,7 +16,7 @@
   community.libvirt.virt:
     command: shutdown
     name: '{{ cluster_node }}'
-  loop: '{{ worker_domains + master_domains + infra_domains }}'
+  loop: '{{ worker_domains + master_domains }}'
   loop_control:
     loop_var: cluster_node
 
@@ -43,7 +27,7 @@
     command: list_vms
     state: shutdown
   register: offline_libvirt_domains
-  until: offline_libvirt_domains.list_vms is superset(worker_domains + master_domains + infra_domains)
+  until: offline_libvirt_domains.list_vms is superset(worker_domains + master_domains)
   retries: 30
   delay: 10
 
@@ -53,25 +37,25 @@
   block:
     - name: optimize node network device
       ansible.builtin.include_tasks: '{{ role_path }}/tasks/libvirt_optimize_network.yml'
-      loop: '{{ worker_domains + master_domains + infra_domains }}'
+      loop: '{{ worker_domains + master_domains }}'
       loop_control:
         loop_var: cluster_node
 
     - name: disable memballoon device
       ansible.builtin.include_tasks: '{{ role_path }}/tasks/libvirt_disable_memballoon.yml'
-      loop: '{{ worker_domains + master_domains + infra_domains }}'
+      loop: '{{ worker_domains + master_domains }}'
       loop_control:
         loop_var: cluster_node
 
     - name: add iothreads
       ansible.builtin.include_tasks: '{{ role_path }}/tasks/libvirt_add_iothreads.yml'
-      loop: '{{ worker_domains + master_domains + infra_domains }}'
+      loop: '{{ worker_domains + master_domains }}'
       loop_control:
         loop_var: cluster_node
 
     - name: optimize disk usage mode
       ansible.builtin.include_tasks: '{{ role_path }}/tasks/libvirt_optimize_disks.yml'
-      loop: '{{ worker_domains + master_domains + infra_domains }}'
+      loop: '{{ worker_domains + master_domains }}'
       loop_control:
         loop_var: cluster_node
 
@@ -85,7 +69,7 @@
       community.libvirt.virt:
         name: '{{ cluster_node }}'
         state: running
-      loop: '{{ master_domains + worker_domains + infra_domains }}'
+      loop: '{{ master_domains + worker_domains }}'
       loop_control:
         loop_var: cluster_node
 
@@ -94,7 +78,7 @@
         command: list_vms
         state: running
       register: online_libvirt_domains
-      until: online_libvirt_domains.list_vms is superset(master_domains + worker_domains + infra_domains)
+      until: online_libvirt_domains.list_vms is superset(master_domains + worker_domains)
       retries: 30
       delay: 10
 
