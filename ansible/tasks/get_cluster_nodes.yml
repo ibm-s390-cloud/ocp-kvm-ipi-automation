@@ -1,0 +1,20 @@
+---
+
+- name: determine cluster node details (using community.libvirt.virt)
+  block:
+    - name: determine name of existing cluster from installation log
+      ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_cluster_name.yml'
+
+    - name: list all existing libvirt domains
+      community.libvirt.virt:
+        command: list_vms
+      register: all_libvirt_domains
+
+    - name: determine list of libvirt domains belonging to current OpenShift cluster instance
+      ansible.builtin.set_fact:
+        all_libvirt_domains_for_cluster: '{{ all_libvirt_domains.list_vms | select("contains", cluster_id) | list }}'
+
+    - name: set facts containing cluster nodes
+      ansible.builtin.set_fact:
+        master_domains: '{{ all_libvirt_domains_for_cluster | select("contains", "master") | list }}'
+        worker_domains: '{{ all_libvirt_domains_for_cluster | select("contains", "worker") | list }}'

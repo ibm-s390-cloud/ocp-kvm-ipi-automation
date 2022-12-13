@@ -24,7 +24,7 @@
 
     - name: set has_nonready_nodes to True if there are non-ready Nodes
       ansible.builtin.set_fact:
-        has_nonready_nodes: '{{ ("True" if nonready_nodes | length > 0 else "False") | bool }}'
+        has_nonready_nodes: '{{ nonready_nodes | length > 0 }}'
 
 - name: get existing unavailable ClusterOperators
   when: workdir_info.stat.exists and workdir_info.stat.isdir
@@ -45,7 +45,7 @@
 
     - name: set has_unavailable_cos to True if there are unavailable ClusterOperators
       ansible.builtin.set_fact:
-        has_unavailable_cos: '{{ ("True" if unavailable_cos | length > 0 else "False") | bool }}'
+        has_unavailable_cos: '{{ unavailable_cos | length > 0 }}'
 
 - name: get existing cluster alerts from Prometheus
   when: workdir_info.stat.exists and workdir_info.stat.isdir
@@ -120,7 +120,7 @@
 
     - name: set has_real_alerts to True if there are currently any non-default alerts
       ansible.builtin.set_fact:
-        has_real_alerts: '{{ ("True" if real_alerts | length > 0 else "False") | bool }}'
+        has_real_alerts: '{{ real_alerts | length > 0 }}'
   always:
     - name: delete temporary file
       ansible.builtin.file:

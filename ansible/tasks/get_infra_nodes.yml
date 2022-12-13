@@ -1,0 +1,15 @@
+---
+
+- name: determine cluster node details
+  block:
+    - name: determine list of cluster infrastructure nodes
+      kubernetes.core.k8s_info:
+        kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+        kind: Node
+        label_selectors:
+          - 'node-role.kubernetes.io/infra'
+      register: infra_nodes
+
+    - name: set facts containing cluster nodes
+      ansible.builtin.set_fact:
+        infra_domains: '{{ (infra_nodes.resources | map(attribute="metadata") | map(attribute="name")) | default([]) }}'

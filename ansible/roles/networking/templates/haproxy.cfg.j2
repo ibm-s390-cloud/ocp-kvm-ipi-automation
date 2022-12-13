@@ -43,6 +43,11 @@ frontend {{ cluster_name }}-https
 backend {{ cluster_name }}-https
   mode tcp
   balance source
+{% if infra_nodes_details is defined and (infra_nodes_details | length) > 0 %}
+{% for infra_index in range(0, infra_nodes_details | length, 1) %}
+  server {{ cluster_name }}-infra-{{ infra_index }} {{ infra_nodes_details[infra_index]["host"]["ip"] }}:443 check
+{% endfor %}
+{% else %}
 {% if (cluster_number_of_workers | int) > 0 %}
 {% for worker_index in range(0, cluster_number_of_workers | int, 1) %}
   server {{ cluster_name }}-worker-{{ worker_index }} {{ machine_network_prefix }}.{{ machine_network_worker_range + 1 + worker_index }}:443 check
@@ -52,6 +57,7 @@ backend {{ cluster_name }}-https
 {% for master_index in range(0, cluster_number_of_masters | int, 1) %}
   server {{ cluster_name }}-master-{{ master_index }} {{ machine_network_prefix }}.{{ machine_network_master_range + 1 + master_index }}:443 check
 {% endfor %}
+{% endif %}
 {% endif %}
 
 #---------------------------------------------------------------------
@@ -71,6 +77,11 @@ frontend {{ cluster_name }}-http
 backend {{ cluster_name }}-http
   mode http
   balance source
+{% if infra_nodes_details is defined and (infra_nodes_details | length) > 0 %}
+{% for infra_index in range(0, infra_nodes_details | length, 1) %}
+  server {{ cluster_name }}-infra-{{ infra_index }} {{ infra_nodes_details[infra_index]["host"]["ip"] }}:80 check
+{% endfor %}
+{% else %}
 {% if (cluster_number_of_workers | int) > 0 %}
 {% for worker_index in range(0, cluster_number_of_workers | int, 1) %}
   server {{ cluster_name }}-worker-{{ worker_index }} {{ machine_network_prefix }}.{{ machine_network_worker_range + 1 + worker_index }}:80 check
@@ -80,4 +91,5 @@ backend {{ cluster_name }}-http
 {% for master_index in range(0, cluster_number_of_masters | int, 1) %}
   server {{ cluster_name }}-master-{{ master_index }} {{ machine_network_prefix }}.{{ machine_network_master_range + 1 + master_index }}:80 check
 {% endfor %}
+{% endif %}
 {% endif %}

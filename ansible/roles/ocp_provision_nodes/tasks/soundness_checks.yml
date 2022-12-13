@@ -1,0 +1,86 @@
+---
+
+- name: only continue if the node type is set properly
+  ansible.builtin.assert:
+    that:
+      - 'cluster_node_type is defined'
+      - 'cluster_node_type is inlist(["infra", "worker"])'
+
+- name: only continue if the number of additional cluster nodes is set properly
+  ansible.builtin.assert:
+    that: 'addl_cluster_nodes | int > 0'
+
+- name: check if the cluster has been tuned with the help of these playbooks
+  block:
+    - name: get ClusterVersion object
+      kubernetes.core.k8s_info:
+        kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+        api_version: 'config.openshift.io/v1'
+        kind: ClusterVersion
+        name: 'version'
+      register: cluster_version
+
+    - name: set fact to mark cluster has been tuned already
+      when:
+        - cluster_version.resources | length > 0
+        - cluster_version.resources[0].metadata.annotations[cluster_tuned_annotation] is defined
+      ansible.builtin.set_fact:
+        is_cluster_tuned: true
+
+    - name: only continue if the existing RHOCP cluster has not been tuned
+      when: is_cluster_tuned is defined
+      ansible.builtin.assert:
+        that: 'not is_cluster_tuned'
+
+- name: check if the cluster is using the required topology
+  block:
+    - name: get list of all existing cluster nodes
+      ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_cluster_nodes.yml'
+
+    - name: determine the cluster topology (single-node vs multi-node)
+      ansible.builtin.set_fact:
+        is_sno: '{{ master_domains | length == 1 and worker_domains | length == 1 }}'
+
+    - name: only continue if the existing cluster is using a multi-node topology
+      ansible.builtin.assert:
+        that: 'not is_sno'
+
+- name: ensure KVM host is capable of accommodating additional cluster nodes
+  block:
+    - name: fetch disk space information of libvirt location on the KVM host
+      ansible.builtin.shell:
+        cmd: 'test -d /var/lib/libvirt/openshift-images && df -B1 --output=avail /var/lib/libvirt/openshift-images || df -B1 --output=avail /var/lib'
+      register: libvirt_df_result
+
+    - name: set libvirt_free_space fact
+      ansible.builtin.set_fact:
+        libvirt_free_space: '{{ libvirt_df_result.stdout_lines | last }}'
+
+    - name: calculate cluster configuration hardware demands
+      ansible.builtin.set_fact:
+        total_cpu_cores_required: '{{ (openshift_master_number_of_cpus * (cluster_number_of_masters | default(3, true)) + openshift_worker_number_of_cpus * cluster_number_of_workers + openshift_worker_number_of_cpus * (addl_cluster_nodes | int)) / soundness_check_cpu_overcommit_factor }}'
+        total_memory_required: '{{ openshift_master_memory_size * (cluster_number_of_masters | default(3, true)) + openshift_worker_memory_size * cluster_number_of_workers + openshift_worker_memory_size * (addl_cluster_nodes | int) }}'
+        additional_min_required_disk_space: '{{ (openshift_worker_root_volume_size * (addl_cluster_nodes | int)) / 5 }}'
+
+    - name: set current number of CPU cores detected
+      when: ansible_architecture is inlist(['ppc64le', 'x86_64', 'aarch64'])
+      ansible.builtin.set_fact:
+        total_cpu_cores_detected: '{{ ansible_processor_vcpus }}'
+
+    - name: set current number of CPU cores detected
+      when: ansible_architecture == 's390x'
+      ansible.builtin.set_fact:
+        total_cpu_cores_detected: '{{ ansible_processor_cores }}'
+
+    - name: ensure that the hardware demands can be met by the KVM host
+      ansible.builtin.assert:
+        that:
+          - 'ansible_memtotal_mb > total_memory_required | int'
+          - 'total_cpu_cores_detected | int >= total_cpu_cores_required | int'
+          - 'libvirt_free_space | int >= additional_min_required_disk_space | int'
+        fail_msg: |-
+          "The KVM host does not meet the hardware demands to accommodate additional cluster nodes."
+          "Make sure the host has at least:"
+          "{{ total_memory_required | int }} MB of RAM available (current: {{ ansible_memtotal_mb }} MB)"
+          "{{ total_cpu_cores_required | int }} CPU cores available (current: {{ total_cpu_cores_detected | int }} CPU cores)"
+          "{{ additional_min_required_disk_space | int | human_readable(unit='G') }} free disk space available at /var/lib/libvirt (current: {{ libvirt_free_space | int | human_readable(unit='G') }})"

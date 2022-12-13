@@ -1,0 +1,126 @@
+---
+
+- name: run soundness checks for cluster node provisioning
+  ansible.builtin.include_tasks: '{{ role_path }}/tasks/soundness_checks.yml'
+
+- name: determine name of existing cluster from installation log
+  ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_cluster_name.yml'
+
+- name: generate list of all existing cluster nodes (pre-scaling)
+  block:
+    - name: fetch list of all existing cluster nodes
+      ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_cluster_nodes.yml'
+
+    - name: retain list of existing cluster worker nodes for future reference
+      ansible.builtin.set_fact:
+        worker_domains_pre_scale: '{{ worker_domains }}'
+
+- name: provision additional worker nodes
+  block:
+    - name: scale up worker node replicas by modifying the corresponding MachineSet resource
+      vars:
+        spec_replicas_patch: |-
+          spec:
+            replicas: {{ (worker_domains_pre_scale | length) + addl_cluster_nodes | int }}
+      kubernetes.core.k8s:
+        kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+        api_version: 'machine.openshift.io/v1beta1'
+        kind: MachineSet
+        name: '{{ cluster_id }}-worker-0'
+        namespace: openshift-machine-api
+        state: present
+        definition: '{{ spec_replicas_patch | from_yaml }}'
+
+    - name: wait for the additional worker nodes to be available
+      kubernetes.core.k8s_info:
+        kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+        api_version: 'machine.openshift.io/v1beta1'
+        kind: MachineSet
+        name: '{{ cluster_id }}-worker-0'
+        namespace: openshift-machine-api
+      register: worker_machineset
+      until: worker_machineset.resources[0].status.readyReplicas == ((worker_domains_pre_scale | length) + addl_cluster_nodes | int)
+      retries: 20
+      delay: 30
+
+- name: generate list of all existing cluster nodes (post-scaling)
+  block:
+    - name: fetch list of all existing cluster nodes
+      ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_cluster_nodes.yml'
+
+    - name: generate list of names of added worker nodes
+      ansible.builtin.set_fact:
+        added_worker_domains: '{{ worker_domains | difference(worker_domains_pre_scale) }}'
+
+- name: configuration handling specific to infrastructure nodes
+  when: "cluster_node_type == 'infra'"
+  block:
+    - name: mark additional worker nodes as dedicated infrastructure nodes
+      kubernetes.core.k8s:
+        kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+        state: present
+        definition: '{{ lookup("template", "{{ role_path }}/templates/infra-node.yaml.j2") | from_yaml }}'
+      loop: '{{ added_worker_domains }}'
+
+    - name: fetch list of all existing cluster nodes
+      ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_infra_nodes.yml'
+
+    - name: retrieve XML of libvirt cluster network
+      community.libvirt.virt_net:
+        command: get_xml
+        name: '{{ cluster_id }}'
+      register: libvirt_cluster_network
+
+    - name: determine network configuration for cluster nodes
+      community.general.xml:
+        xmlstring: '{{ libvirt_cluster_network.get_xml }}'
+        xpath: /network/ip/dhcp/host
+        content: attribute
+      register: libvirt_cluster_nodes
+
+    - name: update haproxy configuration
+      vars:
+        nodes_query: "matches[?contains({{ infra_domains | ansible.builtin.to_json | regex_replace('\"', \"'\") }}, host.name)] || [`0`]"
+        infra_nodes_details: '{{ libvirt_cluster_nodes | to_json | from_json | community.general.json_query(nodes_query) }}'
+      ansible.builtin.include_role:
+        name: networking
+        tasks_from: configure_haproxy
+
+    - name: reschedule corresponding cluster workloads to dedicated infrastructure nodes
+      kubernetes.core.k8s:
+        kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+        state: present
+        definition: '{{ item }}'
+      loop:
+        - '{{ lookup("file", "{{ role_path }}/files/ingresscontroller-default.yaml") | from_yaml }}'
+        - '{{ lookup("file", "{{ role_path }}/files/imageregistry-cluster.yaml") | from_yaml }}'
+        - '{{ lookup("file", "{{ role_path }}/files/configmap-clustermonitoringconfig.yaml") | from_yaml }}'
+
+    - name: wait for the cluster to apply changes
+      ansible.builtin.wait_for:
+        timeout: 300
+      delegate_to: localhost
+
+- name: configuration handling specific to worker nodes
+  when: "cluster_node_type == 'worker'"
+  block:
+    - name: update haproxy configuration
+      vars:
+        cluster_number_of_workers: '{{ worker_domains | length }}'
+      ansible.builtin.include_role:
+        name: networking
+        tasks_from: configure_haproxy
+
+- name: configuration handling common to worker and infrastructure nodes
+  block:
+    - name: update existing vbmc / ipmi configuration to include additional cluster nodes (if applicable)
+      vars:
+        vbmc_ipmi: '{{ setup_vbmc_ipmi | default(true) }}'
+      when: vbmc_ipmi
+      ansible.builtin.include_role:
+        name: vbmc
+
+    - name: update existing SSH configuration for easy access to cluster nodes
+      ansible.builtin.include_role:
+        name: ocp_install_cluster_wrapup
+        tasks_from: persist_ssh_config

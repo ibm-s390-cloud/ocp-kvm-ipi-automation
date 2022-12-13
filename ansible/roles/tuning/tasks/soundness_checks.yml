@@ -1,0 +1,14 @@
+---
+
+- name: check if the cluster is using the required topology
+  block:
+    - name: get list of all existing cluster nodes
+      ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_cluster_nodes.yml'
+
+    - name: determine the cluster topology (single-node vs multi-node)
+      ansible.builtin.set_fact:
+        is_sno: '{{ master_domains | length == 1 and worker_domains | length == 1 }}'
+
+    - name: only continue if the existing cluster is using a multi-node topology
+      ansible.builtin.assert:
+        that: 'not is_sno'

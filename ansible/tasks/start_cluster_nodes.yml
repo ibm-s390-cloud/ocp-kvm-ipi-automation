@@ -17,13 +17,12 @@
   ansible.builtin.set_fact:
     master_domains: '{{ offline_libvirt_domains_for_cluster | select("contains", "master") | list }}'
     worker_domains: '{{ offline_libvirt_domains_for_cluster | select("contains", "worker") | list }}'
-    infra_domains: '{{ (offline_libvirt_domains_for_cluster | select("contains", "infra") | list) | default([]) }}'
 
 - name: startup cluster nodes via libvirt
   community.libvirt.virt:
     command: start
     name: '{{ cluster_node }}'
-  loop: '{{ master_domains + worker_domains + infra_domains }}'
+  loop: '{{ master_domains + worker_domains }}'
   loop_control:
     loop_var: cluster_node
 
@@ -32,7 +31,7 @@
     command: list_vms
     state: running
   register: online_libvirt_domains
-  until: online_libvirt_domains.list_vms is superset(master_domains + worker_domains + infra_domains)
+  until: online_libvirt_domains.list_vms is superset(master_domains + worker_domains)
   retries: 30
   delay: 10
 

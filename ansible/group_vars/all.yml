@@ -30,10 +30,4 @@ cluster_network_hostprefix: 23
 service_networks:
   - 172.30.0.0/16
 
-openshift_setup_dedicated_infra_nodes: false
-openshift_number_of_infra_nodes: 2
-openshift_infra_root_volume_size: 68719476736
-openshift_infra_number_of_cpus: 4
-openshift_infra_memory_size: 16384
-
 cluster_waiting_period: 600

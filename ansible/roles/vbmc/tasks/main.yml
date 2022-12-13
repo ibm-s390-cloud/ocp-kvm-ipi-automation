@@ -87,33 +87,10 @@
         loop_var: worker_node
         index_var: node_index
 
-    - name: consider dedicated infrastructure cluster nodes
-      when: openshift_setup_dedicated_infra_nodes
-      block:
-        - name: determine list of infrastructure cluster nodes
-          ansible.builtin.set_fact:
-            infra_domains: '{{ all_libvirt_domains.list_vms | select("contains", "infra") | list }}'
-
-        - name: add infrastructure cluster nodes to vbmc
-          ansible.builtin.command:
-            cmd: '/opt/vbmc/bin/vbmc add {{ infra_node }} --username {{ vbmc_user }} --password {{ vbmc_password }} --address {{ vbmc_network_prefix }}.{{ vbmc_network_node_start + node_index + ((master_domains + worker_domains) | length) }}'
-          loop: '{{ infra_domains | sort }}'
-          loop_control:
-            loop_var: infra_node
-            index_var: node_index
-
 - name: start and verify vbmc nodes
+  vars:
+    all_domains: "{{ worker_domains + master_domains }}"
   block:
-    - name: concatenate lists of cluster master and worker and infrastucture nodes
-      when: openshift_setup_dedicated_infra_nodes
-      ansible.builtin.set_fact:
-        all_domains: "{{ worker_domains + infra_domains + master_domains }}"
-
-    - name: concatenate lists of cluster master and worker nodes
-      when: not openshift_setup_dedicated_infra_nodes
-      ansible.builtin.set_fact:
-        all_domains: "{{ worker_domains + master_domains }}"
-
     - name: start vbmc nodes
       ansible.builtin.command:
         cmd: "/opt/vbmc/bin/vbmc start {{ all_domains | join(' ') }}"
@@ -145,6 +122,14 @@
     - name: convert vbmc node list output to yaml
       ansible.builtin.set_fact:
         vbmc_node_list_yaml: '{{ vbmc_node_list.stdout | from_yaml }}'
+
+    - name: delete the existing dummy network interface (if applicable)
+      when: ipmi_dummy_network is inlist(ansible_interfaces)
+      ansible.builtin.command:
+        cmd: '{{ item }}'
+      loop:
+        - 'ip addr flush dev {{ ipmi_dummy_network }}'
+        - 'ip link delete {{ ipmi_dummy_network }}'
 
     - name: create dummy network link
       ansible.builtin.command:
