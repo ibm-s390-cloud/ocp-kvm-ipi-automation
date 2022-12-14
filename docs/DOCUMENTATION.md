@@ -258,10 +258,10 @@ ansible-playbook -i inventory reboot_host.yml
 # start the OpenShift cluster nodes (e.g. after a KVM host reboot was performed)
 ansible-playbook -i inventory start_ocp_cluster_nodes.yml
 
-# provision additional worker nodes for the installed OpenShift clutser on the targeted KVM host
+# provision additional worker nodes for the installed OpenShift cluster on the targeted KVM host
 ansible-playbook -i inventory provision_ocp_worker_nodes.yml -e addl_cluster_nodes=<number_of_worker_nodes_to_add>
 
-# provision dedicated infrastructure nodes for the installed OpenShift clutser on the targeted KVM host
+# provision dedicated infrastructure nodes for the installed OpenShift cluster on the targeted KVM host
 ansible-playbook -i inventory provision_ocp_infra_nodes.yml -e addl_cluster_nodes=<number_of_infrastructure_nodes_to_add>
 
 # tune the installed OpenShift cluster on the targeted KVM host
