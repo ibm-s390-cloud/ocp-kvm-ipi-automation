@@ -23,13 +23,6 @@
         - name: end play
           ansible.builtin.meta: end_host
   roles:
-    - role: soundness_check
-      when:
-        - disable_soundness_check is undefined
-      tags:
-        - soundness
-        - preflight
-
     - role: ocp_provision_nodes
       vars:
         cluster_node_type: infra

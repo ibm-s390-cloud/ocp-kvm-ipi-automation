@@ -1,6 +1,7 @@
 ---
 
 - name: run soundness checks for cluster node provisioning
+  when: disable_soundness_check is undefined
   ansible.builtin.include_tasks: '{{ role_path }}/tasks/soundness_checks.yml'
 
 - name: determine name of existing cluster from installation log
@@ -62,7 +63,7 @@
         definition: '{{ lookup("template", "{{ role_path }}/templates/infra-node.yaml.j2") | from_yaml }}'
       loop: '{{ added_worker_domains }}'
 
-    - name: fetch list of all existing cluster nodes
+    - name: fetch list of all existing cluster infrastructure nodes
       ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_infra_nodes.yml'
 
     - name: retrieve XML of libvirt cluster network
@@ -104,7 +105,35 @@
 - name: configuration handling specific to worker nodes
   when: "cluster_node_type == 'worker'"
   block:
+    - name: fetch list of all existing cluster infrastructure nodes
+      ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_infra_nodes.yml'
+
     - name: update haproxy configuration
+      when: infra_domains | length > 0
+      block:
+        - name: retrieve XML of libvirt cluster network
+          community.libvirt.virt_net:
+            command: get_xml
+            name: '{{ cluster_id }}'
+          register: libvirt_cluster_network
+
+        - name: determine network configuration for cluster nodes
+          community.general.xml:
+            xmlstring: '{{ libvirt_cluster_network.get_xml }}'
+            xpath: /network/ip/dhcp/host
+            content: attribute
+          register: libvirt_cluster_nodes
+
+        - name: update haproxy configuration
+          vars:
+            nodes_query: "matches[?contains({{ infra_domains | ansible.builtin.to_json | regex_replace('\"', \"'\") }}, host.name)] || [`0`]"
+            infra_nodes_details: '{{ libvirt_cluster_nodes | to_json | from_json | community.general.json_query(nodes_query) }}'
+          ansible.builtin.include_role:
+            name: networking
+            tasks_from: configure_haproxy
+
+    - name: update haproxy configuration
+      when: infra_domains | length == 0
       vars:
         cluster_number_of_workers: '{{ worker_domains | length }}'
       ansible.builtin.include_role:
