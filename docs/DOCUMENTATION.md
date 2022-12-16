@@ -219,7 +219,6 @@ In addition to the main Ansible playbooks mentioned above this repository contai
   - adds more worker nodes to the OpenShift cluster on the KVM host
   - cannot be used if the OpenShift cluster on the KVM host:
     - is a single-node installation (SNO)
-    - has existing infrastructure nodes
 
 - provision_ocp_infra_nodes.yml
   - adds dedicated infrastructure nodes to the OpenShift cluster on the KVM host
