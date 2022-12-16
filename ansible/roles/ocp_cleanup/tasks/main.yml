@@ -139,6 +139,12 @@
     - '{{ libvirt_marker }}'
     - '{{ host_marker }}'
 
+- name: clean up /etc/haproxy/haproxy.cfg
+  ansible.builtin.blockinfile:
+    path: /etc/haproxy/haproxy.cfg
+    marker: '{{ host_marker }}'
+    state: absent
+
 - name: clean up resolv.conf
   block:
     - name: determine location of resolv.conf file
