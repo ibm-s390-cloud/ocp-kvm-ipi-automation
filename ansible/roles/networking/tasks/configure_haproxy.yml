@@ -22,11 +22,12 @@
 - name: configure haproxy
   ansible.builtin.blockinfile:
     path: /etc/haproxy/haproxy.cfg
-    marker: '{{ host_marker }}'
-    block: '{{ item }}'
+    marker: '{{ item.marker | default(omit) }}'
+    block: '{{ item.block }}'
   loop:
-    - ''
-    - '{{ lookup("template", "{{ role_path }}/templates/haproxy.cfg.j2") }}'
+    - { 'block': '' }
+    - { 'marker': '{{ host_marker }}', 'block': '' }
+    - { 'marker': '{{ host_marker }}', 'block': '{{ lookup("template", "{{ role_path }}/templates/haproxy.cfg.j2") }}' }
 
 - name: restart haproxy service
   ansible.builtin.service:

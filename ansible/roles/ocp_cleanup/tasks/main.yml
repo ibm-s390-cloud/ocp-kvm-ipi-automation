@@ -140,17 +140,13 @@
     - '{{ host_marker }}'
 
 - name: clean up /etc/haproxy/haproxy.cfg
-  block:
-    - name: remove any old Ansible-managed blocks (backwards compatibility)
-      ansible.builtin.blockinfile:
-        path: /etc/haproxy/haproxy.cfg
-        state: absent
-
-    - name: remove current Ansible-managed blocks
-      ansible.builtin.blockinfile:
-        path: /etc/haproxy/haproxy.cfg
-        marker: '{{ host_marker }}'
-        state: absent
+  ansible.builtin.blockinfile:
+    path: /etc/haproxy/haproxy.cfg
+    marker: '{{ item.marker | default(omit) }}'
+    block: '{{ item.block }}'
+  loop:
+    - { 'block': '' }
+    - { 'marker': '{{ host_marker }}', 'block': '' }
 
 - name: clean up resolv.conf
   block:
