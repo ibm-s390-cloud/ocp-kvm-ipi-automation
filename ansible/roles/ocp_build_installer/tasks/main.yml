@@ -37,6 +37,7 @@
         repo: 'https://github.com/openshift/installer.git'
         dest: '{{ temp_dir.path }}/installer'
         version: '{{ openshift_installer_version }}'
+        single_branch: true
 
     - name: patch openshift-install source code
       ansible.builtin.include_tasks: '{{ role_path }}/tasks/patch_installer.yml'
