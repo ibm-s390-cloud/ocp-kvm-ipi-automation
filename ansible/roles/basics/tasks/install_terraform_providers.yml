@@ -6,6 +6,7 @@
     dest: '{{ tfprovider_temp_dir.path }}/{{ tfprovider.name }}'
     version: 'v{{ tfprovider.version }}'
     single_branch: true
+    depth: 1
 
 - name: build terraform provider binary
   ansible.builtin.command:
