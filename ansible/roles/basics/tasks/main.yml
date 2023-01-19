@@ -188,6 +188,7 @@
         repo: 'https://github.com/hashicorp/terraform.git'
         dest: '{{ temp_dir.path }}/terraform'
         version: 'v{{ terraform_version }}'
+        single_branch: true
 
     - name: build terraform binary
       ansible.builtin.command:
@@ -217,49 +218,23 @@
         state: absent
       when: temp_dir.path is defined
 
-- name: compile and install IBM Cloud terraform provider
+- name: compile and install various terraform providers
   block:
     - name: create temporary download directory
       ansible.builtin.tempfile:
         state: directory
-        suffix: ibmcloudtf
+        suffix: tfproviders
       register: temp_dir
 
-    - name: fetch IBM Cloud terraform provider source code
-      ansible.builtin.git:
-        repo: 'https://github.com/IBM-Cloud/terraform-provider-ibm.git'
-        dest: '{{ temp_dir.path }}/terraform-provider-ibm'
-        version: 'v{{ terraform_ibm_provider_version }}'
-
-    - name: build terraform-provider-ibm binary
-      ansible.builtin.command:
-        cmd: 'go build'
-        chdir: '{{ temp_dir.path }}/terraform-provider-ibm'
-      environment:
-        GOPATH: '{{ temp_dir.path }}/go'
-        PATH: '{{ ansible_env.PATH }}:/usr/local/go/bin:{{ temp_dir.path }}/go/bin'
-
-    - name: create global terraform plugin directory
-      ansible.builtin.file:
-        path: '/usr/local/share/terraform/plugins/local/ibm-cloud/ibm/{{ terraform_ibm_provider_version }}/linux_{{ architecture_alias }}'
-        owner: root
-        group: root
-        mode: '0775'
-        state: directory
-
-    - name: remove existing terraform-provider-ibm binary if present
-      ansible.builtin.file:
-        path: '/usr/local/share/terraform/plugins/local/ibm-cloud/ibm/{{ terraform_ibm_provider_version }}/linux_{{ architecture_alias }}/terraform-provider-ibm'
-        state: absent
-
-    - name: copy terraform-provider-ibm binary to global terraform plugin directory
-      ansible.builtin.copy:
-        src: '{{ temp_dir.path }}/terraform-provider-ibm/terraform-provider-ibm'
-        dest: '/usr/local/share/terraform/plugins/local/ibm-cloud/ibm/{{ terraform_ibm_provider_version }}/linux_{{ architecture_alias }}/terraform-provider-ibm'
-        owner: root
-        group: root
-        mode: '0755'
-        remote_src: true
+    - name: compile and install terraform provider
+      vars:
+        tfprovider_temp_dir: '{{ temp_dir }}'
+      ansible.builtin.include_tasks: '{{ role_path }}/tasks/install_terraform_providers.yml'
+      loop:
+        - { 'name': 'terraform-provider-ibm', 'git_url': 'https://github.com/IBM-Cloud/terraform-provider-ibm.git', 'version': '{{ terraform_ibm_provider_version }}', 'path': 'ibm-cloud/ibm/{{ terraform_ibm_provider_version }}/linux_{{ architecture_alias }}' }
+        - { 'name': 'terraform-provider-libvirt', 'git_url': 'https://github.com/dmacvicar/terraform-provider-libvirt.git', 'version': '{{ terraform_libvirt_provider_version }}', 'path': 'dmacvicar/libvirt/{{ terraform_libvirt_provider_version }}/linux_{{ architecture_alias }}' }
+      loop_control:
+        loop_var: tfprovider
   always:
     - name: delete temporary download directory
       ansible.builtin.file:
@@ -321,6 +296,7 @@
         repo: 'https://github.com/coreos/butane.git'
         dest: '{{ temp_dir.path }}/butane'
         version: 'v{{ butane_version }}'
+        single_branch: true
 
     - name: build butane binary
       ansible.builtin.command:
@@ -363,6 +339,7 @@
         repo: 'https://github.com/openshift-online/ocm-cli.git'
         dest: '{{ temp_dir.path }}/ocm-cli'
         version: 'v{{ ocm_version }}'
+        single_branch: true
 
     - name: build ocm binary
       ansible.builtin.command:

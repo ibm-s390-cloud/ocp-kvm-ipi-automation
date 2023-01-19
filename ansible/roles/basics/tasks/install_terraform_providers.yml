@@ -1,0 +1,38 @@
+---
+
+- name: fetch terraform provider source code
+  ansible.builtin.git:
+    repo: '{{ tfprovider.git_url }}'
+    dest: '{{ tfprovider_temp_dir.path }}/{{ tfprovider.name }}'
+    version: 'v{{ tfprovider.version }}'
+    single_branch: true
+
+- name: build terraform provider binary
+  ansible.builtin.command:
+    cmd: 'go build'
+    chdir: '{{ tfprovider_temp_dir.path }}/{{ tfprovider.name }}'
+  environment:
+    GOPATH: '{{ tfprovider_temp_dir.path }}/go'
+    PATH: '{{ ansible_env.PATH }}:/usr/local/go/bin:{{ tfprovider_temp_dir.path }}/go/bin'
+
+- name: create global terraform plugin directory
+  ansible.builtin.file:
+    path: '/usr/local/share/terraform/plugins/local/{{ tfprovider.path }}'
+    owner: root
+    group: root
+    mode: '0775'
+    state: directory
+
+- name: remove existing terraform provider binary if present
+  ansible.builtin.file:
+    path: '/usr/local/share/terraform/plugins/local/{{ tfprovider.path }}/{{ tfprovider.name }}'
+    state: absent
+
+- name: copy terraform provider binary to global terraform plugin directory
+  ansible.builtin.copy:
+    src: '{{ tfprovider_temp_dir.path }}/{{ tfprovider.name }}/{{ tfprovider.name }}'
+    dest: '/usr/local/share/terraform/plugins/local/{{ tfprovider.path }}/{{ tfprovider.name }}'
+    owner: root
+    group: root
+    mode: '0755'
+    remote_src: true
