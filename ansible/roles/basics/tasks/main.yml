@@ -189,6 +189,7 @@
         dest: '{{ temp_dir.path }}/terraform'
         version: 'v{{ terraform_version }}'
         single_branch: true
+        depth: 1
 
     - name: build terraform binary
       ansible.builtin.command:
@@ -297,6 +298,7 @@
         dest: '{{ temp_dir.path }}/butane'
         version: 'v{{ butane_version }}'
         single_branch: true
+        depth: 1
 
     - name: build butane binary
       ansible.builtin.command:
@@ -340,6 +342,7 @@
         dest: '{{ temp_dir.path }}/ocm-cli'
         version: 'v{{ ocm_version }}'
         single_branch: true
+        depth: 1
 
     - name: build ocm binary
       ansible.builtin.command:
