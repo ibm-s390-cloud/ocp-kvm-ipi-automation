@@ -230,7 +230,7 @@
             remote_src: true
 
     - name: wait until cluster installation has finished
-      ansible.builtin.async_status:
+      ansible.builtin.async_status: # noqa args[module]
         jid: '{{ cluster_install.ansible_job_id }}'
       register: job_result
       until: job_result.finished

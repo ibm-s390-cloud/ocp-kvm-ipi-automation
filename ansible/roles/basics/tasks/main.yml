@@ -38,7 +38,7 @@
 
     - name: truncate /usr/lib/systemd/zram-generator.conf file
       when: zram_generator_conf_file_info.stat.exists
-      ansible.builtin.file:
+      ansible.builtin.file: # noqa args[module]
         path: /usr/lib/systemd/zram-generator.conf
         state: '{{ item }}'
         owner: root

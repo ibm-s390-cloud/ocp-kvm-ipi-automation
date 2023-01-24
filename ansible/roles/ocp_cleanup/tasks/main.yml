@@ -173,7 +173,7 @@
         remote_src: true
 
     - name: remove resolv.conf backup file
-      ansible.builtin.file: # noqa risky-file-permissions
+      ansible.builtin.file: # noqa risky-file-permissions args[module]
         path: '{{ resolv_conf_location }}.bkup'
         attributes: '-i'
         state: '{{ item }}'
