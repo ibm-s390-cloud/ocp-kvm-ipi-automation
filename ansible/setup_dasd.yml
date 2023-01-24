@@ -1,0 +1,112 @@
+---
+
+- name: setup DASD disks
+  hosts: s390x_kvm_host
+  vars:
+    lvm_storage_vg_name: libvirt_storage
+    lvm_storage_lv_name: node_storage
+    lvm_storage_fs_type: xfs
+    lvm_storage_mount_path: /var/lib/libvirt
+  tasks:
+    - name: stop playbook execution if there are no DASD disks to setup
+      when: dasd_devices is undefined
+      ansible.builtin.meta: end_play
+
+    - name: configure and format DASD disks
+      when: format_dasd is defined
+      ansible.builtin.shell: |
+        cio_ignore -r 0.0.{{ item.disk_id }}
+        chzdev -e 0.0.{{ item.disk_id }} -a -p
+        grep -q 'unformatted' /sys/bus/ccw/devices/0.0.{{ item.disk_id }}/status && dasdfmt -y -d cdl -b 4096 {{ item.device_id }}
+        fdasd -a {{ item.device_id }}
+      loop: '{{ dasd_devices | rejectattr("device_id", "equalto", "alias") }}'
+
+    - name: add DASD disks to /etc/dasd.conf file
+      ansible.builtin.lineinfile:
+        path: /etc/dasd.conf
+        line: '0.0.{{ item.disk_id }}'
+        state: present
+      loop: '{{ dasd_devices | rejectattr("device_id", "equalto", "alias") }}'
+      register: dasd_config_file
+
+    - name: reboot host to active DASD disks
+      when: dasd_config_file is changed
+      ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/reboot_host.yml'
+
+    - name: enable DASD disk aliases
+      ansible.builtin.shell: |
+        cio_ignore -r 0.0.{{ item.disk_id }}
+        chzdev -e 0.0.{{ item.disk_id }} -a -p
+      loop: '{{ dasd_devices | selectattr("device_id", "equalto", "alias") }}'
+
+    - name: check if LVM storage mount path exists
+      ansible.builtin.stat:
+        path: '{{ lvm_storage_mount_path }}'
+      register: lvm_storage_mount_path_stats
+
+    - name: cleanup existing LVM storage assets
+      when: lvm_storage_mount_path_stats.stat.exists
+      block:
+        - name: unmount existing filesystem
+          ansible.posix.mount:
+            path: '{{ lvm_storage_mount_path }}'
+            src: '/dev/{{ lvm_storage_vg_name }}/{{ lvm_storage_lv_name }}'
+            fstype: '{{ lvm_storage_fs_type }}'
+            state: absent
+
+    - name: blank filesystem signature on logical volumes
+      community.general.filesystem:
+        dev: '/dev/{{ lvm_storage_vg_name }}/{{ lvm_storage_lv_name }}'
+        state: absent
+
+    - name: destroy all existing logical volumes
+      community.general.lvol:
+        vg: '{{ lvm_storage_vg_name }}'
+        lv: '{{ lvm_storage_lv_name }}'
+        state: absent
+        force: true
+
+    - name: create LVM storage
+      block:
+        - name: create single volume group spanning all DASD disks
+          community.general.lvg:
+            vg: '{{ lvm_storage_vg_name }}'
+            pvs: '{{ dasd_devices | rejectattr("device_id", "equalto", "alias") | map(attribute="device_id") | list | product(["1"]) | map("join") | list | join(",") }}'
+            pesize: 4
+
+        - name: create single logical volume
+          community.general.lvol:
+            vg: '{{ lvm_storage_vg_name }}'
+            lv: '{{ lvm_storage_lv_name }}'
+            size: 100%FREE
+            force: true
+
+        - name: create filesystem on logical volume
+          community.general.filesystem:
+            fstype: '{{ lvm_storage_fs_type }}'
+            dev: '/dev/{{ lvm_storage_vg_name }}/{{ lvm_storage_lv_name }}'
+
+        - name: create LVM storage mount path directory
+          ansible.builtin.file:
+            path: '{{ lvm_storage_mount_path }}'
+            owner: root
+            group: root
+            mode: '0755'
+            state: directory
+
+        - name: mount filesystem to LVM storage mount path directory
+          ansible.posix.mount:
+            path: '{{ lvm_storage_mount_path }}'
+            src: '/dev/{{ lvm_storage_vg_name }}/{{ lvm_storage_lv_name }}'
+            fstype: '{{ lvm_storage_fs_type }}'
+            state: mounted
+
+        - name: create required subdirectories
+          ansible.builtin.file:
+            path: '{{ lvm_storage_mount_path }}/{{ item }}'
+            owner: root
+            group: root
+            mode: '0755'
+            state: directory
+          loop:
+            - openshift-images

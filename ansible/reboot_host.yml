@@ -3,6 +3,20 @@
 - name: reboot the KVM host
   hosts: s390x_kvm_host,ppc64le_kvm_host,x86_64_kvm_host,aarch64_kvm_host
   tasks:
+    - name: run pre-boot host customizations
+      vars:
+        pre_boot_tasks_file: '{{ inventory_dir }}/host_files/{{ inventory_hostname }}/pre_boot_tasks.yml'
+      block:
+        - name: check if host-specific pre-boot customizations file exists
+          ansible.builtin.stat:
+            path: '{{ pre_boot_tasks_file }}'
+          register: pre_boot_tasks_file_info
+          delegate_to: localhost
+
+        - name: run pre-boot customization tasks
+          when: pre_boot_tasks_file_info.stat.exists
+          ansible.builtin.include_tasks: '{{ pre_boot_tasks_file }}'
+
     - name: reboot host
       ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/reboot_host.yml'
 
