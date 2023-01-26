@@ -29,7 +29,7 @@
       loop: '{{ dasd_devices | rejectattr("device_id", "equalto", "alias") }}'
       register: dasd_config_file
 
-    - name: reboot host to active DASD disks
+    - name: reboot host to activate DASD disks
       when: dasd_config_file is changed
       ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/reboot_host.yml'
 
