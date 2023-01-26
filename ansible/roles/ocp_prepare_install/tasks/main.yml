@@ -32,6 +32,7 @@
         url: '{{ openshift_rhcos_image_url }}'
         dest: '/var/www/html/bootfiles/{{ openshift_rhcos_image_url | basename }}'
         mode: '0644'
+        decompress: false
         timeout: 300
       register: coreos_download
       until: coreos_download is success
