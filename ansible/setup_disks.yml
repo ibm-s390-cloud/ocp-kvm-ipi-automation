@@ -1,0 +1,17 @@
+---
+
+- name: configure additional disks
+  hosts: s390x_kvm_host
+  pre_tasks:
+    - name: stop playbook execution if there are no additional disks to setup
+      ansible.builtin.assert:
+        that: '{{ item }}'
+        fail_msg: |-
+          "There are no additional disks to setup. Nothing to do."
+      loop:
+        - disk_devices is defined and disk_devices | length > 0
+        - disk_type is defined and disk_type is inlist(["dasd", "fcp"])
+  roles:
+    - role: myrole
+      tags:
+        - myrole
