@@ -13,10 +13,10 @@
     name: haproxy
     state: present
 
-- name: start haproxy service
+- name: stop haproxy service
   ansible.builtin.service:
     name: haproxy
-    state: started
+    state: stopped
     enabled: true
 
 - name: configure haproxy
@@ -28,9 +28,3 @@
     - { 'block': '' }
     - { 'marker': '{{ host_marker }}', 'block': '' }
     - { 'marker': '{{ host_marker }}', 'block': '{{ lookup("template", "{{ role_path }}/templates/haproxy.cfg.j2") }}' }
-
-- name: restart haproxy service
-  ansible.builtin.service:
-    name: haproxy
-    state: restarted
-    enabled: true

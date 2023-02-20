@@ -113,7 +113,7 @@
         - /usr/local/bin/kubectl
         - /usr/local/bin/openshift-install
         - /usr/local/bin/terraform
-        - /usr/local/share/terraform/plugins/local/ibm-cloud/ibm
+        - /usr/local/share/terraform/plugins/local
         - /usr/local/bin/helm
         - /usr/local/bin/butane
         - /usr/local/bin/ocm
