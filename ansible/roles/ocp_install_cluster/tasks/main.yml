@@ -1,5 +1,11 @@
 ---
 
+- name: make sure the haproxy service is started
+  ansible.builtin.service:
+    name: haproxy
+    state: started
+    enabled: true
+
 - name: set required facts
   block:
     - name: check the required SSH key files exist on the KVM host
