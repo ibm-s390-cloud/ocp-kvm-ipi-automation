@@ -30,10 +30,10 @@
     - name: check Fedora prerequisites
       when: "ansible_distribution == 'Fedora'"
       block:
-        - name: ensure that the major Fedora version is 35 or 36
+        - name: ensure that the major Fedora version is 35, 36 or 37
           ansible.builtin.assert:
             that:
-              - '{{ ansible_distribution_major_version is inlist(["35", "36"]) }}'
+              - '{{ ansible_distribution_major_version is inlist(["35", "36", "37"]) }}'
 
 - name: ensure the targeted KVM host architecture is supported by KVM (RHEL only)
   when: "ansible_distribution == 'RedHat'"
