@@ -1,5 +1,36 @@
 ---
 
+- name: install and enable libvirt-nss
+  block:
+    - name: ensure libvirt-nss package is present
+      ansible.builtin.dnf:
+        name: libvirt-nss
+        state: present
+
+    - name: enable libvirt-nss module (RHEL only)
+      when: "ansible_distribution == 'RedHat'"
+      block:
+        - name: add libvirt-nss module to /etc/nsswitch.conf
+          ansible.builtin.replace:
+            path: /etc/authselect/user-nsswitch.conf
+            regexp: '^hosts:.*'
+            replace: 'hosts: files libvirt dns myhostname'
+            backup: true
+
+        - name: activate change
+          ansible.builtin.command:
+            cmd: 'authselect apply-changes'
+
+    - name: enable libvirt-nss module (Fedora only)
+      when: "ansible_distribution == 'Fedora'"
+      block:
+        - name: add libvirt-nss module to /etc/nsswitch.conf
+          ansible.builtin.replace:
+            path: /etc/nsswitch.conf
+            regexp: '^hosts:.*'
+            replace: 'hosts: files libvirt myhostname resolve [!UNAVAIL=return] dns'
+            backup: true
+
 - name: enable IPv4 forwarding
   ansible.posix.sysctl:
     name: '{{ item }}'
