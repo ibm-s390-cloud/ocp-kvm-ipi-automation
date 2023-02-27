@@ -19,7 +19,7 @@
 
         - name: activate change
           ansible.builtin.command:
-            cmd: 'authselect apply-changes'
+            cmd: 'authselect apply-changes -b'
 
     - name: enable libvirt-nss module (Fedora only)
       when: "ansible_distribution == 'Fedora'"
