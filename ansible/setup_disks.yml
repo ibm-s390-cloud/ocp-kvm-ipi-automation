@@ -10,7 +10,7 @@
           "There are no additional disks to setup. Nothing to do."
       loop:
         - disk_devices is defined and disk_devices | length > 0
-        - disk_type is defined and disk_type is inlist(["dasd", "fcp"])
+        - disk_type is defined and disk_type is inlist(["dasd", "fcp", "nvme"])
   roles:
     - role: myrole
       tags:
