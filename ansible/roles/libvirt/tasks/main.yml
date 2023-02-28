@@ -10,16 +10,34 @@
     - name: enable libvirt-nss module (RHEL only)
       when: "ansible_distribution == 'RedHat'"
       block:
-        - name: add libvirt-nss module to /etc/nsswitch.conf
-          ansible.builtin.replace:
-            path: /etc/authselect/user-nsswitch.conf
-            regexp: '^hosts:.*'
-            replace: 'hosts: files libvirt dns myhostname'
-            backup: true
+        - name: check if authselect is enabled and configured properly
+          ansible.builtin.stat:
+            path: /etc/authselect/authselect.conf
+          register: etc_authselect_authselect_conf
 
-        - name: activate change
-          ansible.builtin.command:
-            cmd: 'authselect apply-changes -b'
+        - name: enable libvirt-nss module (using authselect)
+          when: etc_authselect_authselect_conf.stat.exists
+          block:
+            - name: add libvirt-nss module to /etc/nsswitch.conf
+              ansible.builtin.replace:
+                path: /etc/authselect/user-nsswitch.conf
+                regexp: '^hosts:.*'
+                replace: 'hosts: files libvirt dns myhostname'
+                backup: true
+
+            - name: activate change
+              ansible.builtin.command:
+                cmd: 'authselect apply-changes -b'
+
+        - name: enable libvirt-nss module (without authselect)
+          when: not etc_authselect_authselect_conf.stat.exists
+          block:
+            - name: add libvirt-nss module to /etc/nsswitch.conf
+              ansible.builtin.replace:
+                path: /etc/nsswitch.conf
+                regexp: '^hosts:.*'
+                replace: 'hosts: files libvirt dns myhostname'
+                backup: true
 
     - name: enable libvirt-nss module (Fedora only)
       when: "ansible_distribution == 'Fedora'"
