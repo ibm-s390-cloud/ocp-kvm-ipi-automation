@@ -25,8 +25,8 @@ openshift_worker_root_volume_size: 137438953472   # in bytes
 openshift_worker_number_of_cpus: 16
 openshift_worker_memory_size: 32768               # in mebibytes (recommended **minimum** value)
 
-openshift_release_url: 'https://mirror.openshift.com/pub/openshift-v4/{{ ansible_architecture }}/clients/ocp/stable-4.10/release.txt'
-openshift_rhcos_image_url: 'https://mirror.openshift.com/pub/openshift-v4/{{ ansible_architecture }}/dependencies/rhcos/4.10/latest/rhcos-qemu.{{ ansible_architecture }}.qcow2.gz'
+openshift_release_url: 'https://mirror.openshift.com/pub/openshift-v4/{{ ansible_architecture }}/clients/ocp/stable-4.12/release.txt'
+openshift_rhcos_image_url: 'https://mirror.openshift.com/pub/openshift-v4/{{ ansible_architecture }}/dependencies/rhcos/4.12/latest/rhcos-qemu.{{ ansible_architecture }}.qcow2.gz'
 
 #############################################
 # <-- mandatory variables that need to be set
@@ -38,7 +38,7 @@ openshift_rhcos_image_url: 'https://mirror.openshift.com/pub/openshift-v4/{{ ans
 #############################################
 
 # the version of the OpenShift client tools to be installed on the KVM host
-openshift_client_version: 'stable-4.10'
+openshift_client_version: 'stable-4.12'
 
 # the download source location of the OpenShift client tools packages
 oc_package_binary_url: 'https://mirror.openshift.com/pub/openshift-v4/{{ ansible_architecture }}/clients/ocp/{{ openshift_client_version }}/openshift-client-linux.tar.gz'
@@ -87,8 +87,12 @@ service_networks:
   - 172.30.0.0/16
 
 # whether to setup the OpenShift cluster in FIPS mode
-# (see also: https://docs.openshift.com/container-platform/4.10/installing/installing-fips.html)
+# (see also: https://docs.openshift.com/container-platform/4.12/installing/installing-fips.html)
 openshift_setup_fips_mode: false
+
+# whether to enable technology preview features for the OpenShift cluster
+# (see also: https://docs.openshift.com/container-platform/4.12/nodes/clusters/nodes-cluster-enabling-features.html)
+openshift_enable_techpreview: false
 
 #############################################
 # <-- optional variables that don't necessarily to be set
