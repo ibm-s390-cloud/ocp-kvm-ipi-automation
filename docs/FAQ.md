@@ -86,7 +86,7 @@ all:
 
 ## Q: Which cluster topologies / layouts are supported by these playbooks? Can I install a single-node OpenShift (SNO) cluster as well?
 
-A: While the playbooks have been created with the standard multi-node cluster layout in mind you do have the option to install cluster with different layouts and sizes:
+A: While the playbooks have been created with the standard multi-node cluster layout in mind you do have the option to install clusters with different layouts and sizes:
 
 | master nodes | worker nodes | cluster layout |
 |---------|----------|---------|

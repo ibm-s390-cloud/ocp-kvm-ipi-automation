@@ -27,6 +27,10 @@
       ansible.builtin.set_fact:
         fips_mode: '{{ openshift_setup_fips_mode | default(false) }}'
 
+    - name: check if the cluster is to be installed with technology preview features enabled
+      ansible.builtin.set_fact:
+        enable_techpreview: '{{ openshift_enable_techpreview | default(false) }}'
+
     - name: check if the performance monitor tools are installed on the target KVM host
       when:
         - "ansible_architecture == 's390x'"

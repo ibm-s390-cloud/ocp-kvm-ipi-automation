@@ -24,6 +24,9 @@ networking:
 {% for sn in service_networks %}
   - {{ sn }}
 {% endfor %}
+{% if enable_techpreview %}
+featureSet: TechPreviewNoUpgrade
+{% endif %}
 fips: {{ fips_mode | bool | to_json }}
 platform:
   libvirt:

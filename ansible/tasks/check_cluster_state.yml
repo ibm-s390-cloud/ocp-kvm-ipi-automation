@@ -113,7 +113,7 @@
 
     - name: filter the list of current alerts to remove default alerts
       vars:
-        alerts_query: "alerts[?labels.alertname!='Watchdog' && labels.alertname!='AlertmanagerReceiversNotConfigured' && labels.alertname!='ClusterNotUpgradeable'].labels.alertname || [`0`]"
+        alerts_query: "alerts[?labels.alertname!='Watchdog' && labels.alertname!='AlertmanagerReceiversNotConfigured' && labels.alertname!='ClusterNotUpgradeable' && labels.alertname!='InsightsRecommendationActive'].labels.alertname || [`0`]"
       ansible.builtin.set_fact:
         real_alerts: '{{ (real_alerts | default([])) + [item] if item }}'
       loop: '{{ ocp_prometheus_alert_results.json.data | to_json | from_json | community.general.json_query(alerts_query) }}'
