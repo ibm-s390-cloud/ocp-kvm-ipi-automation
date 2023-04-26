@@ -11,7 +11,7 @@ The `.gitignore` file in this directory will ensure that whatever you place in h
 
 The OpenShift cluster installation process supports the inclusion of *advanced* cluster configuration files. These files are:
 
-- `cluster-network-03-config.yml` - OpenShift cluster network configuration file (see: <https://docs.openshift.com/container-platform/4.10/installing/installing_bare_metal/installing-bare-metal-network-customizations.html>)
+- `cluster-network-03-config.yml` - OpenShift cluster network configuration file (see: <https://docs.openshift.com/container-platform/4.12/installing/installing_bare_metal/installing-bare-metal-network-customizations.html>)
 
 The cluster configuration files **must** be organized by KVM hosts, meaning that for every KVM host a specific configuration should be applied to a dedicated subdirectory must exist within this directory.
 
