@@ -15,6 +15,8 @@
   environment:
     GOPATH: '{{ tfprovider_temp_dir.path }}/go'
     PATH: '{{ ansible_env.PATH }}:/usr/local/go/bin:{{ tfprovider_temp_dir.path }}/go/bin'
+  async: 600
+  poll: 10
 
 - name: create global terraform plugin directory
   ansible.builtin.file:

@@ -25,3 +25,23 @@
     - not cluster_main_tf_file_info.stat.exists
     - cluster_network_mtu is defined
     - cluster_network_mtu
+
+- name: increase hard-coded timeouts
+  block:
+    - name: increase bootstrapping timeout # noqa no-tabs
+      when:
+        - cluster_bootstrap_timeout_override is defined
+        - cluster_bootstrap_timeout_override | int >= 30
+      ansible.builtin.lineinfile:
+        path: '{{ temp_dir.path }}/installer/cmd/openshift-install/create.go'
+        regexp: '^\ttimeout := 30.*'
+        line: "\ttimeout := {{ cluster_bootstrap_timeout_override }} * time.Minute"
+
+    - name: increase cluster initialization timeout # noqa no-tabs
+      when:
+        - cluster_init_timeout_override is defined
+        - cluster_init_timeout_override | int >= 40
+      ansible.builtin.lineinfile:
+        path: '{{ temp_dir.path }}/installer/cmd/openshift-install/create.go'
+        regexp: '^\ttimeout := 40.*'
+        line: "\ttimeout := {{ cluster_init_timeout_override }} * time.Minute"

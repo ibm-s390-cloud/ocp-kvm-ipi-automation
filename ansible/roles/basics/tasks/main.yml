@@ -198,6 +198,8 @@
       environment:
         GOPATH: '{{ temp_dir.path }}/go'
         PATH: '{{ ansible_env.PATH }}:/usr/local/go/bin:{{ temp_dir.path }}/go/bin'
+      async: 600
+      poll: 10
 
     - name: remove existing terraform binary from /usr/local/bin
       ansible.builtin.file:
@@ -307,6 +309,8 @@
       environment:
         GOPATH: '{{ temp_dir.path }}/go'
         PATH: '{{ ansible_env.PATH }}:/usr/local/go/bin:{{ temp_dir.path }}/go/bin'
+      async: 600
+      poll: 10
 
     - name: remove existing butane binary from /usr/local/bin
       ansible.builtin.file:
@@ -351,6 +355,8 @@
       environment:
         GOPATH: '{{ temp_dir.path }}/go'
         PATH: '{{ ansible_env.PATH }}:/usr/local/go/bin:{{ temp_dir.path }}/go/bin'
+      async: 600
+      poll: 10
 
     - name: remove existing ocm binary from /usr/local/bin
       ansible.builtin.file:
