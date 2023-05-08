@@ -31,7 +31,7 @@
     - name: increase bootstrapping timeout # noqa no-tabs
       when:
         - cluster_bootstrap_timeout_override is defined
-        - cluster_bootstrap_timeout_override >= 30
+        - cluster_bootstrap_timeout_override | int >= 30
       ansible.builtin.lineinfile:
         path: '{{ temp_dir.path }}/installer/cmd/openshift-install/create.go'
         regexp: '^\ttimeout := 30.*'
@@ -40,7 +40,7 @@
     - name: increase cluster initialization timeout # noqa no-tabs
       when:
         - cluster_init_timeout_override is defined
-        - cluster_init_timeout_override >= 40
+        - cluster_init_timeout_override | int >= 40
       ansible.builtin.lineinfile:
         path: '{{ temp_dir.path }}/installer/cmd/openshift-install/create.go'
         regexp: '^\ttimeout := 40.*'
