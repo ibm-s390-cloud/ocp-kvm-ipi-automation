@@ -43,6 +43,18 @@ ssh root@$$YOUR_KVM_HOST_NAME$$
 tail -fn +1 /root/ocp4-workdir/.openshift_install.log
 ```
 
+If you've deduced the timeouts to be caused by general slowness of the hardware your KVM host runs on (meaning: slow CPU speed, slow network connections, etc.) you can try to rerun the cluster installation with increased timeouts. The following timeouts defined by the OpenShift installer can be overridden:
+
+- cluster bootstrap timeout (usually defaults to 30 minutes)
+- cluster initialization timeout (usually defaults to 40 minutes)
+
+To override either of these timeouts run the `run_ocp_install.yml` playbook as follows:
+
+```bash
+cd ansible
+ansible-playbook run_ocp_install.yml -e cluster_bootstrap_timeout_override=60 -e cluster_init_timeout_override=120
+```
+
 ### Using an incompatible libvirt version
 
 The RHOCP cluster installation times out and you'll find this error message in the RHOCP cluster installation log file:
@@ -86,7 +98,7 @@ Afterwards run the following playbooks in this repository to reboot the KVM host
 ```bash
 cd ansible
 ansible-playbook reboot_host.yml
-ansible-playbook ansible-playbook cleanup_ocp_install.yml -e cleanup_ignore_errors=true
+ansible-playbook cleanup_ocp_install.yml -e cleanup_ignore_errors=true
 ```
 
 Please note that the playbooks do implement a safeguard mechanism to ensure that under normal circumstances this libvirt incompatibility issue will not manifest itself. However depending on your actual KVM host configuration there's still the off chance for this to happen, hence it being mentioned here.
