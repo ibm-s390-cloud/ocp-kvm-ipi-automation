@@ -29,7 +29,7 @@
         chdir: '{{ temp_dir.path }}/ocm-cli'
       environment:
         GOPATH: '{{ temp_dir.path }}/go'
-        PATH: '{{ ansible_env.PATH }}:/usr/local/go/bin:{{ temp_dir.path }}/go/bin'
+        PATH: '/usr/local/go/bin:{{ temp_dir.path }}/go/bin:{{ ansible_env.PATH }}'
       async: 600
       poll: 10
 
