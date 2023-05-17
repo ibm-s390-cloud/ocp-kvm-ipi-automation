@@ -6,6 +6,10 @@
     state: started
     enabled: true
 
+- name: configure the OpenShift image cache (if feasible)
+  when: image_cache is defined
+  ansible.builtin.include_tasks: '{{ role_path }}/tasks/configure_ocp_image_cache.yml'
+
 - name: set required facts
   block:
     - name: check the required SSH key files exist on the KVM host
@@ -153,6 +157,7 @@
   ansible.builtin.include_tasks: '{{ role_path }}/tasks/copy_advanced_configuration_files.yml'
   loop:
     - { 'name': 'cluster-network-03-config.yml', 'dest': '{{ openshift_installer_workdir }}/manifests/cluster-network-03-config.yml' }
+    - { 'name': '99_node-cgroups-v2.yml', 'dest': '{{ openshift_installer_workdir }}/openshift/99_node-cgroups-v2.yml' }
   loop_control:
     loop_var: advanced_config_file
 

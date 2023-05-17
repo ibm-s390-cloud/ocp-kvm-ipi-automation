@@ -1,0 +1,63 @@
+---
+
+- name: create local OpenShift image cache on KVM host
+  when: "image_cache.type == 'local'"
+  block:
+    - name: configure and create local OpenShift image cache
+      ansible.builtin.include_tasks: '{{ role_path }}/tasks/create_local_ocp_image_cache.yml'
+
+    - name: establishing the local image cache succeeded so ensure the OpenShift installer does use it
+      ansible.builtin.set_fact:
+        image_cache_up: true
+  rescue:
+    - name: establishing the local image cache failed so ensure the OpenShift installer does not use it
+      ansible.builtin.set_fact:
+        image_cache_up: false
+
+- name: check if remote OpenShift image cache is available
+  when:
+    - "image_cache.type == 'remote'"
+    - image_cache.remote is defined
+  block:
+    - name: try to contact the remote OpenShift image cache
+      ansible.builtin.wait_for:
+        host: '{{ image_cache.remote.host }}'
+        port: '{{ image_cache.remote.port }}'
+        state: started
+        delay: 1
+    
+    - name: contacting the remote image cache succeeded so ensure the OpenShift installer does use it
+      ansible.builtin.set_fact:
+        image_cache_up: true
+  rescue:
+    - name: contacting the remote image cache failed so ensure the OpenShift installer does not use it
+      ansible.builtin.set_fact:
+        image_cache_up: false
+
+- name: fetch self-signed certificate to use with OpenShift installer
+  when: "image_cache.type == 'local'"
+  ansible.builtin.slurp:
+    src: '{{ local_ocp_image_cache_dir }}/certs/image-cache.crt'
+  register: ocp_image_cache_cert
+
+- name: fetch self-signed certificate to use with OpenShift installer
+  when:
+    - "image_cache.type == 'remote'"
+    - image_cache.remote.certificate is defined
+  ansible.builtin.set_fact:
+    ocp_image_cache_cert: '{{ lookup("file", "{{ image_cache.remote.certificate }}" }}'
+
+- name: set additional required facts
+  block:
+    - name: use local OpenShift image cache
+      when: "image_cache.type == 'local'"
+      ansible.builtin.set_fact:
+        ocp_image_cache_location: '{{ local_ocp_image_cache_hostname }}:6000'
+
+    - name: use remote OpenShift image cache
+      when:
+        - "image_cache.type == 'remote'"
+        - image_cache.remote.host is defined
+        - image_cache.remote.port is defined
+      ansible.builtin.set_fact:
+        ocp_image_cache_location: '{{ image_cache.remote.host }}:{{ image_cache.remote.port }}'

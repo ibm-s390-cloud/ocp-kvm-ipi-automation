@@ -1,0 +1,114 @@
+---
+
+- name: ensure local OpenShift cache image configuration directories exist
+  ansible.builtin.file:
+    path: '{{ local_ocp_image_cache_dir }}/{{ item }}'
+    owner: root
+    group: root
+    mode: '0755'
+    state: directory
+  loop:
+    - certs
+    - data
+
+- name: check if OpenShift image cache configuration files already exist
+  ansible.builtin.stat:
+    path: '{{ item }}'
+  loop:
+    - '{{ local_ocp_image_cache_dir }}/config.yml'
+    - '{{ local_ocp_image_cache_dir }}/certs/image-cache.key'
+    - '{{ local_ocp_image_cache_dir }}/certs/image-cache.crt'
+  register: image_cache_config_files
+
+- name: create OpenShift image cache configuration files (if needed)
+  vars:
+    image_cache_config_files_exist: '{{ image_cache_config_files.results | map(attribute="stat.exists") | list | all }}'
+  when: not image_cache_config_files_exist
+  block:
+    - name: create local OpenShift image cache configuration file
+      vars:
+        pull_secret_file_json: '{{ lookup("file", cluster_pull_secret_file) | from_json }}'
+        quay_auth: '{{ pull_secret_file_json["auths"]["quay.io"]["auth"] | b64decode | trim }}'
+        pull_secret_user: '{{ quay_auth.split(":")[0] }}'
+        pull_secret_pass: '{{ quay_auth.split(":")[1] }}'
+      ansible.builtin.template:
+        src: '{{ role_path }}/templates/cache-config.yml.j2'
+        dest: '{{ local_ocp_image_cache_dir }}/config.yml'
+        owner: root
+        group: root
+        mode: '0600'
+
+    - name: generate self-signed certificate for local OpenShift image cache
+      ansible.builtin.command:
+        argv:
+          - openssl
+          - req
+          - -x509
+          - -newkey
+          - rsa:4096
+          - -nodes
+          - -sha256
+          - -keyout
+          - '{{ local_ocp_image_cache_dir }}/certs/image-cache.key'
+          - -days
+          - 3650
+          - -out
+          - '{{ local_ocp_image_cache_dir }}/certs/image-cache.crt'
+          - -subj
+          - '/CN={{ local_ocp_image_cache_hostname }}'
+          - -addext
+          - 'subjectAltName = DNS:{{ local_ocp_image_cache_hostname }}'
+
+    - name: install self-signed certificate on KVM host
+      block:
+        - name: update CA trust database on KVM host
+          ansible.builtin.command:
+            cmd: 'update-ca-trust force-enable'
+
+        - name: copy self-signed certificate to trust database folder on KVM host
+          ansible.builtin.copy:
+            src: '{{ local_ocp_image_cache_dir }}/certs/image-cache.crt'
+            dest: '/etc/pki/ca-trust/source/anchors/image-cache.crt'
+            owner: root
+            group: root
+            mode: '0644'
+            remote_src: true
+
+        - name: add self-signed certificate to trust database on KVM host
+          ansible.builtin.command:
+            cmd: 'update-ca-trust extract'
+
+- name: run OpenShift image cache container
+  block:
+    - name: upload and import image registry image
+      when: ansible_architecture == 's390x'
+      block:
+        - name: upload compressed image registry image
+          ansible.builtin.copy:
+            src: '{{ role_path }}/files/registry-{{ architecture_alias }}.tar.gz'
+            dest: '{{ local_ocp_image_cache_dir }}/registry.tar.gz'
+            owner: root
+            group: root
+            mode: '0644'
+
+        - name: import image registry image
+          containers.podman.podman_load:
+            input: '{{ local_ocp_image_cache_dir }}/registry.tar.gz'
+
+    - name: run container
+      containers.podman.podman_container:
+        name: ocp-image-cache
+        image: 'docker.io/library/registry:latest'
+        exposed:
+          - 6000
+        published:
+          - '6000:6000'
+        volume:
+          - '{{ local_ocp_image_cache_dir }}/data:/var/lib/registry:Z'
+          - '{{ local_ocp_image_cache_dir }}/config.yml:/etc/docker/registry/config.yml:Z'
+          - '{{ local_ocp_image_cache_dir }}/certs:/certs:Z'
+        env:
+          REGISTRY_HTTP_TLS_CERTIFICATE: /certs/image-cache.crt
+          REGISTRY_HTTP_TLS_KEY: /certs/image-cache.key
+        restart_policy: always
+        state: started

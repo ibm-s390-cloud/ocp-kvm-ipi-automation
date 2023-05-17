@@ -35,3 +35,14 @@ platform:
 pullSecret: '{{ pull_secret_file | trim }}'
 sshKey: |
   {{ ocp_ssh_key_pub['content'] | b64decode | trim }}
+{% if image_cache_up | default(false) %}
+additionalTrustBundle: |
+  {{ ocp_image_cache_cert['content'] | b64decode | trim | regex_replace('\n', '\n  ') }}
+imageContentSources:
+- mirrors:
+  - {{ ocp_image_cache_location }}/openshift-release-dev/ocp-release
+  source: quay.io/openshift-release-dev/ocp-release
+- mirrors:
+  - {{ ocp_image_cache_location }}/openshift-release-dev/ocp-v4.0-art-dev
+  source: quay.io/openshift-release-dev/ocp-v4.0-art-dev
+{% endif %}

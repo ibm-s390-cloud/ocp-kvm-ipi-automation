@@ -10,4 +10,7 @@
   <hostname>rgw.router-default.apps.{{ cluster_name }}.{{ cluster_base_domain }}</hostname>
   <hostname>s3-openshift-storage.apps.{{ cluster_name }}.{{ cluster_base_domain }}</hostname>
   <hostname>canary-openshift-ingress-canary.apps.{{ cluster_name }}.{{ cluster_base_domain }}</hostname>
+{% if image_cache_up and image_cache.type == 'local' | default(false) %}
+  <hostname>{{ local_ocp_image_cache_hostname }}</hostname>
+{% endif %}
 </host>

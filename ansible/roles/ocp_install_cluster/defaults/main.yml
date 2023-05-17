@@ -1,3 +1,6 @@
 ---
 
 cluster_pull_secret_file: '{{ inventory_dir }}/secrets/.ocp4_pull_secret'
+
+local_ocp_image_cache_dir: /opt/registry/cache
+local_ocp_image_cache_hostname: 'registry-cache.{{ cluster_base_domain }}'
