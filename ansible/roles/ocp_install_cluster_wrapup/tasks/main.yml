@@ -13,3 +13,14 @@
   ansible.builtin.service:
     name: httpd.service
     state: stopped
+
+- name: remove the ImageContentSourcePolicy resources referring to the OpenShift image cache
+  kubernetes.core.k8s:
+    kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+    api_version: 'operator.openshift.io/v1alpha1'
+    kind: ImageContentSourcePolicy
+    name: '{{ item }}'
+    state: absent
+  loop:
+    - image-policy-0
+    - image-policy-1

@@ -44,8 +44,10 @@
   when:
     - "image_cache.type == 'remote'"
     - image_cache.remote.certificate is defined
-  ansible.builtin.set_fact:
-    ocp_image_cache_cert: '{{ lookup("file", "{{ image_cache.remote.certificate }}" }}'
+  ansible.builtin.slurp:
+    src: '{{ image_cache.remote.certificate }}'
+  delegate_to: localhost
+  register: ocp_image_cache_cert
 
 - name: set additional required facts
   block:
