@@ -14,7 +14,7 @@
     chdir: '{{ tfprovider_temp_dir.path }}/{{ tfprovider.name }}'
   environment:
     GOPATH: '{{ tfprovider_temp_dir.path }}/go'
-    PATH: '{{ ansible_env.PATH }}:/usr/local/go/bin:{{ tfprovider_temp_dir.path }}/go/bin'
+    PATH: '/usr/local/go/bin:{{ tfprovider_temp_dir.path }}/go/bin:{{ ansible_env.PATH }}'
   async: 600
   poll: 10
 

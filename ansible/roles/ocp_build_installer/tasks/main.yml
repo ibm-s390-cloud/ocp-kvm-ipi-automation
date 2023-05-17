@@ -70,7 +70,7 @@
         TAGS: 'libvirt'
         CC: 'gcc'
         GOPATH: '{{ temp_dir.path }}/go'
-        PATH: '{{ ansible_env.PATH }}:/usr/local/go/bin:{{ temp_dir.path }}/go/bin'
+        PATH: '/usr/local/go/bin:{{ temp_dir.path }}/go/bin:{{ ansible_env.PATH }}'
         DEFAULT_ARCH: '{{ architecture_alias }}'
         BUILD_VERSION: '{{ openshift_installer_version }}'
       async: 600
