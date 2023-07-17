@@ -301,7 +301,7 @@ podman build . -t kvm-ipi-automation:base-latest --format docker
 
 ### Using the Docker image as the base image for further customization
 
-Due to the way the The KVM IPI automation Docker image content has been structured, it's fairly easy to extend the image by adding additional Ansible roles or playbooks. The content of the Docker image is as follows (only the Ansible-related parts of the image are shown here):
+Due to the way the KVM IPI automation Docker image content has been structured, it's fairly easy to extend the image by adding additional Ansible roles or playbooks. The content of the Docker image is as follows (only the Ansible-related parts of the image are shown here):
 
 ```bash
 ansible
