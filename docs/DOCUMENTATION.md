@@ -22,7 +22,7 @@ In order to run the Ansible playbooks in this repository you need:
     - Fedora 36
     - Fedora 37
   - using one of the following hardware architectures:
-    - s390x (an IBM zSystems / LinuxONE LPAR, supported: z14 / z15 / z16)
+    - s390x (an IBM Z / LinuxONE LPAR, supported: z14 / z15 / z16)
     - ppc64le (an IBM Power Systems bare metal host or LPAR, supported: POWER9)
     - x86_64 (an Intel- or AMD-based bare metal host)
     - aarch64 (an ARM64-based bare metal host)
