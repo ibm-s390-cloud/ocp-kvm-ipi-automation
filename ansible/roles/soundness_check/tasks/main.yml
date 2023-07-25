@@ -15,25 +15,25 @@
             that:
               - '{{ ansible_distribution_major_version is inlist(["8", "9"]) }}'
 
-        - name: ensure that the minor version for RHEL 8 is 4, 5, 6 or 7
+        - name: ensure that the minor version for RHEL 8 is 4, 5, 6, 7 or 8
           when: "ansible_distribution_major_version == '8'"
           ansible.builtin.assert:
             that:
-              - '{{ (ansible_distribution_version | parse_version)["minor"] | string is inlist(["4", "5", "6", "7"]) }}'
+              - '{{ (ansible_distribution_version | parse_version)["minor"] | string is inlist(["4", "5", "6", "7", "8"]) }}'
 
-        - name: ensure that the minor version for RHEL 9 is 0 or 1
+        - name: ensure that the minor version for RHEL 9 is 0, 1 or 2
           when: "ansible_distribution_major_version == '9'"
           ansible.builtin.assert:
             that:
-              - '{{ (ansible_distribution_version | parse_version)["minor"] | string is inlist(["0", "1"]) }}'
+              - '{{ (ansible_distribution_version | parse_version)["minor"] | string is inlist(["0", "1", "2"]) }}'
 
     - name: check Fedora prerequisites
       when: "ansible_distribution == 'Fedora'"
       block:
-        - name: ensure that the major Fedora version is 35, 36 or 37
+        - name: ensure that the major Fedora version is 35, 36, 37 or 38
           ansible.builtin.assert:
             that:
-              - '{{ ansible_distribution_major_version is inlist(["35", "36", "37"]) }}'
+              - '{{ ansible_distribution_major_version is inlist(["35", "36", "37", "38"]) }}'
 
 - name: ensure the targeted KVM host architecture is supported by KVM (RHEL only)
   when: "ansible_distribution == 'RedHat'"
