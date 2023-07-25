@@ -49,7 +49,7 @@ For example:
 
 The Ansible playbook provided by the user should contain only simple tasks (e.g. `ansible.builtin.shell` or `ansible.builtin.command`). If any of the tasks contained in the user-provided playbook fails the entire playbook run (e.g. `setup_host.yml`) will fail.
 
-Here's an example of a simple `post_boot_tasks.yml` playbook for an IBM zSystems / LinuxONE target host that activates a DASD disk and mounts the filesystem contained on that disk accordingly:
+Here's an example of a simple `post_boot_tasks.yml` playbook for an IBM Z / LinuxONE target host that activates a DASD disk and mounts the filesystem contained on that disk accordingly:
 
 ```yaml
 ---

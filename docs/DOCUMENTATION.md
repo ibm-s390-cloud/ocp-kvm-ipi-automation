@@ -16,13 +16,16 @@ In order to run the Ansible playbooks in this repository you need:
     - RHEL 8.5 (with an **active** Red Hat subscription)
     - RHEL 8.6 (with an **active** Red Hat subscription)
     - RHEL 8.7 (with an **active** Red Hat subscription)
+    - RHEL 8.8 (with an **active** Red Hat subscription)
     - RHEL 9.0 (with an **active** Red Hat subscription)
     - RHEL 9.1 (with an **active** Red Hat subscription)
+    - RHEL 9.2 (with an **active** Red Hat subscription)
     - Fedora 35
     - Fedora 36
     - Fedora 37
+    - Fedora 38
   - using one of the following hardware architectures:
-    - s390x (an IBM zSystems / LinuxONE LPAR, supported: z14 / z15 / z16)
+    - s390x (an IBM Z / LinuxONE LPAR, supported: z14 / z15 / z16)
     - ppc64le (an IBM Power Systems bare metal host or LPAR, supported: POWER9)
     - x86_64 (an Intel- or AMD-based bare metal host)
     - aarch64 (an ARM64-based bare metal host)
@@ -301,7 +304,7 @@ podman build . -t kvm-ipi-automation:base-latest --format docker
 
 ### Using the Docker image as the base image for further customization
 
-Due to the way the The KVM IPI automation Docker image content has been structured, it's fairly easy to extend the image by adding additional Ansible roles or playbooks. The content of the Docker image is as follows (only the Ansible-related parts of the image are shown here):
+Due to the way the KVM IPI automation Docker image content has been structured, it's fairly easy to extend the image by adding additional Ansible roles or playbooks. The content of the Docker image is as follows (only the Ansible-related parts of the image are shown here):
 
 ```bash
 ansible
