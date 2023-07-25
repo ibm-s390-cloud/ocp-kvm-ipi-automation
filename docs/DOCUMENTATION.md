@@ -16,11 +16,14 @@ In order to run the Ansible playbooks in this repository you need:
     - RHEL 8.5 (with an **active** Red Hat subscription)
     - RHEL 8.6 (with an **active** Red Hat subscription)
     - RHEL 8.7 (with an **active** Red Hat subscription)
+    - RHEL 8.8 (with an **active** Red Hat subscription)
     - RHEL 9.0 (with an **active** Red Hat subscription)
     - RHEL 9.1 (with an **active** Red Hat subscription)
+    - RHEL 9.2 (with an **active** Red Hat subscription)
     - Fedora 35
     - Fedora 36
     - Fedora 37
+    - Fedora 38
   - using one of the following hardware architectures:
     - s390x (an IBM Z / LinuxONE LPAR, supported: z14 / z15 / z16)
     - ppc64le (an IBM Power Systems bare metal host or LPAR, supported: POWER9)
