@@ -56,36 +56,27 @@
 - name: configuration handling specific to infrastructure nodes
   when: "cluster_node_type == 'infra'"
   block:
+    - name: label existing worker nodes as dedicated application nodes
+      vars:
+        node_label_patch: |-
+          metadata:
+            labels:
+              node-role.kubernetes.io/app: ""
+      kubernetes.core.k8s:
+        kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
+        api_version: v1
+        kind: Node
+        name: '{{ item }}'
+        state: present
+        definition: '{{ node_label_patch | from_yaml }}'
+      loop: '{{ worker_domains_pre_scale }}'
+
     - name: mark additional worker nodes as dedicated infrastructure nodes
       kubernetes.core.k8s:
         kubeconfig: '{{ openshift_installer_workdir }}/auth/kubeconfig'
         state: present
         definition: '{{ lookup("template", "{{ role_path }}/templates/infra-node.yaml.j2") | from_yaml }}'
       loop: '{{ added_worker_domains }}'
-
-    - name: fetch list of all existing cluster infrastructure nodes
-      ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_infra_nodes.yml'
-
-    - name: retrieve XML of libvirt cluster network
-      community.libvirt.virt_net:
-        command: get_xml
-        name: '{{ cluster_id }}'
-      register: libvirt_cluster_network
-
-    - name: determine network configuration for cluster nodes
-      community.general.xml:
-        xmlstring: '{{ libvirt_cluster_network.get_xml }}'
-        xpath: /network/ip/dhcp/host
-        content: attribute
-      register: libvirt_cluster_nodes
-
-    - name: update haproxy configuration
-      vars:
-        nodes_query: "matches[?contains({{ infra_domains | ansible.builtin.to_json | regex_replace('\"', \"'\") }}, host.name)] || [`0`]"
-        infra_nodes_details: '{{ libvirt_cluster_nodes | to_json | from_json | community.general.json_query(nodes_query) }}'
-      ansible.builtin.include_role:
-        name: networking
-        tasks_from: configure_haproxy
 
     - name: reschedule corresponding cluster workloads to dedicated infrastructure nodes
       kubernetes.core.k8s:
@@ -102,13 +93,39 @@
         timeout: 300
       delegate_to: localhost
 
+    - name: reconfigure haproxy to account for added infrastructure nodes
+      block:
+        - name: fetch list of all existing cluster infrastructure nodes
+          ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_infra_nodes.yml'
+
+        - name: retrieve XML of libvirt cluster network
+          community.libvirt.virt_net:
+            command: get_xml
+            name: '{{ cluster_id }}'
+          register: libvirt_cluster_network
+
+        - name: determine network configuration for cluster nodes
+          community.general.xml:
+            xmlstring: '{{ libvirt_cluster_network.get_xml }}'
+            xpath: /network/ip/dhcp/host
+            content: attribute
+          register: libvirt_cluster_nodes
+
+        - name: update haproxy configuration
+          vars:
+            nodes_query: "matches[?contains({{ infra_domains | ansible.builtin.to_json | regex_replace('\"', \"'\") }}, host.name)] || [`0`]"
+            infra_nodes_details: '{{ libvirt_cluster_nodes | to_json | from_json | community.general.json_query(nodes_query) }}'
+          ansible.builtin.include_role:
+            name: networking
+            tasks_from: configure_haproxy
+
 - name: configuration handling specific to worker nodes
   when: "cluster_node_type == 'worker'"
   block:
     - name: fetch list of all existing cluster infrastructure nodes
       ansible.builtin.include_tasks: '{{ inventory_dir }}/tasks/get_infra_nodes.yml'
 
-    - name: update haproxy configuration
+    - name: reconfigure haproxy to account for added worker nodes
       when: infra_domains | length > 0
       block:
         - name: retrieve XML of libvirt cluster network
@@ -142,6 +159,12 @@
 
 - name: configuration handling common to worker and infrastructure nodes
   block:
+    - name: make sure the haproxy service is started
+      ansible.builtin.service:
+        name: haproxy
+        state: started
+        enabled: true
+
     - name: update existing vbmc / ipmi configuration to include additional cluster nodes (if applicable)
       vars:
         vbmc_ipmi: '{{ setup_vbmc_ipmi | default(true) }}'

@@ -15,6 +15,9 @@ spec:
           weight: 100
   logLevel: Normal
   managementState: Managed
+  defaultRoute: true
+  storage:
+    emptyDir: {}
   nodeSelector:
     node-role.kubernetes.io/infra: ""
   tolerations:
