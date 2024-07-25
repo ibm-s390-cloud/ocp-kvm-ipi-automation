@@ -760,7 +760,6 @@ os_packages:
       - python3-libvirt
       - python3-libselinux
       - python3-libsemanage
-      - python3-wheel
       - ipmitool
       - gcc
       - gcc-c++
